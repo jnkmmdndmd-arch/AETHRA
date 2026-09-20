@@ -476,7 +476,7 @@ func set_connection_status(text: String) -> void:
 
 func refresh_profile() -> void:
     if profile_button:
-        profile_button.tooltip_text = "%s • %s" % [AppState.player_name, "متصل" if AppState.is_authenticated else "وضع محلي"]
+        profile_button.tooltip_text = "%s - %s" % [AppState.player_name, "متصل" if AppState.is_authenticated else "وضع محلي"]
     if auth_overlay and AppState.is_authenticated:
         auth_overlay.queue_free()
         auth_overlay = null
@@ -776,7 +776,7 @@ func _refresh_friends(players: Dictionary) -> void:
 func _show_friend_profile(name: String, profile: Dictionary) -> void:
     var dialog := AcceptDialog.new()
     dialog.title = "ملف اللاعب"
-    dialog.dialog_text = "%s\nCharacter: %s\nالحالة: متصل داخل الجلسة الحالية" % [name, str(profile.get("character", "ranger"))]
+    dialog.dialog_text = "%s\nالشخصية: %s\nالحالة: متصل داخل الجلسة الحالية" % [name, str(profile.get("character", "ranger"))]
     add_child(dialog)
     dialog.popup_centered(Vector2i(420, 220))
 
