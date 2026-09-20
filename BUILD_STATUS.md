@@ -14,12 +14,14 @@
 - Original generated hero artwork is stored locally under `assets/ui/hero_background.png`.
 
 ## Current verification state
-- Godot editor validation: PASS
+- Godot editor validation: PASS on source revision `c1be0e76f5a049c670cd1778f07a97d37b9c8433`
+- Full GDScript parse validation: PASS
 - Godot self-test: PASS
 - Go auth-service tests: PASS
 - Go vet: PASS
-- Clean Windows export from source revision `514d20e`: PASS
-- Windows GUI runtime execution: BLOCKED BY ENVIRONMENT
+- Clean Windows export: PASS on CI run `35526554338`
+- Windows executable process start: PASS on CI run `35526554338`
+- Windows GUI/gameplay automation: BLOCKED BY ENVIRONMENT
 - Android/iOS export: BLOCKED BY ENVIRONMENT
 - Global server discovery: not implemented as a live external service
 - Store commerce: not implemented as a live production backend
@@ -40,3 +42,12 @@ The project is verified for editor import, headless source validation, and clean
 - Made the main menu responsive for 1366×768 by adapting sidebar/social panels, centered auth layout, hero height, and popup anchoring.
 - Changed the default Windows window size from 1600×900 to 1366×768 to match the tested target display.
 - Runtime/Windows verification is still required after this source change; no gameplay PASS is claimed yet.
+
+## Current source repair state
+- UI navigation uses drawn vector icons instead of decorative emoji/symbol glyphs.
+- The online-player area uses a drawn person icon and only displays real network presence data.
+- Arabic UI layout is explicitly RTL and responsive at the target desktop sizes.
+- World creation display labels are localized while internal IDs remain stable.
+- Authentication requests use independent HTTPRequest instances, and saved sessions are revalidated against the auth service on startup.
+- Historical Windows artifact hashes remain historical and are not associated with the current commit.
+- No unambiguously unrelated production file was deleted; Godot metadata, source, server, test, asset, and engineering documentation files remain because they are part of the project or its validation.
