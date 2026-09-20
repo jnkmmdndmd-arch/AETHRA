@@ -14,14 +14,16 @@
 - Original generated hero artwork is stored locally under `assets/ui/hero_background.png`.
 
 ## Current verification state
-- Godot editor validation: PASS on source revision `c1be0e76f5a049c670cd1778f07a97d37b9c8433`
+- Godot editor validation: PASS on source revision `f3cdbbbe4cf22a20f9395e55e7406a0df3c164e1`
 - Full GDScript parse validation: PASS
 - Godot self-test: PASS
 - Go auth-service tests: PASS
 - Go vet: PASS
-- Clean Windows export: PASS on CI run `35526554338`
-- Windows executable process start: PASS on CI run `35526554338`
+- Clean Windows export: PASS on CI run `35528036255`
+- Windows executable process start: PASS on CI run `35528036255`
 - Windows GUI/gameplay automation: BLOCKED BY ENVIRONMENT
+- Current Windows artifact SHA-256: `fc6df94ff511cdc6b8f7e0d013d1e861dae2055152583f67e35fbc0f69e9ddaa`
+- Current exported EXE SHA-256: `1d6115adb96df5e4294007631d54cfbcea6cc6c70acc3a9c71d490fe516f7e3e`
 - Android/iOS export: BLOCKED BY ENVIRONMENT
 - Global server discovery: not implemented as a live external service
 - Store commerce: not implemented as a live production backend
@@ -41,7 +43,7 @@ The project is verified for editor import, headless source validation, and clean
 - Reworked authentication HTTPRequest handling so login, registration, and logout do not collide on one busy HTTPRequest.
 - Made the main menu responsive for 1366×768 by adapting sidebar/social panels, centered auth layout, hero height, and popup anchoring.
 - Changed the default Windows window size from 1600×900 to 1366×768 to match the tested target display.
-- Runtime/Windows verification is still required after this source change; no gameplay PASS is claimed yet.
+- Windows CI validation for source revision `f3cdbbbe4cf22a20f9395e55e7406a0df3c164e1` is now complete: parser/load gates, Godot self-test, Go tests/vet, Windows export, EXE identity, and process start passed. Interactive GUI gameplay/save/load/settings/multiplayer remain blocked by runner environment.
 
 ## Current source repair state
 - UI navigation uses drawn vector icons instead of decorative emoji/symbol glyphs.
@@ -50,4 +52,4 @@ The project is verified for editor import, headless source validation, and clean
 - World creation display labels are localized while internal IDs remain stable.
 - Authentication requests use independent HTTPRequest instances, and saved sessions are revalidated against the auth service on startup.
 - Historical Windows artifact hashes remain historical and are not associated with the current commit.
-- No unambiguously unrelated production file was deleted; Godot metadata, source, server, test, asset, and engineering documentation files remain because they are part of the project or its validation.
+- Stale delivery/verification report files and the unused `assets/icon.svg` vector asset were removed from the repository; required Godot metadata, source, server, tests, assets, and engineering documentation remain.
