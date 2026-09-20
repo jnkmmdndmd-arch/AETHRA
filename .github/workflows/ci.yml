@@ -103,7 +103,8 @@ jobs:
           $vcpkg = (Get-Command vcpkg -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty Source)
           if (-not $vcpkg) { $vcpkg = "$env:RUNNER_TEMP\vcpkg\vcpkg.exe" }
           & $vcpkg install sqlite3:x64-windows --triplet x64-windows
-          $sqliteRoot = "$env:RUNNER_TEMP\vcpkg\installed\x64-windows"
+          $vcpkgRoot = Split-Path -Parent $vcpkg
+          $sqliteRoot = Join-Path $vcpkgRoot "installed\x64-windows"
           $sqliteRootUnix = $sqliteRoot -replace '\\', '/'
           $sqliteHeader = Get-ChildItem -Path $sqliteRoot -Recurse -Filter "sqlite3.h" | Select-Object -First 1
           if (-not $sqliteHeader) { throw "vcpkg sqlite3.h was not found under $sqliteRoot" }
