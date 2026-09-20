@@ -60,9 +60,17 @@ jobs:
           $templatesDir = Join-Path $env:APPDATA "Godot\export_templates\4.7.2.stable"
           New-Item -ItemType Directory -Force -Path $templatesDir | Out-Null
 
-          $tplRoot = Join-Path $root "export_templates"
-          if (Test-Path $tplRoot) {
-            Get-ChildItem -Path $tplRoot -Force | Copy-Item -Destination $templatesDir -Recurse -Force
+          $tplRoots = @(
+            (Join-Path $root "templates"),
+            (Join-Path $root "export_templates")
+          )
+          foreach ($tplRoot in $tplRoots) {
+            if (Test-Path $tplRoot) {
+              Get-ChildItem -Path $tplRoot -Force | Copy-Item -Destination $templatesDir -Recurse -Force
+            }
+          }
+          if (-not (Test-Path (Join-Path $templatesDir "windows_release_x86_64.exe"))) {
+            throw "Godot Windows export template was not installed under $templatesDir"
           }
 
           $env:PATH = (Split-Path -Parent $godotExe) + ";" + $env:PATH
