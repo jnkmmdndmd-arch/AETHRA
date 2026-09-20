@@ -49,28 +49,19 @@ jobs:
       - name: Verify Godot 4.7.2
         shell: pwsh
         run: |
-          $godot = $env:GODOT
-          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = (Get-Command godot).Source }
-          if (Test-Path "$godot.exe") { $godot = "$godot.exe" }
-          $version = (& $godot --version 2>$null | Out-String).Trim()
+          $version = (cmd.exe /d /c godot --version 2>$null | Out-String).Trim()
           Write-Output "GODOT_VERSION=$version"
           if (-not $version.StartsWith("4.7.2")) { throw "Godot 4.7.2 is required. Detected: $version" }
 
       - name: Validate project files with Godot editor
         shell: pwsh
         run: |
-          $godot = $env:GODOT
-          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = (Get-Command godot).Source }
-          if (Test-Path "$godot.exe") { $godot = "$godot.exe" }
-          & $godot --headless --path . --editor --quit
+          cmd.exe /d /c godot --headless --path . --editor --quit
 
       - name: Run Godot smoke test
         shell: pwsh
         run: |
-          $godot = $env:GODOT
-          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = (Get-Command godot).Source }
-          if (Test-Path "$godot.exe") { $godot = "$godot.exe" }
-          & $godot --headless --path . --script res://tests/self_test.gd
+          cmd.exe /d /c godot --headless --path . --script res://tests/self_test.gd
 
       - name: Go tests
         shell: pwsh
@@ -87,10 +78,11 @@ jobs:
       - name: Export Windows release
         shell: pwsh
         run: |
-          $godot = $env:GODOT
-          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = (Get-Command godot).Source }
-          if (Test-Path "$godot.exe") { $godot = "$godot.exe" }
-          ./build_windows.ps1 -Godot $godot -Output build/AETHRA-Wildbound.exe
+          if (Test-Path build) { Remove-Item -Recurse -Force build }
+          New-Item -ItemType Directory -Force -Path build | Out-Null
+          cmd.exe /d /c godot --headless --path . --export-release "Windows Desktop" "build/AETHRA-Wildbound.exe"
+          if ($LASTEXITCODE -ne 0) { throw "Windows export failed." }
+          if (-not (Test-Path build/AETHRA-Wildbound.exe -PathType Leaf)) { throw "AETHRA-Wildbound.exe was not created." }
 
       - name: Verify single EXE and hash
         shell: pwsh
@@ -104,10 +96,7 @@ jobs:
         shell: pwsh
         run: |
           $commit = (git rev-parse HEAD).Trim()
-          $godot = $env:GODOT
-          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = (Get-Command godot).Source }
-          if (Test-Path "$godot.exe") { $godot = "$godot.exe" }
-          $godotVersion = (& $godot --version 2>$null | Out-String).Trim()
+          $godotVersion = (cmd.exe /d /c godot --version 2>$null | Out-String).Trim()
           $exe = Get-Item "build/AETHRA-Wildbound.exe"
           $sha = (Get-FileHash $exe.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
           $lines = @(
