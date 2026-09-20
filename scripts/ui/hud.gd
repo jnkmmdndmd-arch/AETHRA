@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 var stats: Label
+var players_panel: PanelContainer
 var players: Label
 var hotbar: HBoxContainer
 var selected := 0
@@ -14,14 +15,56 @@ func build() -> void:
     stats.position = Vector2(24,24)
     stats.add_theme_font_size_override("font_size", 15)
     add_child(stats)
+    players_panel = PanelContainer.new()
+    players_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+    players_panel.position = Vector2(-286, 24)
+    players_panel.size = Vector2(262, 138)
+    var panel_style := StyleBoxFlat.new()
+    panel_style.bg_color = Color(0.02, 0.04, 0.08, 0.88)
+    panel_style.corner_radius_top_left = 16
+    panel_style.corner_radius_top_right = 16
+    panel_style.corner_radius_bottom_left = 16
+    panel_style.corner_radius_bottom_right = 16
+    panel_style.border_width_left = 1
+    panel_style.border_width_right = 1
+    panel_style.border_width_top = 1
+    panel_style.border_width_bottom = 1
+    panel_style.border_color = Color(0.25, 0.75, 1.0, 0.28)
+    players_panel.add_theme_stylebox_override("panel", panel_style)
+    add_child(players_panel)
+    var margin := MarginContainer.new()
+    margin.add_theme_constant_override("margin_left", 12)
+    margin.add_theme_constant_override("margin_top", 10)
+    margin.add_theme_constant_override("margin_right", 12)
+    margin.add_theme_constant_override("margin_bottom", 10)
+    players_panel.add_child(margin)
+    var player_box := VBoxContainer.new()
+    player_box.add_theme_constant_override("separation", 5)
+    margin.add_child(player_box)
+    var heading := HBoxContainer.new()
+    heading.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    heading.add_theme_constant_override("separation", 7)
+    player_box.add_child(heading)
+    var heading_icon = load("res://scripts/ui/vector_icon.gd").new()
+    heading_icon.icon_name = "players"
+    heading_icon.icon_color = Color("#78ddff")
+    heading_icon.custom_minimum_size = Vector2(22, 22)
+    heading.add_child(heading_icon)
+    var heading_label := Label.new()
+    heading_label.text = "اللاعبون المتصلون"
+    heading_label.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    heading_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    heading_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    heading_label.add_theme_font_size_override("font_size", 14)
+    heading.add_child(heading_label)
     players = Label.new()
-    players.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-    players.position = Vector2(-260, 30)
-    players.size = Vector2(236, 120)
-    players.layout_direction = Control.LAYOUT_DIRECTION_LTR
-    players.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-    players.add_theme_font_size_override("font_size", 15)
-    add_child(players)
+    players.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    players.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    players.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+    players.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    players.add_theme_font_size_override("font_size", 12)
+    players.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    player_box.add_child(players)
     hotbar = HBoxContainer.new()
     hotbar.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
     hotbar.position = Vector2(-240, -72)
@@ -59,11 +102,11 @@ func _refresh_hotbar() -> void:
         slot_labels[i].text = "%d\n%s x%d" % [i+1, name, count]
 
 func set_player_stats(health: float, hunger: float, stamina: float, fps: float) -> void:
-    stats.text = "AETHRA // Survival\nHP %.1f  Hunger %.1f  Stamina %.1f\nFPS %.0f" % [health,hunger,stamina,fps]
+    stats.text = "AETHRA // بقاء\nالصحة %.1f  الجوع %.1f  التحمل %.1f\nالإطارات %.0f" % [health,hunger,stamina,fps]
 
 func set_players(data: Dictionary) -> void:
     var names: Array[String] = []
     for value in data.values():
         if value is Dictionary:
             names.append(str(value.get("name", "Player")))
-    players.text = "PLAYERS ONLINE\n" + "\n".join(names)
+    players.text = "\n".join(names) if not names.is_empty() else "لا يوجد لاعبون متصلون حاليًا."
