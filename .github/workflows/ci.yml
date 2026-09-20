@@ -104,10 +104,11 @@ jobs:
           if (-not $vcpkg) { $vcpkg = "$env:RUNNER_TEMP\vcpkg\vcpkg.exe" }
           & $vcpkg install sqlite3:x64-windows --triplet x64-windows
           $sqliteRoot = "$env:RUNNER_TEMP\vcpkg\installed\x64-windows"
+          $sqliteRootUnix = $sqliteRoot -replace '\\', '/'
           Write-Output "SQLITE_ROOT=$sqliteRoot"
-          "CGO_CFLAGS=-I$sqliteRoot\include" | Out-File -Encoding ascii -Append $env:GITHUB_ENV
-          "CGO_LDFLAGS=-L$sqliteRoot\lib -lsqlite3" | Out-File -Encoding ascii -Append $env:GITHUB_ENV
-          "PKG_CONFIG_PATH=$sqliteRoot\lib\pkgconfig" | Out-File -Encoding ascii -Append $env:GITHUB_ENV
+          "CGO_CFLAGS=-I$sqliteRootUnix/include" | Out-File -Encoding ascii -Append $env:GITHUB_ENV
+          "CGO_LDFLAGS=-L$sqliteRootUnix/lib -lsqlite3" | Out-File -Encoding ascii -Append $env:GITHUB_ENV
+          "PKG_CONFIG_PATH=$sqliteRootUnix/lib/pkgconfig" | Out-File -Encoding ascii -Append $env:GITHUB_ENV
 
       - name: Go tests
         shell: pwsh
