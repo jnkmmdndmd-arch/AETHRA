@@ -1114,7 +1114,7 @@ func _nav_button(icon_kind: String, text: String) -> Button:
     row.mouse_filter = Control.MOUSE_FILTER_IGNORE
     var label := Label.new()
     label.text = text
-    label.text_direction = TextServer.DIRECTION_RTL
+    label.text_direction = Control.TEXT_DIRECTION_RTL
     label.layout_direction = Control.LAYOUT_DIRECTION_RTL
     label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER

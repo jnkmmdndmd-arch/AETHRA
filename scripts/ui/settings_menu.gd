@@ -102,7 +102,7 @@ func build(parent: Node) -> void:
 
     binding_label = Label.new()
     binding_label.layout_direction = Control.LAYOUT_DIRECTION_RTL
-    binding_label.text_direction = TextServer.DIRECTION_RTL
+    binding_label.text_direction = Control.TEXT_DIRECTION_RTL
     binding_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     binding_label.text = ""
     binding_label.custom_minimum_size = Vector2(230, 40)
@@ -150,7 +150,7 @@ func _heading(text: String) -> void:
     var label := Label.new()
     label.text = text
     var is_arabic := _contains_arabic(text)
-    label.text_direction = TextServer.DIRECTION_RTL if is_arabic else Control.TEXT_DIRECTION_LTR
+    label.text_direction = Control.TEXT_DIRECTION_RTL if is_arabic else Control.TEXT_DIRECTION_LTR
     label.layout_direction = Control.LAYOUT_DIRECTION_RTL if is_arabic else Control.LAYOUT_DIRECTION_LTR
     label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if is_arabic else HORIZONTAL_ALIGNMENT_LEFT
     label.custom_minimum_size = Vector2(0, 32)
@@ -177,7 +177,7 @@ func _row(label_text: String, control: Control) -> void:
     var label := Label.new()
     label.text = label_text
     var is_arabic := _contains_arabic(label_text)
-    label.text_direction = TextServer.DIRECTION_RTL if is_arabic else TextServer.DIRECTION_LTR
+    label.text_direction = Control.TEXT_DIRECTION_RTL if is_arabic else Control.TEXT_DIRECTION_LTR
     label.layout_direction = Control.LAYOUT_DIRECTION_RTL if is_arabic else Control.LAYOUT_DIRECTION_LTR
     label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if is_arabic else HORIZONTAL_ALIGNMENT_LEFT
     label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER

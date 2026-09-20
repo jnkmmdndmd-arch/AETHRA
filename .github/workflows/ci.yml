@@ -100,40 +100,24 @@ jobs:
         run: |
           $godot = (Get-Command godot -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty Source)
           if (-not $godot) { $godot = (Get-ChildItem "$env:RUNNER_TEMP\godot-4.7.2" -Recurse -Filter "Godot*.exe" | Select-Object -First 1 -ExpandProperty FullName) }
-          & $godot --headless --path . --editor --quit
+          if (-not $godot) { throw "Godot 4.7.2 executable path not resolved for editor validation." }
+          $log = Join-Path $env:RUNNER_TEMP "godot-editor-validation.log"
+          & $godot --headless --path . --editor --quit 2>&1 | Tee-Object -FilePath $log
+          if ($LASTEXITCODE -ne 0) { throw "Godot editor validation failed." }
+          $errors = Select-String -Path $log -Pattern "SCRIPT ERROR:|Parse Error:|Compilation failed|Failed to load script"
+          if ($errors) {
+            $errors | ForEach-Object { Write-Output $_.Line }
+            throw "Godot editor validation reported script errors."
+          }
 
-      - name: Parse every GDScript file
+      - name: Run GDScript load gate
         shell: pwsh
         run: |
           $godot = (Get-Command godot -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty Source)
           if (-not $godot) { $godot = (Get-ChildItem "$env:RUNNER_TEMP\godot-4.7.2" -Recurse -Filter "Godot*.exe" | Select-Object -First 1 -ExpandProperty FullName) }
-          if (-not $godot) { throw "Godot 4.7.2 executable path not resolved for parser validation." }
-          $scriptFiles = @(Get-ChildItem -Path scripts,server -Recurse -Filter "*.gd" | Sort-Object FullName)
-          if ($scriptFiles.Count -eq 0) { throw "No GDScript files were found." }
-          $failed = @()
-          foreach ($file in $scriptFiles) {
-            $relative = $file.FullName.Substring(((Get-Location).Path.Length + 1)).Replace("\","/")
-            $projectPath = "res://$relative"
-            Write-Output "[PARSE] Checking $projectPath"
-            & $godot --headless --path . --check-only --script $projectPath
-            if ($LASTEXITCODE -ne 0) {
-              $failed += $projectPath
-            }
-          }
-          if ($failed.Count -gt 0) {
-            Write-Output "[PARSE] Failed files:"
-            $failed | ForEach-Object { Write-Output "[PARSE] FAIL: $_" }
-            throw "GDScript parser validation failed."
-          }
-
-      - name: Run full GDScript load gate
-        shell: pwsh
-        run: |
-          $godot = (Get-Command godot -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty Source)
-          if (-not $godot) { $godot = (Get-ChildItem "$env:RUNNER_TEMP\godot-4.7.2" -Recurse -Filter "Godot*.exe" | Select-Object -First 1 -ExpandProperty FullName) }
-          if (-not $godot) { throw "Godot 4.7.2 executable path not resolved for load gate." }
+          if (-not $godot) { throw "Godot 4.7.2 executable path not resolved for GDScript load gate." }
           & $godot --headless --path . --script "res://tests/parse_all_scripts.gd"
-          if ($LASTEXITCODE -ne 0) { throw "Full GDScript load gate failed." }
+          if ($LASTEXITCODE -ne 0) { throw "GDScript load gate failed." }
 
       - name: Run Godot smoke test
         shell: pwsh

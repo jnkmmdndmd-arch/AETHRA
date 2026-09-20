@@ -60,7 +60,7 @@ func _run(command: String) -> void:
         var item_id: int = int(parts[1])
         var amount: int = maxi(1, int(parts[2]))
         var info: Dictionary = ItemRegistry.get_item(item_id)
-        var valid_item := int(info.get("id", ItemRegistry.EMPTY)) == item_id or (item_id > BlockRegistry.AIR and item_id <= BlockRegistry.SNOW)
+        var valid_item: bool = int(info.get("id", ItemRegistry.EMPTY)) == item_id or (item_id > BlockRegistry.AIR and item_id <= BlockRegistry.SNOW)
         if player == null:
             _log("Player unavailable")
         elif not valid_item:

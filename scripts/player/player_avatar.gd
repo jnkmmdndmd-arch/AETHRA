@@ -191,7 +191,7 @@ func _place_block() -> void:
     var target := hit + normal
     if world.get_block(target) != BlockRegistry.AIR:
         return
-    var held := inventory.slots[inventory.selected]
+    var held: Dictionary = inventory.slots[inventory.selected]
     var id: int = _held_block_id(int(held.item))
     if id == BlockRegistry.AIR:
         return
