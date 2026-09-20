@@ -46,7 +46,7 @@ func _init() -> void:
     inventory.add_item(BlockRegistry.LOG, 2)
     checks.append(_check("Crafting transaction", func() -> bool:
         var crafting = load("res://scripts/gameplay/crafting.gd").new()
-        var crafted := crafting.craft(inventory, "wood_pick")
+        var crafted: bool = crafting.craft(inventory, "wood_pick")
         crafting.free()
         return not crafted and inventory.count_item(BlockRegistry.LOG) == 2
     ))
