@@ -25,4 +25,6 @@ This status describes the continuation pass after the previously verified Window
 - Actual project headless startup: PASS during the bounded startup check.
 - Go tests: PASS.
 - Go vet: PASS.
+- Windows build: PASS on run `35517353496`, source revision `6ef04b3`.
+- Windows process start: PASS on run `35517353496`.
 - Windows GUI gameplay, save/load GUI, settings GUI, and multiplayer GUI: BLOCKED BY ENVIRONMENT until real interactive automation is available.

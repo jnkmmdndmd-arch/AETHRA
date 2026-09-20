@@ -14,8 +14,8 @@
 | Voxel/world systems | PARTIAL | Existing deterministic/bounds checks pass; interactive boundary meshing and long-run streaming require runtime instrumentation. |
 | Persistence | PARTIAL | Existing implementation includes atomic replacement and backups; full restart/corrupt-save exercise was not run in this environment. |
 | Multiplayer | PARTIAL | Authority checks exist in source; a real two-client session was not exercised. |
-| Windows build | PENDING | Must be rebuilt from the pushed continuation commit. |
-| Windows process start | PENDING | Must be rerun against the new Windows artifact. |
+| Windows build | PASS | Run `35517353496` exported source revision `6ef04b3`; EXE SHA is recorded in `WINDOWS-RUNTIME-VERIFICATION.md`. |
+| Windows process start | PASS | Run `35517353496` kept the generated EXE alive for the startup smoke test. |
 | Windows GUI gameplay | BLOCKED BY ENVIRONMENT | No real GUI automation session is available here. |
 | Save/load GUI | BLOCKED BY ENVIRONMENT | No interactive Windows client session was available. |
 | Settings GUI | BLOCKED BY ENVIRONMENT | No interactive Windows client session was available. |
