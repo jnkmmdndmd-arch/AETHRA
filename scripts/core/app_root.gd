@@ -31,8 +31,8 @@ func _ensure_bootstrap_controls() -> void:
     AudioManager.apply_settings()
 
 func _restore_window_state() -> void:
-    var width := int(Settings.get_value("window_width", 1600))
-    var height := int(Settings.get_value("window_height", 900))
+    var width := int(Settings.get_value("window_width", 1366))
+    var height := int(Settings.get_value("window_height", 768))
     get_window().size = Vector2i(clampi(width, 1120, 3840), clampi(height, 680, 2160))
     var mode := int(Settings.get_value("window_mode", 0))
     match mode:
@@ -118,6 +118,11 @@ func _build_auth() -> void:
     auth.configure(str(Settings.get_value("auth_server_url", "http://127.0.0.1:8090")))
     auth.success.connect(_on_auth_success)
     auth.failure.connect(_on_auth_failure)
+    var saved_session := AppState.load_saved_session()
+    var saved_token := str(saved_session.get("token", ""))
+    if not saved_token.is_empty():
+        AppState.character_id = str(saved_session.get("character", AppState.character_id))
+        auth.restore_session(saved_token)
 
 func _build_menu() -> void:
     menu = load("res://scripts/ui/main_menu.gd").new()
@@ -129,13 +134,21 @@ func _build_menu() -> void:
     menu.open_settings.connect(_open_settings)
 
 func _on_auth_success(profile: Dictionary) -> void:
-    AppState.set_session(str(profile.get("username", "Guest")), str(profile.get("token", "")))
+    var token := str(profile.get("token", ""))
+    AppState.set_session(str(profile.get("username", "Guest")), token)
     AppState.character_id = str(profile.get("character", AppState.character_id))
+    if not token.is_empty():
+        AppState.save_session()
     if menu and menu.has_method("refresh_profile"):
         menu.refresh_profile()
 
 func _on_auth_failure(message: String) -> void:
-    AppState.is_authenticated = false
+    if not AppState.auth_token.is_empty():
+        AppState.set_session("Guest", "")
+    AppState.clear_saved_session()
+        AppState.clear_saved_session()
+    else:
+        AppState.is_authenticated = false
     if menu and menu.has_method("notify_auth_failure"):
         menu.notify_auth_failure(message)
 
