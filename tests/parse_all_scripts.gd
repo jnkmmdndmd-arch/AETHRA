@@ -29,5 +29,9 @@ func _scan(path: String) -> void:
         var script: GDScript = load(path + "/" + file) as GDScript
         if script == null:
             failures.append(path + "/" + file)
+            continue
+        var reload_error: Error = script.reload()
+        if reload_error != OK:
+            failures.append(path + "/" + file + " (reload error %s)" % reload_error)
     for dir_name in dir.get_directories():
         _scan(path + "/" + str(dir_name))

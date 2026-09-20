@@ -91,7 +91,7 @@ func set_inventory(inventory) -> void:
 func _refresh_hotbar() -> void:
     if inventory_ref == null:
         return
-    var slots := inventory_ref.get_hotbar()
+    var slots: Array[Dictionary] = inventory_ref.get_hotbar()
     for i in mini(slot_labels.size(), slots.size()):
         var slot: Dictionary = slots[i]
         var item_id := int(slot.get("item", ItemRegistry.EMPTY))

@@ -66,7 +66,7 @@ func _run(command: String) -> void:
         elif not valid_item:
             _log("Invalid item")
         else:
-            var remainder := player.inventory.add_item(item_id, amount)
+            var remainder: int = int(player.inventory.add_item(item_id, amount))
             _log("Give item=%d amount=%d remainder=%d" % [item_id, amount, remainder])
     elif parts.size() >= 4 and parts[0] == "/tp" and str(parts[1]).is_valid_float() and str(parts[2]).is_valid_float() and str(parts[3]).is_valid_float():
         var player = get_tree().get_first_node_in_group("players")

@@ -88,7 +88,7 @@ func _on_request_completed(request: HTTPRequest, operation: String, session_toke
 
     if operation == "restore":
         if response_code >= 200 and response_code < 300 and payload is Dictionary:
-            var restored := payload.duplicate(true)
+            var restored: Dictionary = payload.duplicate(true)
             restored["token"] = session_token
             if str(restored.get("username", "")).is_empty():
                 failure.emit("Saved session is invalid.")

@@ -130,12 +130,12 @@ func _start_mining() -> void:
     if result.is_empty():
         return
     var pos: Vector3i = result["block"]
-    var id := world.get_block(pos)
+    var id: int = int(world.get_block(pos))
     var block := BlockRegistry.get_block(id)
     if int(block.hardness) < 0:
         return
     mine_target = pos
-    var held := inventory.slots[inventory.selected]
+    var held: Dictionary = inventory.slots[inventory.selected]
     var tool_bonus := 1.0
     var tool_id := int(held.item)
     if tool_id in [ItemRegistry.WOOD_PICK, ItemRegistry.STONE_PICK, ItemRegistry.IRON_PICK] and str(block.tool) == "pickaxe":
@@ -154,7 +154,7 @@ func _finish_mining() -> void:
     if not mining_active or world == null:
         mining_active = false
         return
-    var id := world.get_block(mine_target)
+    var id: int = int(world.get_block(mine_target))
     if id == BlockRegistry.AIR or id == BlockRegistry.BEDROCK:
         mining_active = false
         return
@@ -192,7 +192,7 @@ func _place_block() -> void:
     if world.get_block(target) != BlockRegistry.AIR:
         return
     var held := inventory.slots[inventory.selected]
-    var id := _held_block_id(int(held.item))
+    var id: int = _held_block_id(int(held.item))
     if id == BlockRegistry.AIR:
         return
     if inventory.count_item(int(held.item)) <= 0:
@@ -242,7 +242,7 @@ func _raycast_voxel() -> Dictionary:
         var cell := Vector3i(floori(pos.x), floori(pos.y), floori(pos.z))
         if cell == last:
             continue
-        var id := world.get_block(cell)
+        var id: int = int(world.get_block(cell))
         if id != BlockRegistry.AIR and id != BlockRegistry.WATER and id != BlockRegistry.LAVA:
             return {"block": cell, "normal": cell - last}
         last = cell

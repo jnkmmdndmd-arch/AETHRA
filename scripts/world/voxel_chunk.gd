@@ -70,7 +70,7 @@ func build_mesh() -> void:
                 var base := Vector3(x, y, z)
                 var is_fluid := id == BlockRegistry.WATER or id == BlockRegistry.LAVA
                 for face_index in 6:
-                    var n := Vector3i(x,y,z) + face_dirs[face_index]
+                    var n: Vector3i = Vector3i(x,y,z) + face_dirs[face_index]
                     var neighbor := get_voxel(n)
                     if is_fluid:
                         if neighbor == id:
@@ -78,9 +78,10 @@ func build_mesh() -> void:
                         if BlockRegistry.is_solid(neighbor):
                             continue
                         var fluid_base := fluid_vertices.size()
-                        var verts := face_verts[face_index]
-                        for p in verts:
-                            var fp := p
+                        var verts: Array = face_verts[face_index]
+                        for raw_p in verts:
+                            var p: Vector3 = raw_p as Vector3
+                            var fp: Vector3 = p
                             if face_index == 0:
                                 fp.y = 0.88
                             elif face_index != 1:
