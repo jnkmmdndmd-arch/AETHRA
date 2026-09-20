@@ -100,7 +100,16 @@ jobs:
         run: |
           $godot = (Get-Command godot -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty Source)
           if (-not $godot) { $godot = (Get-ChildItem "$env:RUNNER_TEMP\godot-4.7.2" -Recurse -Filter "Godot*.exe" | Select-Object -First 1 -ExpandProperty FullName) }
-          & $godot --headless --path . --script res://tests/self_test.gd
+          $stdout = Join-Path $env:RUNNER_TEMP "godot-smoke.stdout.log"
+          $stderr = Join-Path $env:RUNNER_TEMP "godot-smoke.stderr.log"
+          $process = Start-Process -FilePath $godot -ArgumentList @("--headless", "--path", ".", "--script", "res://tests/self_test.gd") -NoNewWindow -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          if (-not $process.WaitForExit(120000)) {
+            Stop-Process -Id $process.Id -Force
+            Get-Content $stdout, $stderr -ErrorAction SilentlyContinue
+            throw "Godot smoke test exceeded the 120 second timeout."
+          }
+          Get-Content $stdout, $stderr -ErrorAction SilentlyContinue
+          if ($process.ExitCode -ne 0) { throw "Godot smoke test failed with exit code $($process.ExitCode)." }
 
       - name: Install SQLite headers and library
         shell: pwsh
