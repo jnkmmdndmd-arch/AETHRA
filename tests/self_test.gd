@@ -1,6 +1,7 @@
 extends SceneTree
 
 func _init() -> void:
+    print("[TEST] Initializing registries")
     var block_registry = load("res://scripts/data/block_registry.gd").new()
     var item_registry = load("res://scripts/data/item_registry.gd").new()
     var recipe_registry = load("res://scripts/data/recipe_registry.gd").new()
@@ -14,6 +15,7 @@ func _init() -> void:
     checks.append(_check("Recipes", func() -> bool:
         return not recipe_registry.find_recipe("wood_pick").is_empty()
     ))
+    print("[TEST] Initializing world generators")
     var generator = load("res://scripts/world/world_generator.gd").new(1234)
     var matching_generator = load("res://scripts/world/world_generator.gd").new(1234)
     var different_generator = load("res://scripts/world/world_generator.gd").new(5678)
@@ -34,6 +36,7 @@ func _init() -> void:
     checks.append(_check("World bounds", func() -> bool:
         return generator.block_at(0, 0, 0) == 17 and generator.block_at(0, 100, 0) == 0
     ))
+    print("[TEST] Initializing gameplay systems")
     var survival = load("res://scripts/gameplay/survival.gd").new()
     survival.apply_damage(3)
     checks.append(_check("Survival damage", func() -> bool:
