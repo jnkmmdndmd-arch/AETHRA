@@ -11,6 +11,7 @@ var game_root: Node
 var waiting_action := ""
 var binding_label: Label
 var body: VBoxContainer
+var settings_panel: PanelContainer
 var binding_buttons: Dictionary = {}
 
 func build(parent: Node) -> void:
@@ -24,22 +25,19 @@ func build(parent: Node) -> void:
     bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
     add_child(bg)
 
-    var panel := PanelContainer.new()
-    panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    panel.offset_left = 28
-    panel.offset_top = 28
-    panel.offset_right = -28
-    panel.offset_bottom = -28
-    panel.add_theme_stylebox_override("panel", _panel_style())
-    add_child(panel)
+    settings_panel = PanelContainer.new()
+    settings_panel.set_anchors_preset(Control.PRESET_CENTER)
+    settings_panel.add_theme_stylebox_override("panel", _panel_style())
+    add_child(settings_panel)
+    _apply_panel_layout()
 
     var margin := MarginContainer.new()
     margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    margin.add_theme_constant_override("margin_left", 20)
+    margin.add_theme_constant_override("margin_left", 22)
     margin.add_theme_constant_override("margin_top", 18)
-    margin.add_theme_constant_override("margin_right", 20)
+    margin.add_theme_constant_override("margin_right", 22)
     margin.add_theme_constant_override("margin_bottom", 18)
-    panel.add_child(margin)
+    settings_panel.add_child(margin)
 
     var root := VBoxContainer.new()
     root.layout_direction = Control.LAYOUT_DIRECTION_RTL
@@ -53,6 +51,7 @@ func build(parent: Node) -> void:
 
     var title := Label.new()
     title.text = "الإعدادات"
+    title.text_direction = TextServer.DIRECTION_RTL
     title.layout_direction = Control.LAYOUT_DIRECTION_RTL
     title.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -103,6 +102,7 @@ func build(parent: Node) -> void:
 
     binding_label = Label.new()
     binding_label.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    binding_label.text_direction = TextServer.DIRECTION_RTL
     binding_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     binding_label.text = ""
     binding_label.custom_minimum_size = Vector2(230, 40)
@@ -119,6 +119,18 @@ func build(parent: Node) -> void:
     footer.add_child(save)
 
     _apply_camera_setting(bool(Settings.get_value("first_person", true)))
+
+    if not get_viewport().size_changed.is_connected(_apply_panel_layout):
+        get_viewport().size_changed.connect(_apply_panel_layout)
+
+func _apply_panel_layout() -> void:
+    if settings_panel == null or not is_instance_valid(settings_panel):
+        return
+    var viewport_size := get_viewport_rect().size
+    var width := minf(1180.0, maxf(900.0, viewport_size.x - 64.0))
+    var height := minf(700.0, maxf(560.0, viewport_size.y - 64.0))
+    settings_panel.size = Vector2(width, height)
+    settings_panel.position = (viewport_size - settings_panel.size) * 0.5
 
 func _panel_style() -> StyleBoxFlat:
     var style := StyleBoxFlat.new()
@@ -137,12 +149,22 @@ func _panel_style() -> StyleBoxFlat:
 func _heading(text: String) -> void:
     var label := Label.new()
     label.text = text
-    label.layout_direction = Control.LAYOUT_DIRECTION_RTL
-    label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    var is_arabic := _contains_arabic(text)
+    label.text_direction = TextServer.DIRECTION_RTL if is_arabic else TextServer.DIRECTION_LTR
+    label.layout_direction = Control.LAYOUT_DIRECTION_RTL if is_arabic else Control.LAYOUT_DIRECTION_LTR
+    label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if is_arabic else HORIZONTAL_ALIGNMENT_LEFT
     label.custom_minimum_size = Vector2(0, 32)
     label.add_theme_font_size_override("font_size", 17)
     label.add_theme_color_override("font_color", Color("#78ddff"))
+    label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     body.add_child(label)
+
+func _contains_arabic(value: String) -> bool:
+    for i in value.length():
+        var code := value.unicode_at(i)
+        if (code >= 0x0600 and code <= 0x06FF) or (code >= 0x0750 and code <= 0x077F) or (code >= 0x08A0 and code <= 0x08FF):
+            return true
+    return false
 
 func _row(label_text: String, control: Control) -> void:
     var row := HBoxContainer.new()
@@ -154,8 +176,10 @@ func _row(label_text: String, control: Control) -> void:
 
     var label := Label.new()
     label.text = label_text
-    label.layout_direction = Control.LAYOUT_DIRECTION_RTL
-    label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    var is_arabic := _contains_arabic(label_text)
+    label.text_direction = TextServer.DIRECTION_RTL if is_arabic else TextServer.DIRECTION_LTR
+    label.layout_direction = Control.LAYOUT_DIRECTION_RTL if is_arabic else Control.LAYOUT_DIRECTION_LTR
+    label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if is_arabic else HORIZONTAL_ALIGNMENT_LEFT
     label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
     label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     label.custom_minimum_size = Vector2(LABEL_WIDTH, ROW_HEIGHT)

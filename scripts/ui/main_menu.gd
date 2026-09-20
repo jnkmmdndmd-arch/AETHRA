@@ -1084,14 +1084,24 @@ func _style(color: Color, radius: int, border: Color) -> StyleBoxFlat:
 func _label(parent: Control, text: String, size: int, color: Color, align := HORIZONTAL_ALIGNMENT_RIGHT) -> Label:
     var l := Label.new()
     l.text = text
+    var is_arabic := _contains_arabic(text)
+    l.text_direction = TextServer.DIRECTION_RTL if is_arabic else TextServer.DIRECTION_LTR
+    l.layout_direction = Control.LAYOUT_DIRECTION_RTL if is_arabic else Control.LAYOUT_DIRECTION_LTR
     l.horizontal_alignment = align
     l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     l.add_theme_font_size_override("font_size", size)
     l.add_theme_color_override("font_color", color)
-    l.layout_direction = Control.LAYOUT_DIRECTION_RTL
     l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     parent.add_child(l)
     return l
+
+func _contains_arabic(value: String) -> bool:
+    for i in value.length():
+        var code := value.unicode_at(i)
+        if (code >= 0x0600 and code <= 0x06FF) or (code >= 0x0750 and code <= 0x077F) or (code >= 0x08A0 and code <= 0x08FF):
+            return true
+    return false
 
 func _nav_button(icon_kind: String, text: String) -> Button:
     var b := Button.new()
@@ -1104,12 +1114,14 @@ func _nav_button(icon_kind: String, text: String) -> Button:
     row.mouse_filter = Control.MOUSE_FILTER_IGNORE
     var label := Label.new()
     label.text = text
+    label.text_direction = TextServer.DIRECTION_RTL
     label.layout_direction = Control.LAYOUT_DIRECTION_RTL
     label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
     label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     label.add_theme_font_size_override("font_size", 12)
     label.add_theme_color_override("font_color", TEXT)
+    label.clip_text = true
     label.mouse_filter = Control.MOUSE_FILTER_IGNORE
     var icon = load("res://scripts/ui/vector_icon.gd").new()
     icon.icon_name = icon_kind
