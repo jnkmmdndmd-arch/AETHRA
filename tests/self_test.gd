@@ -1,6 +1,9 @@
 extends SceneTree
 
 func _init() -> void:
+    call_deferred("_run")
+
+func _run() -> void:
     print("[TEST] Initializing registries")
     var block_registry = load("res://scripts/data/block_registry.gd").new()
     var item_registry = load("res://scripts/data/item_registry.gd").new()
