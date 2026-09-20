@@ -5,22 +5,22 @@
 This file records the evidence available for the current source revision and the current Windows workflow run. It separates build evidence from GUI/gameplay evidence and does not upgrade build success into gameplay success.
 
 ## Source revision
-- Commit SHA: 6ef04b377d59c81b3fb54eb7de5748bf46890600
+- Commit SHA: 5a7529ed119bd58179192be465e965f8c6596763
 
 ## Godot version
 - Godot version: 4.7.2.stable.official.ed1daf0bf
 
 ## Build result
 - Result: PASS
-- Evidence: Windows CI run 35517353496 imported and exported the checked-out commit with Godot 4.7.2.
+- Evidence: Windows CI run 35520501567 imported and exported the checked-out commit with Godot 4.7.2.
 
 ## EXE identity
-- EXE SHA: e4ecd469a7585cdcf8a24c9478c8eea1673589bf95e0be291784f0d83e8b1bf5
-- EXE size: 114236888 bytes
+- EXE SHA: 92eba536e923bd272cee62fd8c6b42a1c8fdcfe494d68a6f69a1e4aec76e9daa
+- EXE size: 114237784 bytes
 
 ## Process start
 - Result: PASS
-- Evidence: Windows CI run 35517353496 launched the generated EXE, kept it alive for 15 seconds, then stopped it cleanly.
+- Evidence: Windows CI run 35520501567 launched the generated EXE, kept it alive for 15 seconds, then stopped it cleanly.
 
 ## GUI result
 - Result: BLOCKED BY ENVIRONMENT
@@ -47,7 +47,7 @@ This file records the evidence available for the current source revision and the
 - GUI runtime errors: not observed; GUI automation was unavailable
 
 ## Fixes performed
-- Verified current source revision and engine version
+- Verified source revision `5a7529e` and engine version
 - Validated project import and self-test under Godot 4.7.2
 - Exported the Windows Desktop build from the checked-out current commit
 - Recorded the SHA for the produced executable

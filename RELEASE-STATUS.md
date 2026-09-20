@@ -2,7 +2,7 @@
 
 ## Continuation release boundary
 - Previous Windows artifact: historical and superseded for this continuation pass.
-- The continuation commit has a successful Windows artifact from CI run `35517353496`; the final delivery ZIP is produced after the final documentation commit.
+- The engineering source revision `5a7529e` has a successful Windows artifact from CI run `35520501567`; a final documentation commit and CI rerun are required before delivery packaging.
 - GUI gameplay, save/load, settings, and multiplayer remain blocked without real interactive Windows automation.
 
 Status: SOURCE RELEASE CANDIDATE — Windows GUI runtime remains BLOCKED BY ENVIRONMENT

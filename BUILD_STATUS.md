@@ -1,8 +1,9 @@
 # AETHRA: Wildbound — Build Status
 
-## Continuation pass
-- The current continuation fixes are validated locally with Godot 4.7.2, the Godot self-test, Go tests, and Go vet.
-- Windows CI run `35517353496` rebuilt the pushed continuation commit and passed export, hash, and process-start checks.
+## Final engineering pass
+- Windows CI run `35520501567` rebuilt source revision `5a7529ed119bd58179192be465e965f8c6596763` with Godot 4.7.2.
+- Godot editor validation, smoke tests, Go tests, Go vet, export, EXE identity, process start, and artifact upload all passed.
+- New EXE SHA-256: `92eba536e923bd272cee62fd8c6b42a1c8fdcfe494d68a6f69a1e4aec76e9daa`.
 
 ## Implemented in source
 - Native Godot client hub rebuilt with functional sidebar, search, profile, hero, quick actions, recent worlds, social panel, server favorites, discovery fallback, settings, developer metrics, notifications empty-state, and window controls.
@@ -17,14 +18,14 @@
 - Godot self-test: PASS
 - Go auth-service tests: PASS
 - Go vet: PASS
-- Clean Windows export from current source: PASS
+- Clean Windows export from source revision `5a7529e`: PASS
 - Windows GUI runtime execution: BLOCKED BY ENVIRONMENT
 - Android/iOS export: BLOCKED BY ENVIRONMENT
 - Global server discovery: not implemented as a live external service
 - Store commerce: not implemented as a live production backend
 
 ## Rule
-The project is verified for editor import, headless source validation, and clean Windows export from the current source. Real Windows GUI gameplay verification remains BLOCKED BY ENVIRONMENT because this host is Linux and no real Windows runtime is available.
+The project is verified for editor import, headless source validation, and clean Windows export from the CI-checked source revision. Real Windows GUI gameplay verification remains BLOCKED BY ENVIRONMENT because no interactive GUI automation is available.
 
 ## Release hardening (current)
 - Windows export preset targets x86_64 with embedded project resources (`binary_format/embed_pck=true`).
