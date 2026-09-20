@@ -1,9 +1,9 @@
 # AETHRA: Wildbound — Build Status
 
-## Final engineering pass
-- Windows CI run `35521014763` rebuilt source revision `514d20e86d47b4e35d5bd10d4f4be2b8c9710607` with Godot 4.7.2.
-- Godot editor validation, smoke tests, Go tests, Go vet, export, EXE identity, process start, and artifact upload all passed.
-- New EXE SHA-256: `5c2008854122a6689aa893365cb0f45fd1361c76f30a3b0bafd05d4e4ec02c51`.
+## Windows release preparation
+- The production documentation update is pushed before the release build.
+- The release build must come from the exact pushed commit and be verified by Windows CI before publication.
+- The release asset is `AETHRA-Wildbound-Windows-FINAL.zip`.
 
 ## Implemented in source
 - Native Godot client hub rebuilt with functional sidebar, search, profile, hero, quick actions, recent worlds, social panel, server favorites, discovery fallback, settings, developer metrics, notifications empty-state, and window controls.

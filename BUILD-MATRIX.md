@@ -2,7 +2,7 @@
 
 | Target | Preset / entry | Status in this environment | Evidence | Required next validation |
 |---|---|---|---|---|
-| Windows x64 | `Windows Desktop` | BUILD VERIFIED / RUNTIME BLOCKED BY ENVIRONMENT | Export preset configured and clean EXE produced from current source | Real Windows 10/11 runner for GUI/process validation |
+| Windows x64 | `Windows Desktop` | RELEASE BUILD REQUIRED / GUI BLOCKED BY ENVIRONMENT | Release CI rebuilds the exact pushed commit and publishes the verified ZIP | Real interactive Windows GUI automation |
 | Linux dedicated server | `server/main_server.tscn` | SOURCE READY | Dedicated server scene + entry point + NetworkManager binding | Headless export/run on Linux |
 | Android | `Android` | CONFIGURED | Export preset exists | Android SDK, export templates, install/runtime QA |
 | iOS | `iOS` | CONFIGURED | Export preset exists | macOS/Xcode/signing/export QA |

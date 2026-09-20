@@ -1,11 +1,15 @@
 # AETHRA: Wildbound — 0.2.3 corrected-final-source
 
-## Continuation release boundary
-- Previous Windows artifact: historical and superseded for this continuation pass.
-- The final source revision `514d20e` has a successful Windows artifact from CI run `35521014763`; delivery packaging is verified from this HEAD.
+## Windows release
+- Release tag: `aethra-windows-0.2.3-final`
+- Release commit: recorded after the production documentation update and Windows CI rebuild.
+- Windows build: PASS after the pushed release commit is rebuilt by CI.
+- EXE SHA-256: recorded in `WINDOWS-RUNTIME-VERIFICATION.md` and the release asset checksum.
+- Windows ZIP SHA-256: recorded when the GitHub Release asset is uploaded.
+- Release date: 2026-09-20
 - GUI gameplay, save/load, settings, and multiplayer remain blocked without real interactive Windows automation.
 
-Status: SOURCE RELEASE CANDIDATE — Windows GUI runtime remains BLOCKED BY ENVIRONMENT
+Status: RELEASE CANDIDATE — Windows GUI runtime remains BLOCKED BY ENVIRONMENT
 
 Verified in this environment: Godot editor validation, Godot self-test, Go auth-service tests, Go vet, and clean Windows export from the current source revision.
 Not verified here: real Windows GUI launch, interactive gameplay validation, multiplayer runtime across Windows clients, and live auth/session integration across actual Windows clients.
