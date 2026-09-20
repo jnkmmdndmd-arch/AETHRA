@@ -39,29 +39,59 @@ jobs:
           Write-Output "COMMIT_SHA=$commit"
           $commit | Out-File -Encoding ascii build/commit.sha
 
-      - uses: chickensoft-games/setup-godot@v2
-        with:
-          version: 4.7.2
-          use-dotnet: false
-          include-templates: true
-          cache: true
+      - name: Install Godot 4.7.2 and export templates
+        shell: pwsh
+        run: |
+          $root = Join-Path $env:RUNNER_TEMP "godot-4.7.2"
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+
+          $binUrl = "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_win64.exe.zip"
+          $tplUrl = "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz"
+
+          Invoke-WebRequest -Uri $binUrl -OutFile (Join-Path $root "godot-win64.zip")
+          Invoke-WebRequest -Uri $tplUrl -OutFile (Join-Path $root "godot-export-templates.tpz")
+
+          Expand-Archive -Path (Join-Path $root "godot-win64.zip") -DestinationPath $root -Force
+          Expand-Archive -Path (Join-Path $root "godot-export-templates.tpz") -DestinationPath $root -Force
+
+          $godotExe = Get-ChildItem -Path $root -Recurse -Filter "Godot*.exe" | Select-Object -First 1 -ExpandProperty FullName
+          if (-not $godotExe) { throw "Godot executable was not found in the downloaded archive." }
+
+          $templatesDir = Join-Path $env:APPDATA "Godot\export_templates\4.7.2.stable"
+          New-Item -ItemType Directory -Force -Path $templatesDir | Out-Null
+
+          $tplRoot = Join-Path $root "export_templates"
+          if (Test-Path $tplRoot) {
+            Get-ChildItem -Path $tplRoot -Force | Copy-Item -Destination $templatesDir -Recurse -Force
+          }
+
+          $env:PATH = (Split-Path -Parent $godotExe) + ";" + $env:PATH
+          Write-Output "GODOT_PATH=$godotExe"
+          & $godotExe --version
 
       - name: Verify Godot 4.7.2
         shell: pwsh
         run: |
-          $version = (cmd.exe /d /c godot --version 2>$null | Out-String).Trim()
+          $godot = (Get-Command godot -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty Source)
+          if (-not $godot) { $godot = (Get-ChildItem "$env:RUNNER_TEMP\godot-4.7.2" -Recurse -Filter "Godot*.exe" | Select-Object -First 1 -ExpandProperty FullName) }
+          if (-not $godot) { throw "Godot 4.7.2 is not available on PATH or in the runner temp directory." }
+          $version = (& $godot --version 2>$null | Out-String).Trim()
           Write-Output "GODOT_VERSION=$version"
           if (-not $version.StartsWith("4.7.2")) { throw "Godot 4.7.2 is required. Detected: $version" }
 
       - name: Validate project files with Godot editor
         shell: pwsh
         run: |
-          cmd.exe /d /c godot --headless --path . --editor --quit
+          $godot = (Get-Command godot -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty Source)
+          if (-not $godot) { $godot = (Get-ChildItem "$env:RUNNER_TEMP\godot-4.7.2" -Recurse -Filter "Godot*.exe" | Select-Object -First 1 -ExpandProperty FullName) }
+          & $godot --headless --path . --editor --quit
 
       - name: Run Godot smoke test
         shell: pwsh
         run: |
-          cmd.exe /d /c godot --headless --path . --script res://tests/self_test.gd
+          $godot = (Get-Command godot -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty Source)
+          if (-not $godot) { $godot = (Get-ChildItem "$env:RUNNER_TEMP\godot-4.7.2" -Recurse -Filter "Godot*.exe" | Select-Object -First 1 -ExpandProperty FullName) }
+          & $godot --headless --path . --script res://tests/self_test.gd
 
       - name: Go tests
         shell: pwsh
@@ -78,9 +108,12 @@ jobs:
       - name: Export Windows release
         shell: pwsh
         run: |
+          $godot = (Get-Command godot -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty Source)
+          if (-not $godot) { $godot = (Get-ChildItem "$env:RUNNER_TEMP\godot-4.7.2" -Recurse -Filter "Godot*.exe" | Select-Object -First 1 -ExpandProperty FullName) }
+          if (-not $godot) { throw "Godot 4.7.2 executable path not resolved for export." }
           if (Test-Path build) { Remove-Item -Recurse -Force build }
           New-Item -ItemType Directory -Force -Path build | Out-Null
-          cmd.exe /d /c godot --headless --path . --export-release "Windows Desktop" "build/AETHRA-Wildbound.exe"
+          & $godot --headless --path . --export-release "Windows Desktop" "build/AETHRA-Wildbound.exe"
           if ($LASTEXITCODE -ne 0) { throw "Windows export failed." }
           if (-not (Test-Path build/AETHRA-Wildbound.exe -PathType Leaf)) { throw "AETHRA-Wildbound.exe was not created." }
 
@@ -96,7 +129,9 @@ jobs:
         shell: pwsh
         run: |
           $commit = (git rev-parse HEAD).Trim()
-          $godotVersion = (cmd.exe /d /c godot --version 2>$null | Out-String).Trim()
+          $godot = (Get-Command godot -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty Source)
+          if (-not $godot) { $godot = (Get-ChildItem "$env:RUNNER_TEMP\godot-4.7.2" -Recurse -Filter "Godot*.exe" | Select-Object -First 1 -ExpandProperty FullName) }
+          $godotVersion = (& $godot --version 2>$null | Out-String).Trim()
           $exe = Get-Item "build/AETHRA-Wildbound.exe"
           $sha = (Get-FileHash $exe.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
           $lines = @(
