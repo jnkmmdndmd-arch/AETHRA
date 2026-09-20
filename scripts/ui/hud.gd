@@ -18,7 +18,7 @@ func build() -> void:
     players_panel = PanelContainer.new()
     players_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
     players_panel.position = Vector2(-286, 24)
-    players_panel.size = Vector2(262, 138)
+    players_panel.size = Vector2(270, 138)
     var panel_style := StyleBoxFlat.new()
     panel_style.bg_color = Color(0.02, 0.04, 0.08, 0.88)
     panel_style.corner_radius_top_left = 16
@@ -66,6 +66,7 @@ func build() -> void:
     players.size_flags_vertical = Control.SIZE_EXPAND_FILL
     player_box.add_child(players)
     hotbar = HBoxContainer.new()
+    hotbar.layout_direction = Control.LAYOUT_DIRECTION_LTR
     hotbar.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
     hotbar.position = Vector2(-240, -72)
     hotbar.size = Vector2(480, 60)
@@ -73,7 +74,7 @@ func build() -> void:
     for i in 9:
         var box := Label.new()
         box.name = "Slot%d" % i
-        box.text = "%d\nEmpty" % (i+1)
+        box.text = "%d\nفارغ" % (i+1)
         box.custom_minimum_size = Vector2(48,48)
         box.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
         hotbar.add_child(box)
@@ -96,7 +97,7 @@ func _refresh_hotbar() -> void:
         var item_id := int(slot.get("item", ItemRegistry.EMPTY))
         var count := int(slot.get("count", 0))
         var item := ItemRegistry.get_item(item_id)
-        var name := str(item.get("name", "Empty"))
+        var name := str(item.get("name", "فارغ"))
         if item_id > BlockRegistry.AIR and item_id <= BlockRegistry.SNOW and (str(item.get("category", "none")) == "none"):
             name = str(BlockRegistry.get_block(item_id).get("name", name))
         slot_labels[i].text = "%d\n%s x%d" % [i+1, name, count]

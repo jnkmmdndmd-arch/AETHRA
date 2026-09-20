@@ -47,6 +47,16 @@ func _run() -> void:
     checks.append(_check("Developer console parser", func() -> bool:
         return console_script != null
     ))
+
+    checks.append(_check("UI icon policy", func() -> bool:
+        var banned := ["♟", "⌂", "▶", "▣", "◇", "◆", "⚙", "↪", "●", "◉", "□", "×"]
+        for path in ["res://scripts/ui/main_menu.gd", "res://scripts/ui/hud.gd", "res://scripts/ui/settings_menu.gd"]:
+            var text := FileAccess.get_file_as_string(path)
+            for glyph in banned:
+                if glyph in text:
+                    return false
+        return FileAccess.file_exists("res://scripts/ui/vector_icon.gd")
+    ))
     print("[TEST] Initializing gameplay systems")
     var survival = load("res://scripts/gameplay/survival.gd").new()
     survival.apply_damage(3)

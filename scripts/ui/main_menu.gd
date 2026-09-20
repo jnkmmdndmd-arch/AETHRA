@@ -51,6 +51,7 @@ func build(_parent: Node) -> void:
     set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     layout_direction = Control.LAYOUT_DIRECTION_RTL
     mouse_filter = Control.MOUSE_FILTER_STOP
+    layout_direction = Control.LAYOUT_DIRECTION_RTL
     ServerDirectory.load_favorites()
     _build_backdrop()
     _build_shell()
@@ -186,7 +187,7 @@ func _build_sidebar(parent: PanelContainer) -> void:
     logo.add_child(logo_art)
     _label(logo, "AETHRA", 32, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
     _label(logo, "WILDBOUND", 15, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
-    _label(logo, "ORIGINAL VOXEL SURVIVAL", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(logo, "بقاء فوكسيلي أصلي", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
     _label(logo, "المطور : عبدالله لازم", 11, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
     _label(logo, "برمجه وتطوير : عبدالله لازم", 11, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
 
@@ -437,7 +438,7 @@ func _build_auth_gate() -> void:
     var character_select := OptionButton.new()
     character_select.name = "CharacterSelect"
     for character in characters:
-        character_select.add_item("%s — %s" % [str(character.ar), str(character.name)])
+        character_select.add_item(str(character.ar))
     character_select.select(character_index)
     character_select.item_selected.connect(func(index): character_index = index; AppState.character_id = str(characters[index].id))
     box.add_child(character_select)
@@ -633,7 +634,7 @@ func _world_cards(parent: Control, worlds: Array, manage := false) -> void:
         box.add_child(thumb)
         var meta: Dictionary = world.get("metadata", {})
         _label(box, str(meta.get("name", world.get("id", "World"))), 17, TEXT)
-        _label(box, "النمط: %s" % str(meta.get("mode", "غير معروف")), 10, MUTED)
+        _label(box, "النمط: %s" % _mode_label(str(meta.get("mode", "unknown")) ), 10, MUTED)
         _label(box, "البذرة: %s" % str(meta.get("seed", "غير محدد")), 10, MUTED)
         _label(box, "آخر لعب: %s" % str(meta.get("saved_at", "غير محدد")), 9, MUTED)
         var actions := HBoxContainer.new()
@@ -649,7 +650,7 @@ func _world_cards(parent: Control, worlds: Array, manage := false) -> void:
             actions.add_child(menu_button)
 
 func _page_multiplayer() -> void:
-    _section_title(content, "متعدد اللاعبين", "اتصال حقيقي عبر NetworkManager")
+    _section_title(content, "متعدد اللاعبين", "اتصال حقيقي عبر مدير الشبكة")
     var row := HBoxContainer.new()
     row.add_theme_constant_override("separation", 10)
     content.add_child(row)
@@ -659,7 +660,7 @@ func _page_multiplayer() -> void:
     join.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     var servers := _quick_card(row, "servers", "الخوادم", "المفضلة والاتصال المباشر", func(): _show_page("servers"))
     servers.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _section_title(content, "الأصدقاء داخل الجلسة", "لا يعرض أي لاعب غير موجود في presence الحالي")
+    _section_title(content, "الأصدقاء داخل الجلسة", "لا يعرض إلا اللاعبين الموجودين في الجلسة الحالية")
     _refresh_friends(NetworkManager.remote_players)
 
 func _page_servers() -> void:
@@ -688,7 +689,9 @@ func _server_card(server: Dictionary) -> void:
     info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     row.add_child(info)
     _label(info, str(server.get("name", "سيرفر")), 15, TEXT)
-    _label(info, str(server.get("address", "")), 10, MUTED)
+    var address_label := _label(info, str(server.get("address", "")), 10, MUTED)
+    address_label.layout_direction = Control.LAYOUT_DIRECTION_LTR
+    address_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
     var state := _label(info, "جارٍ فحص الاتصال...", 10, YELLOW)
     _probe_server(str(server.get("address", "")), state)
     var join := _button("دخول", Vector2(100, 38))
@@ -699,7 +702,7 @@ func _server_card(server: Dictionary) -> void:
     row.add_child(remove)
 
 func _page_store() -> void:
-    _section_title(content, "المتجر", "التجارة الحقيقية تحتاج مزود دفع وBackend تجاري")
+    _section_title(content, "المتجر", "التجارة الحقيقية تحتاج مزود دفع وخدمة تجارية متصلة")
     var panel := _panel(PANEL, 22, Color(0.22, 0.7, 1.0, 0.18))
     panel.custom_minimum_size = Vector2(0, 280)
     content.add_child(panel)
@@ -708,7 +711,7 @@ func _page_store() -> void:
     box.add_theme_constant_override("separation", 10)
     panel.add_child(box)
     _label(box, "المتجر غير مفعّل", 24, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
-    _label(box, "لا توجد مشتريات وهمية أو أسعار غير مرتبطة بخدمة حقيقية. عند إضافة Commerce Backend سيتم ربط هذه الصفحة بالبيانات الحقيقية.", 12, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "لا توجد مشتريات وهمية أو أسعار غير مرتبطة بخدمة حقيقية. عند إضافة خدمة التجارة سيتم ربط هذه الصفحة بالبيانات الفعلية.", 12, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
 
 func _page_profile() -> void:
     _section_title(content, "الملف الشخصي", "بيانات الجلسة الحالية")
@@ -719,7 +722,7 @@ func _page_profile() -> void:
     box.add_theme_constant_override("separation", 8)
     panel.add_child(box)
     _label(box, AppState.player_name, 28, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
-    _label(box, "الشخصية: %s" % AppState.character_id, 12, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "الشخصية: %s" % _character_label(AppState.character_id), 12, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
     _label(box, "الحساب: %s" % ("موثّق" if AppState.is_authenticated else "محلي / ضيف"), 11, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
     _label(box, "العالم: %s" % (AppState.current_world_name if not AppState.current_world_name.is_empty() else "غير محدد"), 11, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
     _label(box, "هوية اللاعب لا تظهر في الواجهة إلا عند توفر جلسة مصادقة فعلية.", 9, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
@@ -737,7 +740,7 @@ func _page_developer() -> void:
     _metric(grid, "العوالم المحفوظة", str(SaveDB.list_worlds().size()))
     _metric(grid, "عقد المشهد", str(get_tree().get_node_count()))
     _metric(grid, "الاتصال", "متصل" if multiplayer.multiplayer_peer != null else "غير متصل")
-    var console := _button("فتح Developer Console (F8)", Vector2(270, 44))
+    var console := _button("فتح وحدة المطور (F8)", Vector2(270, 44))
     console.pressed.connect(func():
         var root := get_parent()
         if root and root.has_method("toggle_developer_console"):
@@ -786,7 +789,7 @@ func _refresh_friends(players: Dictionary) -> void:
         inner.add_child(box)
         var name := str(profile.get("name", "Player"))
         _label(box, name, 12, TEXT)
-        _label(box, "متصل داخل الجلسة - %s" % str(profile.get("character", "ranger")), 9, GREEN)
+        _label(box, "متصل داخل الجلسة - %s" % _character_label(str(profile.get("character", "ranger"))), 9, GREEN)
         var view := _button("عرض", Vector2(70, 30))
         view.pressed.connect(func(): _show_friend_profile(name, profile))
         inner.add_child(view)
@@ -800,7 +803,7 @@ func _refresh_friends(players: Dictionary) -> void:
 func _show_friend_profile(name: String, profile: Dictionary) -> void:
     var dialog := AcceptDialog.new()
     dialog.title = "ملف اللاعب"
-    dialog.dialog_text = "%s\nالشخصية: %s\nالحالة: متصل داخل الجلسة الحالية" % [name, str(profile.get("character", "ranger"))]
+    dialog.dialog_text = "%s\nالشخصية: %s\nالحالة: متصل داخل الجلسة الحالية" % [name, _character_label(str(profile.get("character", "ranger")))]
     add_child(dialog)
     dialog.popup_centered(Vector2i(420, 220))
 
@@ -829,7 +832,7 @@ func _refresh_metric_grid(grid: GridContainer) -> void:
         str(multiplayer.get_peers().size()),
         str(SaveDB.list_worlds().size()),
         str(get_tree().get_node_count()),
-        "connected" if multiplayer.multiplayer_peer != null else "offline"
+        "متصل" if multiplayer.multiplayer_peer != null else "غير متصل"
     ]
     var i := 0
     for card in grid.get_children():
@@ -863,8 +866,8 @@ func _search(query: String) -> void:
             var id := str(world.get("id", ""))
             b.pressed.connect(func(): _close_search_popup(); _resume_world(id))
     for server in ServerDirectory.recent():
-        var text := (str(server.get("name", "")) + " " + str(server.get("address", ""))).to_lower()
-        if q in text:
+        var searchable := (str(server.get("name", "")) + " " + str(server.get("address", ""))).to_lower()
+        if q in searchable:
             found += 1
             var sb := _button("خادم: %s" % str(server.get("name", "Server")), Vector2(0, 38))
             search_results.add_child(sb)
@@ -1188,6 +1191,26 @@ func _quick_card(parent: Control, icon: String, title: String, subtitle: String,
 func _section_title(parent: Control, title: String, subtitle: String) -> void:
     _label(parent, title, 22, TEXT)
     _label(parent, subtitle, 10, MUTED)
+
+
+func _mode_label(mode: String) -> String:
+    match mode:
+        "survival": return "بقاء"
+        "creative": return "إبداعي"
+        "adventure": return "مغامرة"
+        "peaceful": return "سلمي"
+        "easy": return "سهل"
+        "normal": return "عادي"
+        "hard": return "صعب"
+        _: return mode
+
+func _character_label(character: String) -> String:
+    match character:
+        "ranger": return "المستكشف"
+        "engineer": return "المهندس"
+        "shadow": return "الظل"
+        "grove": return "حارس الغابة"
+        _: return character
 
 func _find_child_label(node_name: String) -> Label:
     return find_child(node_name, true, false) as Label
