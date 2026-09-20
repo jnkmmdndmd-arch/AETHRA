@@ -1,9 +1,9 @@
 # AETHRA: Wildbound — Build Status
 
 ## Final engineering pass
-- Windows CI run `35520501567` rebuilt source revision `5a7529ed119bd58179192be465e965f8c6596763` with Godot 4.7.2.
+- Windows CI run `35521014763` rebuilt source revision `514d20e86d47b4e35d5bd10d4f4be2b8c9710607` with Godot 4.7.2.
 - Godot editor validation, smoke tests, Go tests, Go vet, export, EXE identity, process start, and artifact upload all passed.
-- New EXE SHA-256: `92eba536e923bd272cee62fd8c6b42a1c8fdcfe494d68a6f69a1e4aec76e9daa`.
+- New EXE SHA-256: `5c2008854122a6689aa893365cb0f45fd1361c76f30a3b0bafd05d4e4ec02c51`.
 
 ## Implemented in source
 - Native Godot client hub rebuilt with functional sidebar, search, profile, hero, quick actions, recent worlds, social panel, server favorites, discovery fallback, settings, developer metrics, notifications empty-state, and window controls.
@@ -18,7 +18,7 @@
 - Godot self-test: PASS
 - Go auth-service tests: PASS
 - Go vet: PASS
-- Clean Windows export from source revision `5a7529e`: PASS
+- Clean Windows export from source revision `514d20e`: PASS
 - Windows GUI runtime execution: BLOCKED BY ENVIRONMENT
 - Android/iOS export: BLOCKED BY ENVIRONMENT
 - Global server discovery: not implemented as a live external service

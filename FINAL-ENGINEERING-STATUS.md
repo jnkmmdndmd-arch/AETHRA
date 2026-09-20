@@ -27,7 +27,7 @@ This status describes the continuation pass after the previously verified Window
 - Actual project headless startup: PASS during the bounded startup check.
 - Go tests: PASS.
 - Go vet: PASS.
-- Windows build: PASS on run `35520501567`, source revision `5a7529ed119bd58179192be465e965f8c6596763`.
-- Windows EXE SHA-256: `92eba536e923bd272cee62fd8c6b42a1c8fdcfe494d68a6f69a1e4aec76e9daa`.
-- Windows process start: PASS on run `35520501567`.
+- Windows build: PASS on run `35521014763`, source revision `514d20e86d47b4e35d5bd10d4f4be2b8c9710607`.
+- Windows EXE SHA-256: `5c2008854122a6689aa893365cb0f45fd1361c76f30a3b0bafd05d4e4ec02c51`.
+- Windows process start: PASS on run `35521014763`.
 - Windows GUI gameplay, save/load GUI, settings GUI, and multiplayer GUI: BLOCKED BY ENVIRONMENT until real interactive automation is available.
