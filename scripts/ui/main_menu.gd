@@ -1036,6 +1036,7 @@ func _logout() -> void:
     if auth_node != null and auth_node.has_method("logout") and not AppState.auth_token.is_empty():
         auth_node.logout(AppState.auth_token)
     AppState.set_session("Guest", "")
+    AppState.clear_saved_session()
     _show_page("home")
 
 func _request_close() -> void:

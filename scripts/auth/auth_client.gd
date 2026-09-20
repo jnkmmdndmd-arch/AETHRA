@@ -2,6 +2,7 @@ extends Node
 
 signal success(profile)
 signal failure(message)
+signal session_invalid
 
 var base_url := ""
 var active_requests: Array[HTTPRequest] = []
@@ -93,6 +94,9 @@ func _on_request_completed(request: HTTPRequest, operation: String, session_toke
                 failure.emit("Saved session is invalid.")
                 return
             success.emit(restored)
+            return
+        if response_code == 401 or response_code == 403:
+            session_invalid.emit()
             return
         failure.emit(message)
         return

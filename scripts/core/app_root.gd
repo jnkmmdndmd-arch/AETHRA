@@ -118,6 +118,7 @@ func _build_auth() -> void:
     auth.configure(str(Settings.get_value("auth_server_url", "http://127.0.0.1:8090")))
     auth.success.connect(_on_auth_success)
     auth.failure.connect(_on_auth_failure)
+    auth.session_invalid.connect(_on_saved_session_invalid)
     var saved_session := AppState.load_saved_session()
     var saved_token := str(saved_session.get("token", ""))
     if not saved_token.is_empty():
@@ -143,14 +144,12 @@ func _on_auth_success(profile: Dictionary) -> void:
         menu.refresh_profile()
 
 func _on_auth_failure(message: String) -> void:
-    if not AppState.auth_token.is_empty():
-        AppState.set_session("Guest", "")
-    AppState.clear_saved_session()
-        AppState.clear_saved_session()
-    else:
-        AppState.is_authenticated = false
     if menu and menu.has_method("notify_auth_failure"):
         menu.notify_auth_failure(message)
+
+func _on_saved_session_invalid() -> void:
+    AppState.set_session("Guest", "")
+    AppState.clear_saved_session()
 
 func _start_singleplayer() -> void:
     var config := AppState.pending_world_config.duplicate(true)
