@@ -57,9 +57,9 @@ func _run(command: String) -> void:
             _log("Usage: /weather <clear|rain|fog>")
     elif parts.size() >= 3 and parts[0] == "/give" and str(parts[1]).is_valid_int() and str(parts[2]).is_valid_int():
         var player = get_tree().get_first_node_in_group("players")
-        var item_id := int(parts[1])
-        var amount := max(1, int(parts[2]))
-        var info := ItemRegistry.get_item(item_id)
+        var item_id: int = int(parts[1])
+        var amount: int = maxi(1, int(parts[2]))
+        var info: Dictionary = ItemRegistry.get_item(item_id)
         var valid_item := int(info.get("id", ItemRegistry.EMPTY)) == item_id or (item_id > BlockRegistry.AIR and item_id <= BlockRegistry.SNOW)
         if player == null:
             _log("Player unavailable")

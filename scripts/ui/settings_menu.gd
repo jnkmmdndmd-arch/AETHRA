@@ -51,7 +51,7 @@ func build(parent: Node) -> void:
 
     var title := Label.new()
     title.text = "الإعدادات"
-    title.text_direction = TextServer.DIRECTION_RTL
+    title.text_direction = Control.TEXT_DIRECTION_RTL
     title.layout_direction = Control.LAYOUT_DIRECTION_RTL
     title.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -150,7 +150,7 @@ func _heading(text: String) -> void:
     var label := Label.new()
     label.text = text
     var is_arabic := _contains_arabic(text)
-    label.text_direction = TextServer.DIRECTION_RTL if is_arabic else TextServer.DIRECTION_LTR
+    label.text_direction = TextServer.DIRECTION_RTL if is_arabic else Control.TEXT_DIRECTION_LTR
     label.layout_direction = Control.LAYOUT_DIRECTION_RTL if is_arabic else Control.LAYOUT_DIRECTION_LTR
     label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if is_arabic else HORIZONTAL_ALIGNMENT_LEFT
     label.custom_minimum_size = Vector2(0, 32)

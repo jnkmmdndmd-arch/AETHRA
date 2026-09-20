@@ -161,7 +161,7 @@ func _finish_mining() -> void:
     if not is_local:
         mining_active = false
         return
-    var held := inventory.slots[inventory.selected]
+    var held: Dictionary = inventory.slots[inventory.selected]
     var held_id := int(held.item)
     if held_id == ItemRegistry.EMPTY:
         held_id = ItemRegistry.HAND
