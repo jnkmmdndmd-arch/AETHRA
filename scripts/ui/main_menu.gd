@@ -185,14 +185,14 @@ func _build_sidebar(parent: PanelContainer) -> void:
     box.add_child(sep)
 
     var items := [
-        ["home", "⌂", "الرئيسية"],
-        ["solo", "▶", "اللعب الفردي"],
-        ["multiplayer", "♟", "متعدد اللاعبين"],
-        ["servers", "▣", "الخوادم"],
-        ["worlds", "◇", "العوالم"],
-        ["store", "◆", "المتجر"],
-        ["settings", "⚙", "الإعدادات"],
-        ["developer", "</>", "أدوات المطور"],
+        ["home", "home", "الرئيسية"],
+        ["solo", "play", "اللعب الفردي"],
+        ["multiplayer", "players", "متعدد اللاعبين"],
+        ["servers", "servers", "الخوادم"],
+        ["worlds", "world", "العوالم"],
+        ["store", "store", "المتجر"],
+        ["settings", "settings", "الإعدادات"],
+        ["developer", "developer", "أدوات المطور"],
     ]
     for item in items:
         var b := _nav_button(item[1], item[2])
@@ -220,7 +220,7 @@ func _build_sidebar(parent: PanelContainer) -> void:
     _label(user_info, AppState.player_name, 14, TEXT)
     _label(user_info, "مسجل دخول" if AppState.is_authenticated else "وضع محلي", 10, GREEN if AppState.is_authenticated else MUTED)
 
-    var logout := _nav_button("↪", "تسجيل الخروج")
+    var logout := _nav_button("logout", "تسجيل الخروج")
     logout.pressed.connect(_logout)
     box.add_child(logout)
 
@@ -237,25 +237,25 @@ func _build_header(parent: PanelContainer) -> void:
     row.add_child(search_line)
     search_line.text_changed.connect(_search)
 
-    var notice := _small_button("●", 42)
+    var notice := _small_icon_button("bell", 42)
     notice.tooltip_text = "الإشعارات"
     notice.pressed.connect(_toggle_notifications)
     row.add_child(notice)
 
-    profile_button = _small_button("◉", 42)
+    profile_button = _small_icon_button("profile", 42)
     profile_button.tooltip_text = "الملف الشخصي"
     profile_button.pressed.connect(func(): _show_page("profile"))
     row.add_child(profile_button)
 
-    var min_btn := _small_button("—", 42)
+    var min_btn := _small_icon_button("minimize", 42)
     min_btn.tooltip_text = "تصغير النافذة"
     min_btn.pressed.connect(func(): DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_MINIMIZED))
     row.add_child(min_btn)
-    var max_btn := _small_button("□", 42)
+    var max_btn := _small_icon_button("maximize", 42)
     max_btn.tooltip_text = "تكبير / استعادة النافذة"
     max_btn.pressed.connect(_toggle_window_mode)
     row.add_child(max_btn)
-    var close_btn := _small_button("×", 42)
+    var close_btn := _small_icon_button("close", 42)
     close_btn.tooltip_text = "إغلاق اللعبة"
     close_btn.pressed.connect(_request_close)
     row.add_child(close_btn)
@@ -328,9 +328,9 @@ func _page_home() -> void:
     var quick := HBoxContainer.new()
     quick.add_theme_constant_override("separation", 10)
     content.add_child(quick)
-    _quick_card(quick, "◇", "إنشاء عالم جديد", "ابدأ مغامرة محفوظة فعليًا", func(): _page_create_world())
-    _quick_card(quick, "♟", "متعدد اللاعبين", "ادخل جلسة عبر الشبكة", func(): _show_page("multiplayer"))
-    _quick_card(quick, "▣", "قائمة الخوادم", "الخوادم المحفوظة لديك", func(): _show_page("servers"))
+    _quick_card(quick, "world", "إنشاء عالم جديد", "ابدأ مغامرة محفوظة فعليًا", func(): _page_create_world())
+    _quick_card(quick, "players", "متعدد اللاعبين", "ادخل جلسة عبر الشبكة", func(): _show_page("multiplayer"))
+    _quick_card(quick, "servers", "قائمة الخوادم", "الخوادم المحفوظة لديك", func(): _show_page("servers"))
     _section_title(content, "العوالم الأخيرة", "البيانات من SaveDB فقط")
     _world_cards(content, SaveDB.list_worlds())
 
@@ -363,7 +363,7 @@ func _hero_panel() -> PanelContainer:
     _label(box, "WILDBOUND", 23, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
     _label(box, "عالمك. مغامرتك. قصتك.", 17, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
     _label(box, "عوالم إجرائية مستمرة، استكشاف، بقاء، بناء، ولعب جماعي.", 11, Color(0.9,0.96,1.0,0.82), HORIZONTAL_ALIGNMENT_CENTER)
-    var play := _primary_button("▶  ابدأ اللعب", Vector2(260, 54))
+    var play := _primary_button("ابدأ اللعب", Vector2(260, 54))
     play.pressed.connect(func(): play_singleplayer.emit())
     box.add_child(play)
     var sub := HBoxContainer.new()
@@ -550,7 +550,7 @@ func _page_create_world() -> void:
 
 func _page_solo() -> void:
     _section_title(content, "اللعب الفردي", "عوالم محفوظة على جهازك")
-    var new_world := _primary_button("＋ إنشاء عالم جديد", Vector2(240, 48))
+    var new_world := _primary_button("إنشاء عالم جديد", Vector2(240, 48))
     new_world.pressed.connect(_page_create_world)
     content.add_child(new_world)
     _world_cards(content, SaveDB.list_worlds())
@@ -614,7 +614,7 @@ func _world_cards(parent: Control, worlds: Array, manage := false) -> void:
         play.pressed.connect(func(): _resume_world(world_id))
         actions.add_child(play)
         if manage:
-            var menu_button := _button("⋮", Vector2(48, 34))
+            var menu_button := _button("خيارات", Vector2(80, 34))
             menu_button.pressed.connect(func(): _world_actions(world_id, str(meta.get("name", "World"))))
             actions.add_child(menu_button)
 
@@ -634,7 +634,7 @@ func _page_multiplayer() -> void:
 
 func _page_servers() -> void:
     _section_title(content, "قائمة الخوادم", "القيم المعروضة من الشبكة الفعلية أو من مفضلاتك المحفوظة")
-    var add := _primary_button("＋ إضافة سيرفر", Vector2(190, 44))
+    var add := _primary_button("إضافة سيرفر", Vector2(190, 44))
     add.pressed.connect(_add_server_dialog)
     content.add_child(add)
     var favorites := ServerDirectory.recent()
@@ -744,7 +744,7 @@ func _refresh_friends(players: Dictionary) -> void:
         row.add_child(box)
         var name := str(profile.get("name", "Player"))
         _label(box, name, 12, TEXT)
-        _label(box, "● متصل داخل الجلسة • %s" % str(profile.get("character", "ranger")), 9, GREEN)
+        _label(box, "متصل داخل الجلسة - %s" % str(profile.get("character", "ranger")), 9, GREEN)
         var view := _button("عرض", Vector2(70, 30))
         view.pressed.connect(func(): _show_friend_profile(name, profile))
         box.add_child(view)
@@ -1035,21 +1035,43 @@ func _style(color: Color, radius: int, border: Color) -> StyleBoxFlat:
     s.content_margin_bottom = 10
     return s
 
-func _label(parent: Control, text: String, size: int, color: Color, align := HORIZONTAL_ALIGNMENT_LEFT) -> Label:
+func _label(parent: Control, text: String, size: int, color: Color, align := HORIZONTAL_ALIGNMENT_RIGHT) -> Label:
     var l := Label.new()
     l.text = text
     l.horizontal_alignment = align
     l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
     l.add_theme_font_size_override("font_size", size)
     l.add_theme_color_override("font_color", color)
+    l.layout_direction = Control.LAYOUT_DIRECTION_RTL
     l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     parent.add_child(l)
     return l
 
-func _nav_button(icon: String, text: String) -> Button:
+func _nav_button(icon_kind: String, text: String) -> Button:
     var b := Button.new()
-    b.text = "%s  %s" % [icon, text]
-    b.custom_minimum_size = Vector2(0, 42)
+    b.custom_minimum_size = Vector2(0, 38)
+    var row := HBoxContainer.new()
+    row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    row.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    row.alignment = BoxContainer.ALIGNMENT_END
+    row.add_theme_constant_override("separation", 8)
+    row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var label := Label.new()
+    label.text = text
+    label.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    label.add_theme_font_size_override("font_size", 12)
+    label.add_theme_color_override("font_color", TEXT)
+    label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var icon = load("res://scripts/ui/vector_icon.gd").new()
+    icon.icon_name = icon_kind
+    icon.icon_color = ACCENT_BRIGHT
+    icon.custom_minimum_size = Vector2(22, 22)
+    row.add_child(icon)
+    row.add_child(label)
+    b.add_child(row)
     b.alignment = HORIZONTAL_ALIGNMENT_RIGHT
     b.add_theme_font_size_override("font_size", 13)
     var normal := _style(Color(0.02,0.04,0.08,0.66), 12, Color(0.18,0.36,0.55,0.20))
@@ -1085,6 +1107,17 @@ func _primary_button(text: String, size: Vector2) -> Button:
 func _small_button(text: String, width: int) -> Button:
     return _button(text, Vector2(width, 40))
 
+func _small_icon_button(icon_kind: String, width: int) -> Button:
+    var b := _button("", Vector2(width, 40))
+    var icon = load("res://scripts/ui/vector_icon.gd").new()
+    icon.icon_name = icon_kind
+    icon.icon_color = ACCENT_BRIGHT
+    icon.custom_minimum_size = Vector2(20, 20)
+    icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+    icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+    b.add_child(icon)
+    return b
+
 func _quick_card(parent: Control, icon: String, title: String, subtitle: String, action: Callable) -> PanelContainer:
     var card := _panel(PANEL_2, 16, Color(0.22,0.7,1.0,0.16))
     card.custom_minimum_size = Vector2(0, 104)
@@ -1092,8 +1125,14 @@ func _quick_card(parent: Control, icon: String, title: String, subtitle: String,
     parent.add_child(card)
     var box := VBoxContainer.new()
     box.alignment = BoxContainer.ALIGNMENT_CENTER
+    box.layout_direction = Control.LAYOUT_DIRECTION_RTL
     card.add_child(box)
-    _label(box, icon, 18, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
+    var icon_node = load("res://scripts/ui/vector_icon.gd").new()
+    icon_node.icon_name = icon
+    icon_node.icon_color = ACCENT_BRIGHT
+    icon_node.custom_minimum_size = Vector2(30, 30)
+    icon_node.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+    box.add_child(icon_node)
     _label(box, title, 14, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
     _label(box, subtitle, 9, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
     card.gui_input.connect(func(event):

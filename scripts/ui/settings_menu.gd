@@ -10,6 +10,7 @@ var binding_buttons: Dictionary = {}
 
 func build(_parent: Node) -> void:
     set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    layout_direction = Control.LAYOUT_DIRECTION_RTL
     var bg := ColorRect.new()
     bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     bg.color = Color(0.015,0.025,0.055,0.86)
@@ -31,6 +32,7 @@ func build(_parent: Node) -> void:
     panel.add_theme_stylebox_override("panel", style)
     add_child(panel)
     var root := VBoxContainer.new()
+    root.layout_direction = Control.LAYOUT_DIRECTION_RTL
     root.add_theme_constant_override("separation", 12)
     panel.add_child(root)
     var head := HBoxContainer.new()
@@ -42,7 +44,7 @@ func build(_parent: Node) -> void:
     title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     head.add_child(title)
     var close := Button.new()
-    close.text = "×"
+    close.text = "إغلاق"
     close.custom_minimum_size = Vector2(52,44)
     close.pressed.connect(func(): Settings.save_settings(); closed.emit())
     head.add_child(close)
@@ -51,6 +53,7 @@ func build(_parent: Node) -> void:
     scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
     root.add_child(scroll)
     body = VBoxContainer.new()
+    body.layout_direction = Control.LAYOUT_DIRECTION_RTL
     body.add_theme_constant_override("separation", 8)
     body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     scroll.add_child(body)
@@ -65,23 +68,28 @@ func build(_parent: Node) -> void:
 func _heading(text: String) -> void:
     var label := Label.new()
     label.text = text
+    label.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     label.add_theme_font_size_override("font_size", 18)
     label.add_theme_color_override("font_color", Color("#78ddff"))
     body.add_child(label)
 
 func _row(label_text: String, control: Control) -> void:
     var row := HBoxContainer.new()
+    row.layout_direction = Control.LAYOUT_DIRECTION_RTL
     row.custom_minimum_size = Vector2(0, 42)
     body.add_child(row)
     var label := Label.new()
     label.text = label_text
+    label.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
     row.add_child(label)
     row.add_child(control)
 
 func _build_graphics() -> void:
-    _heading("GRAPHICS")
+    _heading("الرسومات")
     var quality := OptionButton.new()
     for v in ["low","medium","high","ultra"]: quality.add_item(v.capitalize())
     quality.select(["low","medium","high","ultra"].find(str(Settings.get_value("graphics_quality","medium"))))
@@ -95,7 +103,7 @@ func _build_graphics() -> void:
     _row("Render Distance", rd)
 
 func _build_window() -> void:
-    _heading("WINDOW")
+    _heading("النافذة")
     var resolution := OptionButton.new()
     var options: Array[Vector2i] = [Vector2i(1280, 720), Vector2i(1366, 768), Vector2i(1600, 900), Vector2i(1920, 1080), Vector2i(2560, 1440)]
     var current := get_window().size
@@ -133,7 +141,7 @@ func _build_window() -> void:
     _row("وضع النافذة", mode)
 
 func _build_controls() -> void:
-    _heading("CONTROLS")
+    _heading("التحكم")
     for action in bindings:
         var button := Button.new()
         button.text = str(Settings.controls.get(action, ""))
@@ -150,7 +158,7 @@ func _build_controls() -> void:
     _row("الكاميرا", camera)
 
 func _build_audio() -> void:
-    _heading("AUDIO")
+    _heading("الصوت")
     _audio_row("Master", "master_volume")
     _audio_row("Music", "music_volume")
     _audio_row("Effects", "sfx_volume")
@@ -161,16 +169,16 @@ func _audio_row(label_text: String, key: String) -> void:
     _row(label_text, slider)
 
 func _build_gameplay() -> void:
-    _heading("GAMEPLAY")
+    _heading("أسلوب اللعب")
     var hint := Label.new(); hint.text="الإعدادات المؤثرة مباشرة على اللعب محفوظة إلى user://aethra_settings.json"; hint.add_theme_color_override("font_color",Color("#91a9bf")); body.add_child(hint)
 
 func _build_network() -> void:
-    _heading("NETWORK")
-    var net := Label.new(); net.text="NetworkManager: %s" % ("active" if multiplayer.multiplayer_peer != null else "offline"); net.add_theme_color_override("font_color",Color("#91a9bf")); body.add_child(net)
+    _heading("الشبكة")
+    var net := Label.new(); net.text="حالة الشبكة: %s" % ("متصل" if multiplayer.multiplayer_peer != null else "غير متصل"); net.layout_direction = Control.LAYOUT_DIRECTION_RTL; net.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT; net.add_theme_color_override("font_color",Color("#91a9bf")); body.add_child(net)
 
 func _build_footer(root: VBoxContainer) -> void:
     var spacer := Control.new(); spacer.size_flags_vertical=Control.SIZE_EXPAND_FILL; root.add_child(spacer)
-    var footer := HBoxContainer.new(); root.add_child(footer)
+    var footer := HBoxContainer.new(); footer.layout_direction = Control.LAYOUT_DIRECTION_RTL; root.add_child(footer)
     var reset := Button.new(); reset.text="إعادة القيم الافتراضية"; reset.pressed.connect(func(): Settings.values=Settings.DEFAULTS.duplicate(true); Settings.controls=Settings.DEFAULT_CONTROLS.duplicate(true); Settings.save_settings(); closed.emit())
     footer.add_child(reset)
     var save := Button.new(); save.text="حفظ وإغلاق"; save.size_flags_horizontal=Control.SIZE_EXPAND_FILL; save.pressed.connect(func(): Settings.save_settings(); closed.emit()); footer.add_child(save)
@@ -179,7 +187,7 @@ func _build_footer(root: VBoxContainer) -> void:
 func _capture(action: String, button: Button) -> void:
     waiting_action = action
     binding_label.text = "اضغط المفتاح أو زر الفأرة لـ %s" % action
-    button.text = "..."
+    button.text = "انتظر..."
 
 func _unhandled_input(event: InputEvent) -> void:
     if waiting_action.is_empty():

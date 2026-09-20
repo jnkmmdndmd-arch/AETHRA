@@ -61,13 +61,13 @@ func _run(command: String) -> void:
         var amount := max(1, int(parts[2]))
         var info := ItemRegistry.get_item(item_id)
         var valid_item := int(info.get("id", ItemRegistry.EMPTY)) == item_id or (item_id > BlockRegistry.AIR and item_id <= BlockRegistry.SNOW)
-        if player and valid_item:
+        if player == null:
+            _log("Player unavailable")
+        elif not valid_item:
+            _log("Invalid item")
+        else:
             var remainder := player.inventory.add_item(item_id, amount)
             _log("Give item=%d amount=%d remainder=%d" % [item_id, amount, remainder])
-        else:
-            _log("Invalid item or player unavailable")
-        else:
-            _log("Player unavailable")
     elif parts.size() >= 4 and parts[0] == "/tp" and str(parts[1]).is_valid_float() and str(parts[2]).is_valid_float() and str(parts[3]).is_valid_float():
         var player = get_tree().get_first_node_in_group("players")
         if player:

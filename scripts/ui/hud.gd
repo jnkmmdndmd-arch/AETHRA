@@ -9,6 +9,8 @@ var slot_labels: Array[Label] = []
 
 func build() -> void:
     stats = Label.new()
+    stats.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     stats.position = Vector2(24,24)
     stats.add_theme_font_size_override("font_size", 15)
     add_child(stats)
@@ -16,6 +18,8 @@ func build() -> void:
     players.set_anchors_preset(Control.PRESET_TOP_RIGHT)
     players.position = Vector2(-260, 30)
     players.size = Vector2(236, 120)
+    players.layout_direction = Control.LAYOUT_DIRECTION_LTR
+    players.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
     players.add_theme_font_size_override("font_size", 15)
     add_child(players)
     hotbar = HBoxContainer.new()
@@ -58,4 +62,8 @@ func set_player_stats(health: float, hunger: float, stamina: float, fps: float) 
     stats.text = "AETHRA // Survival\nHP %.1f  Hunger %.1f  Stamina %.1f\nFPS %.0f" % [health,hunger,stamina,fps]
 
 func set_players(data: Dictionary) -> void:
-    players.text = "ONLINE\n" + "\n".join(data.values().map(func(x): return str(x.get("name","Player"))))
+    var names: Array[String] = []
+    for value in data.values():
+        if value is Dictionary:
+            names.append(str(value.get("name", "Player")))
+    players.text = "PLAYERS ONLINE\n" + "\n".join(names)
