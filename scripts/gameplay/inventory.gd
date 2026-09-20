@@ -16,8 +16,16 @@ func _item_info(item_id: int) -> Dictionary:
         return info
     return info
 
+func _is_valid_item_id(item_id: int) -> bool:
+    if item_id == ItemRegistry.EMPTY:
+        return true
+    if item_id > BlockRegistry.AIR and item_id <= BlockRegistry.SNOW:
+        return item_id not in [BlockRegistry.WATER, BlockRegistry.LAVA, BlockRegistry.BEDROCK]
+    var info := ItemRegistry.get_item(item_id)
+    return int(info.get("id", ItemRegistry.EMPTY)) == item_id and str(info.get("category", "none")) != "none"
+
 func _stack_size_for(item_id: int) -> int:
-    if item_id > BlockRegistry.AIR and item_id <= BlockRegistry.SNOW and item_id not in [BlockRegistry.WATER, BlockRegistry.LAVA, BlockRegistry.BEDROCK]:
+    if item_id > BlockRegistry.AIR and item_id <= BlockRegistry.SNOW and _is_valid_item_id(item_id):
         return 64
     var info := ItemRegistry.get_item(item_id)
     if int(info.get("id", ItemRegistry.EMPTY)) == item_id and str(info.get("category", "none")) != "none":
@@ -25,8 +33,10 @@ func _stack_size_for(item_id: int) -> int:
     return 1
 
 func can_add_item(item_id: int, amount: int) -> bool:
-    if amount <= 0:
+    if amount == 0:
         return true
+    if amount < 0 or not _is_valid_item_id(item_id):
+        return false
     var remaining := amount
     var stack_size := _stack_size_for(item_id)
     for slot in slots:
@@ -53,6 +63,8 @@ func can_add_items(items: Dictionary) -> bool:
     return true
 
 func _can_add_to_slots(simulated: Array, item_id: int, amount: int) -> bool:
+    if amount <= 0 or not _is_valid_item_id(item_id):
+        return amount == 0
     var remaining := amount
     var stack_size := _stack_size_for(item_id)
     for slot in simulated:
@@ -74,6 +86,10 @@ func _can_add_to_slots(simulated: Array, item_id: int, amount: int) -> bool:
     return false
 
 func add_item(item_id: int, amount: int = 1) -> int:
+    if amount < 0 or not _is_valid_item_id(item_id):
+        return 0
+    if amount == 0:
+        return 0
     var remaining := amount
     var info := ItemRegistry.get_item(item_id)
     var stack_size := _stack_size_for(item_id)
@@ -99,6 +115,10 @@ func add_item(item_id: int, amount: int = 1) -> int:
     return remaining
 
 func remove_item(item_id: int, amount: int) -> bool:
+    if amount < 0 or not _is_valid_item_id(item_id):
+        return false
+    if amount == 0:
+        return true
     if count_item(item_id) < amount:
         return false
     var remaining := amount
@@ -136,7 +156,7 @@ func deserialize(data: Array) -> void:
         if not (item is Dictionary):
             continue
         var item_id := int(item.get("item", ItemRegistry.EMPTY))
-        var valid_item: bool = item_id == ItemRegistry.EMPTY or (item_id > BlockRegistry.AIR and item_id <= BlockRegistry.SNOW) or ItemRegistry.get_item(item_id).get("id", ItemRegistry.EMPTY) == item_id
+        var valid_item: bool = _is_valid_item_id(item_id)
         if not valid_item:
             item_id = ItemRegistry.EMPTY
         var count := clampi(int(item.get("count", 0)), 0, _stack_size_for(item_id))

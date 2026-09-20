@@ -8,7 +8,7 @@ var binding_label: Label
 var body: VBoxContainer
 var binding_buttons: Dictionary = {}
 
-func build(_parent: Control) -> void:
+func build(_parent: Node) -> void:
     set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     var bg := ColorRect.new()
     bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

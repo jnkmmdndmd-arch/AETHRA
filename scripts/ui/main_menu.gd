@@ -45,7 +45,7 @@ var characters := [
     {"id":"grove","name":"Grovekeeper","ar":"حارس الغابة","description":"Nature-oriented wilderness specialist"},
 ]
 
-func build(parent: Control) -> void:
+func build(_parent: Node) -> void:
     set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     mouse_filter = Control.MOUSE_FILTER_STOP
     ServerDirectory.load_favorites()

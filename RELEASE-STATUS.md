@@ -1,5 +1,10 @@
 # AETHRA: Wildbound — 0.2.3 corrected-final-source
 
+## Continuation release boundary
+- Previous Windows artifact: historical and superseded for this continuation pass.
+- Final release status remains pending until the updated commit is pushed and its Windows artifact is rebuilt and hashed.
+- GUI gameplay, save/load, settings, and multiplayer remain blocked without real interactive Windows automation.
+
 Status: SOURCE RELEASE CANDIDATE — Windows GUI runtime remains BLOCKED BY ENVIRONMENT
 
 Verified in this environment: Godot editor validation, Godot self-test, Go auth-service tests, Go vet, and clean Windows export from the current source revision.

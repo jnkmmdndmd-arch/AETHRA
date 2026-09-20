@@ -1,5 +1,9 @@
 # AETHRA: Wildbound — Build Status
 
+## Continuation pass
+- The current continuation fixes are validated locally with Godot 4.7.2, the Godot self-test, Go tests, and Go vet.
+- A new Windows artifact is required after the continuation commit; the previous Windows EXE is historical evidence, not the final output for this pass.
+
 ## Implemented in source
 - Native Godot client hub rebuilt with functional sidebar, search, profile, hero, quick actions, recent worlds, social panel, server favorites, discovery fallback, settings, developer metrics, notifications empty-state, and window controls.
 - Real data bindings for SaveDB, AppState, NetworkManager, ServerDirectory, Engine/Performance, Settings, and AudioManager.

@@ -231,8 +231,13 @@ func send_chat(text: String) -> void:
     if not multiplayer.is_server():
         return
     var sender := multiplayer.get_remote_sender_id()
+    if not accepted_peers.get(sender, false):
+        return
+    var message := text.strip_edges().substr(0, 240)
+    if message.is_empty():
+        return
     var name := str(remote_players.get(sender, {}).get("name", "Player"))
-    rpc("receive_chat", name, text.substr(0, 240))
+    rpc("receive_chat", name, message)
 
 @rpc("authority", "reliable")
 func receive_chat(sender: String, text: String) -> void:

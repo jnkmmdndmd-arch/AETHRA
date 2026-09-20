@@ -1,5 +1,9 @@
 # AETHRA: WILDBOUND
 
+## Current engineering status
+
+The continuation pass fixes a real startup type mismatch, rejects invalid inventory quantities/IDs, and restricts server chat to accepted peers. Godot 4.7.2, the Godot self-test, Go tests, Go vet, and bounded headless startup validation pass locally. Windows GUI gameplay, save/load GUI, settings GUI, and multiplayer GUI remain blocked without interactive automation.
+
 Original 3D open-world voxel survival sandbox game project — corrected release candidate 0.2.3.
 
 ## Client

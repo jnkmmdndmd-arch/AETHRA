@@ -28,6 +28,9 @@ func _init() -> void:
     ))
     for result in checks:
         print("[TEST] %s: %s" % [result[0], "PASS" if result[1] else "FAIL"])
+    block_registry.free()
+    item_registry.free()
+    recipe_registry.free()
     if checks.any(func(x): return not bool(x[1])):
         quit(1)
     quit(0)
