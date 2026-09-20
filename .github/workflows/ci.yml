@@ -93,6 +93,22 @@ jobs:
           if (-not $godot) { $godot = (Get-ChildItem "$env:RUNNER_TEMP\godot-4.7.2" -Recurse -Filter "Godot*.exe" | Select-Object -First 1 -ExpandProperty FullName) }
           & $godot --headless --path . --script res://tests/self_test.gd
 
+      - name: Install SQLite headers and library
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "$env:RUNNER_TEMP\vcpkg")) {
+            git clone https://github.com/Microsoft/vcpkg.git "$env:RUNNER_TEMP\vcpkg"
+            & "$env:RUNNER_TEMP\vcpkg\bootstrap-vcpkg.bat"
+          }
+          $vcpkg = (Get-Command vcpkg -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty Source)
+          if (-not $vcpkg) { $vcpkg = "$env:RUNNER_TEMP\vcpkg\vcpkg.exe" }
+          & $vcpkg install sqlite3:x64-windows --triplet x64-windows
+          $sqliteRoot = "$env:RUNNER_TEMP\vcpkg\installed\x64-windows"
+          Write-Output "SQLITE_ROOT=$sqliteRoot"
+          "CGO_CFLAGS=-I$sqliteRoot\include" | Out-File -Encoding ascii -Append $env:GITHUB_ENV
+          "CGO_LDFLAGS=-L$sqliteRoot\lib -lsqlite3" | Out-File -Encoding ascii -Append $env:GITHUB_ENV
+          "PKG_CONFIG_PATH=$sqliteRoot\lib\pkgconfig" | Out-File -Encoding ascii -Append $env:GITHUB_ENV
+
       - name: Go tests
         shell: pwsh
         working-directory: server/auth-service
