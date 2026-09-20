@@ -39,6 +39,14 @@ func _run() -> void:
     checks.append(_check("World bounds", func() -> bool:
         return generator.block_at(0, 0, 0) == 17 and generator.block_at(0, 100, 0) == 0
     ))
+    var voxel_script: GDScript = load("res://scripts/world/voxel_world.gd") as GDScript
+    checks.append(_check("Voxel world parser", func() -> bool:
+        return voxel_script != null
+    ))
+    var console_script: GDScript = load("res://scripts/tools/dev_console.gd") as GDScript
+    checks.append(_check("Developer console parser", func() -> bool:
+        return console_script != null
+    ))
     print("[TEST] Initializing gameplay systems")
     var survival = load("res://scripts/gameplay/survival.gd").new()
     survival.apply_damage(3)

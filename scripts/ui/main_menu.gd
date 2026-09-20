@@ -49,6 +49,7 @@ var characters := [
 
 func build(_parent: Node) -> void:
     set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    layout_direction = Control.LAYOUT_DIRECTION_RTL
     mouse_filter = Control.MOUSE_FILTER_STOP
     ServerDirectory.load_favorites()
     _build_backdrop()
@@ -99,11 +100,12 @@ func _build_shell() -> void:
 
     var sidebar := _panel(PANEL, 22, Color(0.22, 0.7, 1.0, 0.28))
     sidebar_panel = sidebar
-    sidebar.custom_minimum_size = Vector2(210, 0)
+    sidebar.custom_minimum_size = Vector2(190, 0)
     columns.add_child(sidebar)
     _build_sidebar(sidebar)
 
     var center_column := VBoxContainer.new()
+    center_column.layout_direction = Control.LAYOUT_DIRECTION_RTL
     center_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     center_column.add_theme_constant_override("separation", 12)
     columns.add_child(center_column)
@@ -118,13 +120,14 @@ func _build_shell() -> void:
     content_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
     center_column.add_child(content_scroll)
     content = VBoxContainer.new()
+    content.layout_direction = Control.LAYOUT_DIRECTION_RTL
     content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     content.add_theme_constant_override("separation", 12)
     content_scroll.add_child(content)
 
     var social := _panel(PANEL, 22, Color(0.22, 0.7, 1.0, 0.22))
     social_panel = social
-    social.custom_minimum_size = Vector2(280, 0)
+    social.custom_minimum_size = Vector2(220, 0)
     columns.add_child(social)
     _build_social(social)
 
@@ -135,10 +138,11 @@ func _build_shell() -> void:
 func _apply_responsive_layout() -> void:
     var viewport_size := get_viewport_rect().size
     if sidebar_panel:
-        var sidebar_width := 184 if viewport_size.x < 1280.0 else 210
+        var sidebar_width := 178 if viewport_size.x < 1280.0 else (190 if viewport_size.x < 1500.0 else 210)
         sidebar_panel.custom_minimum_size = Vector2(sidebar_width, 0)
     if social_panel:
-        social_panel.visible = viewport_size.x >= 1500.0
+        social_panel.visible = viewport_size.x >= 1280.0
+        social_panel.custom_minimum_size = Vector2(220 if viewport_size.x < 1500.0 else 280, 0)
     if auth_overlay and is_instance_valid(auth_overlay):
         _layout_auth_overlay()
     if content:
@@ -159,17 +163,23 @@ func _layout_auth_overlay() -> void:
     auth_overlay.position = -auth_overlay.size * 0.5
 
 func _build_sidebar(parent: PanelContainer) -> void:
+    var scroll := ScrollContainer.new()
+    scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+    parent.add_child(scroll)
     var box := VBoxContainer.new()
-    box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    box.add_theme_constant_override("separation", 10)
-    parent.add_child(box)
+    box.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    box.add_theme_constant_override("separation", 6)
+    scroll.add_child(box)
 
     var logo := VBoxContainer.new()
     logo.alignment = BoxContainer.ALIGNMENT_CENTER
     box.add_child(logo)
     var logo_art := TextureRect.new()
     logo_art.texture = load("res://assets/icon.png") as Texture2D
-    logo_art.custom_minimum_size = Vector2(112, 112)
+    logo_art.custom_minimum_size = Vector2(82, 82)
     logo_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
     logo_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
     logo_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -209,10 +219,12 @@ func _build_sidebar(parent: PanelContainer) -> void:
     box.add_child(user)
     var user_row := HBoxContainer.new()
     user_row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    user_row.layout_direction = Control.LAYOUT_DIRECTION_RTL
     user.add_child(user_row)
-    var avatar := ColorRect.new()
-    avatar.custom_minimum_size = Vector2(42, 42)
-    avatar.color = ACCENT
+    var avatar = load("res://scripts/ui/vector_icon.gd").new()
+    avatar.icon_name = "person"
+    avatar.icon_color = ACCENT_BRIGHT
+    avatar.custom_minimum_size = Vector2(30, 30)
     user_row.add_child(avatar)
     var user_info := VBoxContainer.new()
     user_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -234,6 +246,7 @@ func _build_header(parent: PanelContainer) -> void:
     search_line.clear_button_enabled = true
     search_line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     search_line.custom_minimum_size = Vector2(0, 42)
+    search_line.layout_direction = Control.LAYOUT_DIRECTION_RTL
     row.add_child(search_line)
     search_line.text_changed.connect(_search)
 
@@ -284,7 +297,7 @@ func _build_bottom_bar(center_column: VBoxContainer) -> void:
     bar.add_child(row)
     status_connection = _label(row, "الاتصال: غير متصل", 10, MUTED)
     status_connection.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    status_server = _label(row, "الخادم: —", 10, MUTED)
+    status_server = _label(row, "الخادم: غير محدد", 10, MUTED)
     status_server.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     status_fps = _label(row, "FPS: %d" % Engine.get_frames_per_second(), 10, MUTED)
     status_fps.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -326,6 +339,7 @@ func _page_home() -> void:
     var hero := _hero_panel()
     content.add_child(hero)
     var quick := HBoxContainer.new()
+    quick.layout_direction = Control.LAYOUT_DIRECTION_RTL
     quick.add_theme_constant_override("separation", 10)
     content.add_child(quick)
     _quick_card(quick, "world", "إنشاء عالم جديد", "ابدأ مغامرة محفوظة فعليًا", func(): _page_create_world())
@@ -578,6 +592,7 @@ func _world_cards(parent: Control, worlds: Array, manage := false) -> void:
         return
     var grid := GridContainer.new()
     grid.columns = 2
+    grid.layout_direction = Control.LAYOUT_DIRECTION_RTL
     grid.add_theme_constant_override("h_separation", 10)
     grid.add_theme_constant_override("v_separation", 10)
     parent.add_child(grid)
@@ -603,9 +618,9 @@ func _world_cards(parent: Control, worlds: Array, manage := false) -> void:
         box.add_child(thumb)
         var meta: Dictionary = world.get("metadata", {})
         _label(box, str(meta.get("name", world.get("id", "World"))), 17, TEXT)
-        _label(box, "Mode: %s" % str(meta.get("mode", "unknown")), 10, MUTED)
-        _label(box, "Seed: %s" % str(meta.get("seed", "—")), 10, MUTED)
-        _label(box, "Last played: %s" % str(meta.get("saved_at", "—")), 9, MUTED)
+        _label(box, "النمط: %s" % str(meta.get("mode", "غير معروف")), 10, MUTED)
+        _label(box, "البذرة: %s" % str(meta.get("seed", "غير محدد")), 10, MUTED)
+        _label(box, "آخر لعب: %s" % str(meta.get("saved_at", "غير محدد")), 9, MUTED)
         var actions := HBoxContainer.new()
         actions.alignment = BoxContainer.ALIGNMENT_END
         box.add_child(actions)
@@ -623,11 +638,11 @@ func _page_multiplayer() -> void:
     var row := HBoxContainer.new()
     row.add_theme_constant_override("separation", 10)
     content.add_child(row)
-    var host := _quick_card(row, "HOST", "استضافة", "تشغيل جلسة ENet فعلية", func(): host_multiplayer.emit())
+    var host := _quick_card(row, "host", "استضافة", "تشغيل جلسة ENet فعلية", func(): host_multiplayer.emit())
     host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    var join := _quick_card(row, "JOIN", "انضمام", "الاتصال بعنوان سيرفر فعلي", func(): _join_dialog())
+    var join := _quick_card(row, "join", "انضمام", "الاتصال بعنوان سيرفر فعلي", func(): _join_dialog())
     join.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    var servers := _quick_card(row, "SERVERS", "الخوادم", "المفضلة والاتصال المباشر", func(): _show_page("servers"))
+    var servers := _quick_card(row, "servers", "الخوادم", "المفضلة والاتصال المباشر", func(): _show_page("servers"))
     servers.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     _section_title(content, "الأصدقاء داخل الجلسة", "لا يعرض أي لاعب غير موجود في presence الحالي")
     _refresh_friends(NetworkManager.remote_players)
@@ -657,7 +672,7 @@ func _server_card(server: Dictionary) -> void:
     var info := VBoxContainer.new()
     info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     row.add_child(info)
-    _label(info, str(server.get("name", "Server")), 15, TEXT)
+    _label(info, str(server.get("name", "سيرفر")), 15, TEXT)
     _label(info, str(server.get("address", "")), 10, MUTED)
     var state := _label(info, "جارٍ فحص الاتصال...", 10, YELLOW)
     _probe_server(str(server.get("address", "")), state)
@@ -689,24 +704,24 @@ func _page_profile() -> void:
     box.add_theme_constant_override("separation", 8)
     panel.add_child(box)
     _label(box, AppState.player_name, 28, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
-    _label(box, "Character: %s" % AppState.character_id, 12, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
-    _label(box, "Account: %s" % ("Authenticated" if AppState.is_authenticated else "Local/Guest"), 11, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
-    _label(box, "World: %s" % (AppState.current_world_name if not AppState.current_world_name.is_empty() else "—"), 11, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
-    _label(box, "Player ID is kept out of UI unless an authenticated backend session supplies it.", 9, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "الشخصية: %s" % AppState.character_id, 12, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "الحساب: %s" % ("موثّق" if AppState.is_authenticated else "محلي / ضيف"), 11, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "العالم: %s" % (AppState.current_world_name if not AppState.current_world_name.is_empty() else "غير محدد"), 11, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "هوية اللاعب لا تظهر في الواجهة إلا عند توفر جلسة مصادقة فعلية.", 9, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
 
 func _page_developer() -> void:
-    _section_title(content, "أدوات المطور", "مقاييس Runtime فعلية فقط")
+    _section_title(content, "أدوات المطور", "مقاييس تشغيل فعلية فقط")
     var grid := GridContainer.new()
     grid.columns = 2
     grid.add_theme_constant_override("h_separation", 10)
     grid.add_theme_constant_override("v_separation", 10)
     content.add_child(grid)
     _metric(grid, "FPS", str(Engine.get_frames_per_second()))
-    _metric(grid, "Memory", "%0.2f MB" % (Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0))
-    _metric(grid, "Network Peers", str(multiplayer.get_peers().size()))
-    _metric(grid, "Loaded Worlds", str(SaveDB.list_worlds().size()))
-    _metric(grid, "Loaded Scene Nodes", str(get_tree().get_node_count()))
-    _metric(grid, "Connection", "connected" if multiplayer.multiplayer_peer != null else "offline")
+    _metric(grid, "الذاكرة", "%0.2f MB" % (Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0))
+    _metric(grid, "لاعبو الشبكة", str(multiplayer.get_peers().size()))
+    _metric(grid, "العوالم المحفوظة", str(SaveDB.list_worlds().size()))
+    _metric(grid, "عقد المشهد", str(get_tree().get_node_count()))
+    _metric(grid, "الاتصال", "متصل" if multiplayer.multiplayer_peer != null else "غير متصل")
     var console := _button("فتح Developer Console (F8)", Vector2(270, 44))
     console.pressed.connect(func():
         var root := get_parent()
@@ -833,7 +848,7 @@ func _search(query: String) -> void:
         var name := str(profile.get("name", ""))
         if q in name.to_lower():
             found += 1
-            _label(search_results, "لاعب: %s • متصل" % name, 11, GREEN)
+            _label(search_results, "لاعب: %s - متصل" % name, 11, GREEN)
     if found == 0:
         _label(search_results, "لا توجد نتائج مطابقة من البيانات المتوفرة حاليًا.", 11, MUTED)
 
@@ -862,7 +877,7 @@ func _join_dialog() -> void:
     dialog.title = "الانضمام إلى سيرفر"
     var box := VBoxContainer.new()
     var address := LineEdit.new()
-    address.placeholder_text = "IP أو Domain"
+    address.placeholder_text = "عنوان السيرفر أو النطاق"
     address.text = "127.0.0.1"
     box.add_child(address)
     dialog.add_child(box)
@@ -894,7 +909,7 @@ func _add_server_dialog() -> void:
         var n := name.text.strip_edges()
         var a := address.text.strip_edges()
         if not a.is_empty():
-            ServerDirectory.add_favorite(a, n if not n.is_empty() else "Favorite")
+            ServerDirectory.add_favorite(a, n if not n.is_empty() else "مفضلة")
             _show_page("servers")
     )
     dialog.popup_centered(Vector2i(540, 220))
@@ -902,7 +917,7 @@ func _add_server_dialog() -> void:
 func _probe_server(address: String, label: Label) -> void:
     # ENet servers do not expose an HTTP/TCP status port in the current client.
     # Never mislabel a server as online using an incompatible transport probe.
-    label.text = "محفوظ محليًا • الحالة عبر الاتصال المباشر"
+    label.text = "محفوظ محليًا - الحالة عبر الاتصال المباشر"
     label.add_theme_color_override("font_color", MUTED)
 
 func _resume_world(world_id: String) -> void:

@@ -17,12 +17,14 @@ var stream_center := Vector3.ZERO
 var last_stream_chunk := Vector2i(999999, 999999)
 var stream_tick := 0
 var world_settings: Dictionary = {}
+var spawn_ready := false
 
 func initialize(seed_value: int) -> void:
     world_seed = seed_value
     generator = load("res://scripts/world/world_generator.gd").new(world_seed)
     if generator.has_method("configure"):
         generator.configure(true)
+    _resolve_spawn_position()
     for x in range(-2, 3):
         for z in range(-2, 3):
             queue_chunk(Vector2i(x, z))
@@ -37,6 +39,19 @@ func _process(_delta: float) -> void:
         pending[coord] = true
         _generate_chunk(coord)
         budget -= 1
+
+func _resolve_spawn_position() -> void:
+    if generator == null:
+        return
+    var ground_y := 40
+    for scan_y in range(90, 0, -1):
+        var ground := int(generator.block_at(0, scan_y, 0))
+        var above := int(generator.block_at(0, scan_y + 1, 0))
+        if BlockRegistry.is_solid(ground) and above == BlockRegistry.AIR:
+            ground_y = scan_y
+            break
+    spawn_position = Vector3(8.5, ground_y + 1.05, 8.5)
+    spawn_ready = true
 
 func configure(settings: Dictionary) -> void:
     world_settings = settings.duplicate(true)

@@ -11,6 +11,7 @@ var binding_buttons: Dictionary = {}
 func build(_parent: Node) -> void:
     set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     layout_direction = Control.LAYOUT_DIRECTION_RTL
+    layout_direction = Control.LAYOUT_DIRECTION_RTL
     var bg := ColorRect.new()
     bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     bg.color = Color(0.015,0.025,0.055,0.86)
@@ -33,6 +34,7 @@ func build(_parent: Node) -> void:
     add_child(panel)
     var root := VBoxContainer.new()
     root.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    root.layout_direction = Control.LAYOUT_DIRECTION_RTL
     root.add_theme_constant_override("separation", 12)
     panel.add_child(root)
     var head := HBoxContainer.new()
@@ -54,6 +56,7 @@ func build(_parent: Node) -> void:
     root.add_child(scroll)
     body = VBoxContainer.new()
     body.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    body.layout_direction = Control.LAYOUT_DIRECTION_RTL
     body.add_theme_constant_override("separation", 8)
     body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     scroll.add_child(body)
@@ -70,6 +73,8 @@ func _heading(text: String) -> void:
     label.text = text
     label.layout_direction = Control.LAYOUT_DIRECTION_RTL
     label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    label.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     label.add_theme_font_size_override("font_size", 18)
     label.add_theme_color_override("font_color", Color("#78ddff"))
     body.add_child(label)
@@ -77,10 +82,13 @@ func _heading(text: String) -> void:
 func _row(label_text: String, control: Control) -> void:
     var row := HBoxContainer.new()
     row.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    row.layout_direction = Control.LAYOUT_DIRECTION_RTL
     row.custom_minimum_size = Vector2(0, 42)
     body.add_child(row)
     var label := Label.new()
     label.text = label_text
+    label.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     label.layout_direction = Control.LAYOUT_DIRECTION_RTL
     label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
     label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -110,7 +118,7 @@ func _build_window() -> void:
     var selected := 0
     for i in options.size():
         var size := options[i]
-        resolution.add_item("%d × %d" % [size.x, size.y])
+        resolution.add_item("%d x %d" % [size.x, size.y])
         if size == current:
             selected = i
     resolution.select(selected)
