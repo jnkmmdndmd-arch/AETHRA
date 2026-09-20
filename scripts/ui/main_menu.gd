@@ -494,6 +494,7 @@ func _page_create_world() -> void:
     panel.custom_minimum_size = Vector2(0, 440)
     content.add_child(panel)
     var form := VBoxContainer.new()
+    form.layout_direction = Control.LAYOUT_DIRECTION_RTL
     form.add_theme_constant_override("separation", 10)
     panel.add_child(form)
     var name_field := LineEdit.new()
@@ -502,41 +503,43 @@ func _page_create_world() -> void:
     name_field.text = "Wildbound World"
     form.add_child(name_field)
     var seed_field := LineEdit.new()
-    seed_field.placeholder_text = "Seed أو اتركه عشوائيًا"
+    seed_field.placeholder_text = "البذرة أو اتركها عشوائية"
     seed_field.text = str(randi_range(1, 2147480000))
     form.add_child(seed_field)
     var mode := OptionButton.new()
-    mode.add_item("Survival")
-    mode.add_item("Creative")
-    mode.add_item("Adventure")
+    mode.add_item("بقاء")
+    mode.add_item("إبداعي")
+    var mode_ids := ["survival", "creative"]
     form.add_child(mode)
     var difficulty := OptionButton.new()
-    difficulty.add_item("Peaceful")
-    difficulty.add_item("Easy")
-    difficulty.add_item("Normal")
-    difficulty.add_item("Hard")
+    difficulty.add_item("سلمي")
+    difficulty.add_item("سهل")
+    difficulty.add_item("عادي")
+    difficulty.add_item("صعب")
+    var difficulty_ids := ["peaceful", "easy", "normal", "hard"]
     difficulty.select(2)
     form.add_child(difficulty)
     var privacy := OptionButton.new()
-    privacy.add_item("Public")
-    privacy.add_item("Private")
-    privacy.add_item("Friends Only")
+    privacy.add_item("عام")
+    privacy.add_item("خاص")
+    privacy.add_item("للأصدقاء فقط")
+    var privacy_ids := ["public", "private", "friends_only"]
     privacy.select(1)
     form.add_child(privacy)
     var structures := CheckBox.new()
-    structures.text = "Generate Structures"
+    structures.text = "إنشاء المباني الطبيعية"
     structures.button_pressed = true
     form.add_child(structures)
     var creatures := CheckBox.new()
-    creatures.text = "Creatures"
+    creatures.text = "المخلوقات"
     creatures.button_pressed = true
     form.add_child(creatures)
     var weather := CheckBox.new()
-    weather.text = "Weather"
+    weather.text = "الطقس"
     weather.button_pressed = true
     form.add_child(weather)
     var starting_inventory := LineEdit.new()
-    starting_inventory.placeholder_text = "Starting Inventory (مثال: 1=64,2=32)"
+    starting_inventory.placeholder_text = "مخزون البداية، مثال: 1=64, 2=32"
     form.add_child(starting_inventory)
     var controls := HBoxContainer.new()
     controls.alignment = BoxContainer.ALIGNMENT_END
@@ -550,9 +553,9 @@ func _page_create_world() -> void:
         AppState.pending_world_config = {
             "name": name_field.text.strip_edges() if not name_field.text.strip_edges().is_empty() else "Wildbound World",
             "seed": seed_value,
-            "mode": mode.get_item_text(mode.selected).to_lower(),
-            "difficulty": difficulty.get_item_text(difficulty.selected).to_lower(),
-            "privacy": privacy.get_item_text(privacy.selected).to_lower(),
+            "mode": mode_ids[mode.selected],
+            "difficulty": difficulty_ids[difficulty.selected],
+            "privacy": privacy_ids[privacy.selected],
             "structures": structures.button_pressed,
             "creatures": creatures.button_pressed,
             "weather": weather.button_pressed,
