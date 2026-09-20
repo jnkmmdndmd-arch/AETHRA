@@ -1,0 +1,1074 @@
+extends Control
+
+signal play_singleplayer
+signal host_multiplayer
+signal join_multiplayer(address)
+signal open_settings
+
+const BG_PATH := "res://assets/ui/hero_background.png"
+const ACCENT := Color("#35a8ff")
+const ACCENT_BRIGHT := Color("#78ddff")
+const PANEL := Color(0.025, 0.045, 0.09, 0.94)
+const PANEL_2 := Color(0.035, 0.065, 0.12, 0.92)
+const TEXT := Color("#eaf6ff")
+const MUTED := Color("#91a9bf")
+const GREEN := Color("#49e38b")
+const YELLOW := Color("#f3c85b")
+const RED := Color("#ff6575")
+
+var current_page := "home"
+var nav_buttons: Dictionary = {}
+var page_root: Control
+var content_scroll: ScrollContainer
+var content: VBoxContainer
+var friends_box: VBoxContainer
+var status_connection: Label
+var status_server: Label
+var status_fps: Label
+var status_friends: Label
+var profile_button: Button
+var search_line: LineEdit
+var search_popup: PanelContainer
+var search_results: VBoxContainer
+var notification_popup: PanelContainer
+var auth_overlay: PanelContainer
+var auth_user: LineEdit
+var auth_password: LineEdit
+var auth_server: LineEdit
+var auth_status: Label
+var auth_register_mode := false
+var character_index := 0
+var characters := [
+    {"id":"ranger","name":"Ranger","ar":"المستكشف","description":"Balanced explorer and survival specialist"},
+    {"id":"engineer","name":"Engineer","ar":"المهندس","description":"Builder focused on systems and construction"},
+    {"id":"shadow","name":"Shadow","ar":"الظل","description":"Agile explorer with a stealth-focused identity"},
+    {"id":"grove","name":"Grovekeeper","ar":"حارس الغابة","description":"Nature-oriented wilderness specialist"},
+]
+
+func build(parent: Control) -> void:
+    set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    mouse_filter = Control.MOUSE_FILTER_STOP
+    ServerDirectory.load_favorites()
+    _build_backdrop()
+    _build_shell()
+    _show_page("home")
+    if not NetworkManager.player_presence_changed.is_connected(_refresh_friends):
+        NetworkManager.player_presence_changed.connect(_refresh_friends)
+    if not NetworkManager.connected.is_connected(_refresh_status):
+        NetworkManager.connected.connect(_refresh_status)
+    if not NetworkManager.disconnected.is_connected(_refresh_status):
+        NetworkManager.disconnected.connect(_refresh_status)
+    _refresh_friends({})
+    _refresh_status()
+    _animate_intro()
+    _build_auth_gate()
+
+func _build_backdrop() -> void:
+    var image := TextureRect.new()
+    image.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    image.texture = load(BG_PATH) as Texture2D
+    image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+    image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    add_child(image)
+    var dim := ColorRect.new()
+    dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    dim.color = Color(0.015, 0.025, 0.055, 0.68)
+    dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    add_child(dim)
+    var vignette := ColorRect.new()
+    vignette.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    vignette.color = Color(0.0, 0.0, 0.0, 0.18)
+    vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    add_child(vignette)
+
+func _build_shell() -> void:
+    var root := MarginContainer.new()
+    root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    root.add_theme_constant_override("margin_left", 24)
+    root.add_theme_constant_override("margin_top", 22)
+    root.add_theme_constant_override("margin_right", 24)
+    root.add_theme_constant_override("margin_bottom", 22)
+    add_child(root)
+
+    var columns := HBoxContainer.new()
+    columns.add_theme_constant_override("separation", 14)
+    root.add_child(columns)
+
+    var sidebar := _panel(PANEL, 22, Color(0.22, 0.7, 1.0, 0.28))
+    sidebar.custom_minimum_size = Vector2(240, 0)
+    columns.add_child(sidebar)
+    _build_sidebar(sidebar)
+
+    var center_column := VBoxContainer.new()
+    center_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    center_column.add_theme_constant_override("separation", 12)
+    columns.add_child(center_column)
+
+    var header := _panel(PANEL_2, 18, Color(0.22, 0.7, 1.0, 0.2))
+    header.custom_minimum_size = Vector2(0, 66)
+    center_column.add_child(header)
+    _build_header(header)
+
+    content_scroll = ScrollContainer.new()
+    content_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    content_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    center_column.add_child(content_scroll)
+    content = VBoxContainer.new()
+    content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    content.add_theme_constant_override("separation", 12)
+    content_scroll.add_child(content)
+
+    var social := _panel(PANEL, 22, Color(0.22, 0.7, 1.0, 0.22))
+    social.custom_minimum_size = Vector2(304, 0)
+    columns.add_child(social)
+    _build_social(social)
+
+    _build_bottom_bar(center_column)
+
+func _build_sidebar(parent: PanelContainer) -> void:
+    var box := VBoxContainer.new()
+    box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    box.add_theme_constant_override("separation", 10)
+    parent.add_child(box)
+
+    var logo := VBoxContainer.new()
+    logo.alignment = BoxContainer.ALIGNMENT_CENTER
+    box.add_child(logo)
+    var logo_art := TextureRect.new()
+    logo_art.texture = load("res://assets/icon.png") as Texture2D
+    logo_art.custom_minimum_size = Vector2(112, 112)
+    logo_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    logo_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+    logo_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    logo.add_child(logo_art)
+    _label(logo, "AETHRA", 32, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(logo, "WILDBOUND", 15, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(logo, "ORIGINAL VOXEL SURVIVAL", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(logo, "المطور : عبدالله لازم", 11, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(logo, "برمجه وتطوير : عبدالله لازم", 11, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
+
+    var sep := HSeparator.new()
+    sep.modulate.a = 0.25
+    box.add_child(sep)
+
+    var items := [
+        ["home", "⌂", "الرئيسية"],
+        ["solo", "▶", "اللعب الفردي"],
+        ["multiplayer", "♟", "متعدد اللاعبين"],
+        ["servers", "▣", "الخوادم"],
+        ["worlds", "◇", "العوالم"],
+        ["store", "◆", "المتجر"],
+        ["settings", "⚙", "الإعدادات"],
+        ["developer", "</>", "أدوات المطور"],
+    ]
+    for item in items:
+        var b := _nav_button(item[1], item[2])
+        nav_buttons[item[0]] = b
+        b.pressed.connect(func(): _show_page(item[0]))
+        box.add_child(b)
+
+    var spacer := Control.new()
+    spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    box.add_child(spacer)
+
+    var user := _panel(PANEL_2, 14, Color(0.22, 0.7, 1.0, 0.16))
+    user.custom_minimum_size = Vector2(0, 68)
+    box.add_child(user)
+    var user_row := HBoxContainer.new()
+    user_row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    user.add_child(user_row)
+    var avatar := ColorRect.new()
+    avatar.custom_minimum_size = Vector2(42, 42)
+    avatar.color = ACCENT
+    user_row.add_child(avatar)
+    var user_info := VBoxContainer.new()
+    user_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    user_row.add_child(user_info)
+    _label(user_info, AppState.player_name, 14, TEXT)
+    _label(user_info, "مسجل دخول" if AppState.is_authenticated else "وضع محلي", 10, GREEN if AppState.is_authenticated else MUTED)
+
+    var logout := _nav_button("↪", "تسجيل الخروج")
+    logout.pressed.connect(_logout)
+    box.add_child(logout)
+
+func _build_header(parent: PanelContainer) -> void:
+    var row := HBoxContainer.new()
+    row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    row.add_theme_constant_override("separation", 10)
+    parent.add_child(row)
+    search_line = LineEdit.new()
+    search_line.placeholder_text = "ابحث عن عالم، خادم، لاعب أو إعداد..."
+    search_line.clear_button_enabled = true
+    search_line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    search_line.custom_minimum_size = Vector2(0, 42)
+    row.add_child(search_line)
+    search_line.text_changed.connect(_search)
+
+    var notice := _small_button("●", 42)
+    notice.tooltip_text = "الإشعارات"
+    notice.pressed.connect(_toggle_notifications)
+    row.add_child(notice)
+
+    profile_button = _small_button("◉", 42)
+    profile_button.tooltip_text = "الملف الشخصي"
+    profile_button.pressed.connect(func(): _show_page("profile"))
+    row.add_child(profile_button)
+
+    var min_btn := _small_button("—", 42)
+    min_btn.tooltip_text = "تصغير النافذة"
+    min_btn.pressed.connect(func(): DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_MINIMIZED))
+    row.add_child(min_btn)
+    var max_btn := _small_button("□", 42)
+    max_btn.tooltip_text = "تكبير / استعادة النافذة"
+    max_btn.pressed.connect(_toggle_window_mode)
+    row.add_child(max_btn)
+    var close_btn := _small_button("×", 42)
+    close_btn.tooltip_text = "إغلاق اللعبة"
+    close_btn.pressed.connect(_request_close)
+    row.add_child(close_btn)
+
+func _build_social(parent: PanelContainer) -> void:
+    var box := VBoxContainer.new()
+    box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    box.add_theme_constant_override("separation", 10)
+    parent.add_child(box)
+    _label(box, "أصدقائي المتصلون", 18, TEXT)
+    var count := _label(box, "0 متصل", 11, MUTED)
+    count.name = "FriendCount"
+    friends_box = VBoxContainer.new()
+    friends_box.add_theme_constant_override("separation", 6)
+    friends_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    box.add_child(friends_box)
+    _label(box, "الخصوصية محفوظة: الحالات الظاهرة هنا مصدرها جلسات الشبكة الفعلية فقط.", 9, MUTED, HORIZONTAL_ALIGNMENT_RIGHT)
+
+func _build_bottom_bar(center_column: VBoxContainer) -> void:
+    var bar := _panel(PANEL_2, 12, Color(0.22, 0.7, 1.0, 0.18))
+    bar.custom_minimum_size = Vector2(0, 38)
+    center_column.add_child(bar)
+    var row := HBoxContainer.new()
+    row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    row.alignment = BoxContainer.ALIGNMENT_CENTER
+    bar.add_child(row)
+    status_connection = _label(row, "الاتصال: غير متصل", 10, MUTED)
+    status_connection.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    status_server = _label(row, "الخادم: —", 10, MUTED)
+    status_server.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    status_fps = _label(row, "FPS: %d" % Engine.get_frames_per_second(), 10, MUTED)
+    status_fps.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    status_friends = _label(row, "الأصدقاء: 0", 10, MUTED)
+    status_friends.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+func _show_page(page: String) -> void:
+    current_page = page
+    for key in nav_buttons:
+        var b: Button = nav_buttons[key]
+        b.disabled = key == page
+    for child in content.get_children():
+        child.queue_free()
+    match page:
+        "home": _page_home()
+        "solo": _page_solo()
+        "multiplayer": _page_multiplayer()
+        "servers": _page_servers()
+        "worlds": _page_worlds()
+        "store": _page_store()
+        "settings": open_settings.emit()
+        "developer": _page_developer()
+        "profile": _page_profile()
+    _update_nav_state()
+
+func _update_nav_state() -> void:
+    for key in nav_buttons:
+        var b: Button = nav_buttons[key]
+        if key == current_page:
+            b.modulate = Color(0.98, 1.0, 1.0, 1.0)
+            b.add_theme_color_override("font_color", ACCENT_BRIGHT)
+        else:
+            b.modulate = Color.WHITE
+            b.remove_theme_color_override("font_color")
+
+func _page_home() -> void:
+    var hero := _hero_panel()
+    content.add_child(hero)
+    var quick := HBoxContainer.new()
+    quick.add_theme_constant_override("separation", 10)
+    content.add_child(quick)
+    _quick_card(quick, "◇", "إنشاء عالم جديد", "ابدأ مغامرة محفوظة فعليًا", func(): _page_create_world())
+    _quick_card(quick, "♟", "متعدد اللاعبين", "ادخل جلسة عبر الشبكة", func(): _show_page("multiplayer"))
+    _quick_card(quick, "▣", "قائمة الخوادم", "الخوادم المحفوظة لديك", func(): _show_page("servers"))
+    _section_title(content, "العوالم الأخيرة", "البيانات من SaveDB فقط")
+    _world_cards(content, SaveDB.list_worlds())
+
+func _hero_panel() -> PanelContainer:
+    var panel := PanelContainer.new()
+    panel.custom_minimum_size = Vector2(0, 370)
+    panel.add_theme_stylebox_override("panel", _style(PANEL, 24, Color(0.25, 0.75, 1.0, 0.32)))
+    var art := TextureRect.new()
+    art.texture = load(BG_PATH) as Texture2D
+    art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+    panel.add_child(art)
+    var overlay := ColorRect.new()
+    overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    overlay.color = Color(0.0, 0.01, 0.03, 0.36)
+    art.add_child(overlay)
+    var margin := MarginContainer.new()
+    margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    margin.add_theme_constant_override("margin_left", 26)
+    margin.add_theme_constant_override("margin_top", 22)
+    margin.add_theme_constant_override("margin_right", 26)
+    margin.add_theme_constant_override("margin_bottom", 22)
+    overlay.add_child(margin)
+    var box := VBoxContainer.new()
+    box.alignment = BoxContainer.ALIGNMENT_CENTER
+    box.add_theme_constant_override("separation", 10)
+    margin.add_child(box)
+    _label(box, "AETHRA", 44, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "WILDBOUND", 23, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "عالمك. مغامرتك. قصتك.", 17, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "عوالم إجرائية مستمرة، استكشاف، بقاء، بناء، ولعب جماعي.", 11, Color(0.9,0.96,1.0,0.82), HORIZONTAL_ALIGNMENT_CENTER)
+    var play := _primary_button("▶  ابدأ اللعب", Vector2(260, 54))
+    play.pressed.connect(func(): play_singleplayer.emit())
+    box.add_child(play)
+    var sub := HBoxContainer.new()
+    sub.alignment = BoxContainer.ALIGNMENT_CENTER
+    sub.add_theme_constant_override("separation", 8)
+    box.add_child(sub)
+    var solo := _button("اللعب الفردي", Vector2(150, 38))
+    solo.pressed.connect(func(): _show_page("solo"))
+    sub.add_child(solo)
+    var multi := _button("متعدد اللاعبين", Vector2(170, 38))
+    multi.pressed.connect(func(): _show_page("multiplayer"))
+    sub.add_child(multi)
+    return panel
+
+func _build_auth_gate() -> void:
+    if AppState.is_authenticated:
+        return
+    auth_overlay = _panel(Color(0.01, 0.02, 0.045, 0.96), 26, Color(0.25, 0.75, 1.0, 0.48))
+    auth_overlay.set_anchors_preset(Control.PRESET_CENTER)
+    auth_overlay.position = Vector2(-310, -260)
+    auth_overlay.size = Vector2(620, 520)
+    add_child(auth_overlay)
+    var margin := MarginContainer.new()
+    margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    margin.add_theme_constant_override("margin_left", 34)
+    margin.add_theme_constant_override("margin_top", 30)
+    margin.add_theme_constant_override("margin_right", 34)
+    margin.add_theme_constant_override("margin_bottom", 30)
+    auth_overlay.add_child(margin)
+    var box := VBoxContainer.new()
+    box.add_theme_constant_override("separation", 10)
+    margin.add_child(box)
+    _label(box, "تسجيل الدخول إلى AETHRA", 27, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "الحساب يحسن تجربة اللعب الجماعي، ويمكنك متابعة اللعب محليًا دون حساب.", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    auth_server = LineEdit.new()
+    auth_server.text = str(Settings.get_value("auth_server_url", "http://127.0.0.1:8090"))
+    auth_server.placeholder_text = "عنوان خدمة المصادقة"
+    box.add_child(auth_server)
+    auth_user = LineEdit.new()
+    auth_user.placeholder_text = "اسم المستخدم"
+    box.add_child(auth_user)
+    auth_password = LineEdit.new()
+    auth_password.placeholder_text = "كلمة المرور"
+    auth_password.secret = true
+    box.add_child(auth_password)
+    var character_select := OptionButton.new()
+    character_select.name = "CharacterSelect"
+    for character in characters:
+        character_select.add_item("%s — %s" % [str(character.ar), str(character.name)])
+    character_select.select(character_index)
+    character_select.item_selected.connect(func(index): character_index = index; AppState.character_id = str(characters[index].id))
+    box.add_child(character_select)
+    var row := HBoxContainer.new()
+    row.add_theme_constant_override("separation", 8)
+    box.add_child(row)
+    var submit := _primary_button("تسجيل الدخول", Vector2(190, 46))
+    submit.pressed.connect(_submit_auth)
+    row.add_child(submit)
+    var toggle := _button("إنشاء حساب", Vector2(150, 46))
+    toggle.pressed.connect(func():
+        auth_register_mode = not auth_register_mode
+        submit.text = "إنشاء الحساب" if auth_register_mode else "تسجيل الدخول"
+        toggle.text = "لدي حساب" if auth_register_mode else "إنشاء حساب"
+    )
+    row.add_child(toggle)
+    var offline := _button("متابعة دون حساب", Vector2(180, 42))
+    offline.pressed.connect(func(): auth_overlay.queue_free(); auth_overlay = null)
+    box.add_child(offline)
+    auth_status = _label(box, "الحالة: في انتظار إدخال بياناتك", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "الهوية والحالة الشبكية لا تُعتبر متصلة إلا بعد نجاح الخدمة الفعلية.", 9, Color(0.65,0.78,0.9,0.75), HORIZONTAL_ALIGNMENT_CENTER)
+
+func _submit_auth() -> void:
+    if auth_user.text.strip_edges().is_empty() or auth_password.text.length() < 8:
+        auth_status.text = "الحالة: اسم المستخدم أو كلمة المرور غير صالحة."
+        auth_status.add_theme_color_override("font_color", RED)
+        return
+    var root = get_parent()
+    var auth_node = root.get("auth") if root != null else null
+    if auth_node == null:
+        auth_status.text = "الحالة: خدمة المصادقة غير متاحة في التطبيق."
+        return
+    var auth_url := auth_server.text.strip_edges()
+    Settings.set_value("auth_server_url", auth_url)
+    auth_node.configure(auth_url)
+    auth_status.text = "الحالة: جارٍ الاتصال بالخدمة..."
+    auth_status.add_theme_color_override("font_color", YELLOW)
+    var character := str(characters[character_index].id)
+    if auth_register_mode:
+        auth_node.register(auth_user.text.strip_edges(), auth_password.text, character)
+    else:
+        auth_node.login(auth_user.text.strip_edges(), auth_password.text)
+
+func set_connection_status(text: String) -> void:
+    if status_connection:
+        status_connection.text = "الاتصال: " + text
+        status_connection.add_theme_color_override("font_color", YELLOW)
+
+func refresh_profile() -> void:
+    if profile_button:
+        profile_button.tooltip_text = "%s • %s" % [AppState.player_name, "متصل" if AppState.is_authenticated else "وضع محلي"]
+    if auth_overlay and AppState.is_authenticated:
+        auth_overlay.queue_free()
+        auth_overlay = null
+
+func notify_auth_failure(message: String) -> void:
+    if auth_status:
+        auth_status.text = "الحالة: " + message
+        auth_status.add_theme_color_override("font_color", RED)
+
+func _page_create_world() -> void:
+    for child in content.get_children():
+        child.queue_free()
+    _section_title(content, "إنشاء عالم جديد", "كل قيمة هنا تُحفظ مع العالم")
+    var panel := _panel(PANEL, 20, Color(0.22, 0.7, 1.0, 0.2))
+    panel.custom_minimum_size = Vector2(0, 440)
+    content.add_child(panel)
+    var form := VBoxContainer.new()
+    form.add_theme_constant_override("separation", 10)
+    panel.add_child(form)
+    var name_field := LineEdit.new()
+    name_field.name = "WorldName"
+    name_field.placeholder_text = "اسم العالم"
+    name_field.text = "Wildbound World"
+    form.add_child(name_field)
+    var seed_field := LineEdit.new()
+    seed_field.placeholder_text = "Seed أو اتركه عشوائيًا"
+    seed_field.text = str(randi_range(1, 2147480000))
+    form.add_child(seed_field)
+    var mode := OptionButton.new()
+    mode.add_item("Survival")
+    mode.add_item("Creative")
+    mode.add_item("Adventure")
+    form.add_child(mode)
+    var difficulty := OptionButton.new()
+    difficulty.add_item("Peaceful")
+    difficulty.add_item("Easy")
+    difficulty.add_item("Normal")
+    difficulty.add_item("Hard")
+    difficulty.select(2)
+    form.add_child(difficulty)
+    var privacy := OptionButton.new()
+    privacy.add_item("Public")
+    privacy.add_item("Private")
+    privacy.add_item("Friends Only")
+    privacy.select(1)
+    form.add_child(privacy)
+    var structures := CheckBox.new()
+    structures.text = "Generate Structures"
+    structures.button_pressed = true
+    form.add_child(structures)
+    var creatures := CheckBox.new()
+    creatures.text = "Creatures"
+    creatures.button_pressed = true
+    form.add_child(creatures)
+    var weather := CheckBox.new()
+    weather.text = "Weather"
+    weather.button_pressed = true
+    form.add_child(weather)
+    var starting_inventory := LineEdit.new()
+    starting_inventory.placeholder_text = "Starting Inventory (مثال: 1=64,2=32)"
+    form.add_child(starting_inventory)
+    var controls := HBoxContainer.new()
+    controls.alignment = BoxContainer.ALIGNMENT_END
+    form.add_child(controls)
+    var cancel := _button("إلغاء", Vector2(120, 42))
+    cancel.pressed.connect(func(): _show_page("home"))
+    controls.add_child(cancel)
+    var create := _primary_button("إنشاء وابدأ", Vector2(190, 48))
+    create.pressed.connect(func():
+        var seed_value := int(seed_field.text) if seed_field.text.is_valid_int() else randi_range(1, 2147480000)
+        AppState.pending_world_config = {
+            "name": name_field.text.strip_edges() if not name_field.text.strip_edges().is_empty() else "Wildbound World",
+            "seed": seed_value,
+            "mode": mode.get_item_text(mode.selected).to_lower(),
+            "difficulty": difficulty.get_item_text(difficulty.selected).to_lower(),
+            "privacy": privacy.get_item_text(privacy.selected).to_lower(),
+            "structures": structures.button_pressed,
+            "creatures": creatures.button_pressed,
+            "weather": weather.button_pressed,
+            "starting_inventory": _parse_starting_inventory(starting_inventory.text),
+        }
+        play_singleplayer.emit()
+    )
+    controls.add_child(create)
+
+func _page_solo() -> void:
+    _section_title(content, "اللعب الفردي", "عوالم محفوظة على جهازك")
+    var new_world := _primary_button("＋ إنشاء عالم جديد", Vector2(240, 48))
+    new_world.pressed.connect(_page_create_world)
+    content.add_child(new_world)
+    _world_cards(content, SaveDB.list_worlds())
+
+func _parse_starting_inventory(text: String) -> Dictionary:
+    var result := {}
+    for part in text.split(","):
+        var pair := part.strip_edges().split("=")
+        if pair.size() == 2 and pair[0].is_valid_int() and pair[1].is_valid_int():
+            var item_id := int(pair[0])
+            var amount := maxi(0, int(pair[1]))
+            if item_id >= 0 and amount > 0:
+                result[item_id] = amount
+    return result
+
+func _page_worlds() -> void:
+    _section_title(content, "العوالم", "إدارة العوالم المحفوظة")
+    _world_cards(content, SaveDB.list_worlds(), true)
+
+func _world_cards(parent: Control, worlds: Array, manage := false) -> void:
+    if worlds.is_empty():
+        var empty := _panel(PANEL_2, 18, Color(0.22, 0.7, 1.0, 0.12))
+        parent.add_child(empty)
+        _label(empty, "لا توجد عوالم محفوظة بعد.", 14, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+        return
+    var grid := GridContainer.new()
+    grid.columns = 2
+    grid.add_theme_constant_override("h_separation", 10)
+    grid.add_theme_constant_override("v_separation", 10)
+    parent.add_child(grid)
+    for world in worlds:
+        var card := _panel(PANEL_2, 16, Color(0.22, 0.7, 1.0, 0.14))
+        card.custom_minimum_size = Vector2(0, 150)
+        grid.add_child(card)
+        var margin := MarginContainer.new()
+        margin.add_theme_constant_override("margin_left", 14)
+        margin.add_theme_constant_override("margin_top", 12)
+        margin.add_theme_constant_override("margin_right", 14)
+        margin.add_theme_constant_override("margin_bottom", 12)
+        card.add_child(margin)
+        var box := VBoxContainer.new()
+        box.add_theme_constant_override("separation", 6)
+        margin.add_child(box)
+        var thumb := TextureRect.new()
+        thumb.texture = load(BG_PATH) as Texture2D
+        thumb.custom_minimum_size = Vector2(0, 78)
+        thumb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+        thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+        thumb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        box.add_child(thumb)
+        var meta: Dictionary = world.get("metadata", {})
+        _label(box, str(meta.get("name", world.get("id", "World"))), 17, TEXT)
+        _label(box, "Mode: %s" % str(meta.get("mode", "unknown")), 10, MUTED)
+        _label(box, "Seed: %s" % str(meta.get("seed", "—")), 10, MUTED)
+        _label(box, "Last played: %s" % str(meta.get("saved_at", "—")), 9, MUTED)
+        var actions := HBoxContainer.new()
+        actions.alignment = BoxContainer.ALIGNMENT_END
+        box.add_child(actions)
+        var play := _button("استئناف", Vector2(110, 34))
+        var world_id := str(world.get("id", ""))
+        play.pressed.connect(func(): _resume_world(world_id))
+        actions.add_child(play)
+        if manage:
+            var menu_button := _button("⋮", Vector2(48, 34))
+            menu_button.pressed.connect(func(): _world_actions(world_id, str(meta.get("name", "World"))))
+            actions.add_child(menu_button)
+
+func _page_multiplayer() -> void:
+    _section_title(content, "متعدد اللاعبين", "اتصال حقيقي عبر NetworkManager")
+    var row := HBoxContainer.new()
+    row.add_theme_constant_override("separation", 10)
+    content.add_child(row)
+    var host := _quick_card(row, "HOST", "استضافة", "تشغيل جلسة ENet فعلية", func(): host_multiplayer.emit())
+    host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    var join := _quick_card(row, "JOIN", "انضمام", "الاتصال بعنوان سيرفر فعلي", func(): _join_dialog())
+    join.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    var servers := _quick_card(row, "SERVERS", "الخوادم", "المفضلة والاتصال المباشر", func(): _show_page("servers"))
+    servers.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    _section_title(content, "الأصدقاء داخل الجلسة", "لا يعرض أي لاعب غير موجود في presence الحالي")
+    _refresh_friends(NetworkManager.remote_players)
+
+func _page_servers() -> void:
+    _section_title(content, "قائمة الخوادم", "القيم المعروضة من الشبكة الفعلية أو من مفضلاتك المحفوظة")
+    var add := _primary_button("＋ إضافة سيرفر", Vector2(190, 44))
+    add.pressed.connect(_add_server_dialog)
+    content.add_child(add)
+    var favorites := ServerDirectory.recent()
+    if favorites.is_empty():
+        var empty := _panel(PANEL_2, 18, Color(0.22, 0.7, 1.0, 0.12))
+        content.add_child(empty)
+        _label(empty, "لا توجد خوادم محفوظة. أضف عنوان سيرفر لبدء الاتصال.", 13, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    else:
+        for server in favorites:
+            _server_card(server)
+
+func _server_card(server: Dictionary) -> void:
+    var card := _panel(PANEL_2, 16, Color(0.22, 0.7, 1.0, 0.14))
+    card.custom_minimum_size = Vector2(0, 92)
+    content.add_child(card)
+    var row := HBoxContainer.new()
+    row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    row.add_theme_constant_override("separation", 10)
+    card.add_child(row)
+    var info := VBoxContainer.new()
+    info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    row.add_child(info)
+    _label(info, str(server.get("name", "Server")), 15, TEXT)
+    _label(info, str(server.get("address", "")), 10, MUTED)
+    var state := _label(info, "جارٍ فحص الاتصال...", 10, YELLOW)
+    _probe_server(str(server.get("address", "")), state)
+    var join := _button("دخول", Vector2(100, 38))
+    join.pressed.connect(func(): _join_remote(str(server.get("address", ""))))
+    row.add_child(join)
+    var remove := _button("حذف", Vector2(80, 38))
+    remove.pressed.connect(func(): ServerDirectory.remove_favorite(str(server.get("address", ""))); _show_page("servers"))
+    row.add_child(remove)
+
+func _page_store() -> void:
+    _section_title(content, "المتجر", "التجارة الحقيقية تحتاج مزود دفع وBackend تجاري")
+    var panel := _panel(PANEL, 22, Color(0.22, 0.7, 1.0, 0.18))
+    panel.custom_minimum_size = Vector2(0, 280)
+    content.add_child(panel)
+    var box := VBoxContainer.new()
+    box.alignment = BoxContainer.ALIGNMENT_CENTER
+    box.add_theme_constant_override("separation", 10)
+    panel.add_child(box)
+    _label(box, "المتجر غير مفعّل", 24, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "لا توجد مشتريات وهمية أو أسعار غير مرتبطة بخدمة حقيقية. عند إضافة Commerce Backend سيتم ربط هذه الصفحة بالبيانات الحقيقية.", 12, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+
+func _page_profile() -> void:
+    _section_title(content, "الملف الشخصي", "بيانات الجلسة الحالية")
+    var panel := _panel(PANEL, 22, Color(0.22, 0.7, 1.0, 0.2))
+    content.add_child(panel)
+    var box := VBoxContainer.new()
+    box.alignment = BoxContainer.ALIGNMENT_CENTER
+    box.add_theme_constant_override("separation", 8)
+    panel.add_child(box)
+    _label(box, AppState.player_name, 28, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "Character: %s" % AppState.character_id, 12, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "Account: %s" % ("Authenticated" if AppState.is_authenticated else "Local/Guest"), 11, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "World: %s" % (AppState.current_world_name if not AppState.current_world_name.is_empty() else "—"), 11, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "Player ID is kept out of UI unless an authenticated backend session supplies it.", 9, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+
+func _page_developer() -> void:
+    _section_title(content, "أدوات المطور", "مقاييس Runtime فعلية فقط")
+    var grid := GridContainer.new()
+    grid.columns = 2
+    grid.add_theme_constant_override("h_separation", 10)
+    grid.add_theme_constant_override("v_separation", 10)
+    content.add_child(grid)
+    _metric(grid, "FPS", str(Engine.get_frames_per_second()))
+    _metric(grid, "Memory", "%0.2f MB" % (Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0))
+    _metric(grid, "Network Peers", str(multiplayer.get_peers().size()))
+    _metric(grid, "Loaded Worlds", str(SaveDB.list_worlds().size()))
+    _metric(grid, "Loaded Scene Nodes", str(get_tree().get_node_count()))
+    _metric(grid, "Connection", "connected" if multiplayer.multiplayer_peer != null else "offline")
+    var console := _button("فتح Developer Console (F8)", Vector2(270, 44))
+    console.pressed.connect(func():
+        var root := get_parent()
+        if root and root.has_method("toggle_developer_console"):
+            root.toggle_developer_console()
+    )
+    content.add_child(console)
+
+func _metric(parent: Control, title: String, value: String) -> void:
+    var card := _panel(PANEL_2, 14, Color(0.22, 0.7, 1.0, 0.12))
+    card.custom_minimum_size = Vector2(0, 92)
+    parent.add_child(card)
+    var box := VBoxContainer.new()
+    box.alignment = BoxContainer.ALIGNMENT_CENTER
+    card.add_child(box)
+    _label(box, title, 11, MUTED)
+    var value_label := _label(box, value, 24, ACCENT_BRIGHT)
+    value_label.name = "MetricValue"
+
+func _refresh_friends(players: Dictionary) -> void:
+    if friends_box == null:
+        return
+    for child in friends_box.get_children():
+        child.queue_free()
+    var valid := 0
+    for id in players:
+        var profile: Dictionary = players[id]
+        if profile.is_empty():
+            continue
+        valid += 1
+        var row := _panel(PANEL_2, 12, Color(0.22, 0.7, 1.0, 0.1))
+        row.custom_minimum_size = Vector2(0, 54)
+        friends_box.add_child(row)
+        var box := VBoxContainer.new()
+        row.add_child(box)
+        var name := str(profile.get("name", "Player"))
+        _label(box, name, 12, TEXT)
+        _label(box, "● متصل داخل الجلسة • %s" % str(profile.get("character", "ranger")), 9, GREEN)
+        var view := _button("عرض", Vector2(70, 30))
+        view.pressed.connect(func(): _show_friend_profile(name, profile))
+        box.add_child(view)
+    if valid == 0:
+        _label(friends_box, "لا يوجد أصدقاء متصلون حاليًا.", 11, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    var count_label := _find_child_label("FriendCount")
+    if count_label:
+        count_label.text = "%d متصل" % valid
+    status_friends.text = "الأصدقاء: %d" % valid
+
+func _show_friend_profile(name: String, profile: Dictionary) -> void:
+    var dialog := AcceptDialog.new()
+    dialog.title = "ملف اللاعب"
+    dialog.dialog_text = "%s\nCharacter: %s\nالحالة: متصل داخل الجلسة الحالية" % [name, str(profile.get("character", "ranger"))]
+    add_child(dialog)
+    dialog.popup_centered(Vector2i(420, 220))
+
+func _refresh_status() -> void:
+    if status_connection == null:
+        return
+    var state := str(NetworkManager.connection_state)
+    var online := state in ["connected", "hosting"]
+    status_connection.text = "الاتصال: %s" % ({"connected":"متصل", "hosting":"مستضيف", "connecting":"جارٍ الاتصال", "offline":"غير متصل"}.get(state, state))
+    status_connection.add_theme_color_override("font_color", GREEN if online else (YELLOW if state == "connecting" else MUTED))
+    status_server.text = "الخادم: مستضاف" if NetworkManager.server_started else "الخادم: عميل"
+    status_fps.text = "FPS: %d" % Engine.get_frames_per_second()
+
+func _process(_delta: float) -> void:
+    if status_fps:
+        status_fps.text = "FPS: %d" % Engine.get_frames_per_second()
+    if current_page == "developer" and content:
+        for child in content.get_children():
+            if child is GridContainer:
+                _refresh_metric_grid(child)
+
+func _refresh_metric_grid(grid: GridContainer) -> void:
+    var values := [
+        str(Engine.get_frames_per_second()),
+        "%0.2f MB" % (Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0),
+        str(multiplayer.get_peers().size()),
+        str(SaveDB.list_worlds().size()),
+        str(get_tree().get_node_count()),
+        "connected" if multiplayer.multiplayer_peer != null else "offline"
+    ]
+    var i := 0
+    for card in grid.get_children():
+        var labels := card.find_children("Label", "Label", true, false)
+        if labels.size() >= 2 and i < values.size():
+            labels[1].text = values[i]
+        i += 1
+
+func _search(query: String) -> void:
+    _close_search_popup()
+    var q := query.strip_edges().to_lower()
+    if q.is_empty():
+        return
+    search_popup = _panel(PANEL, 16, Color(0.22, 0.7, 1.0, 0.22))
+    search_popup.custom_minimum_size = Vector2(520, 340)
+    search_popup.position = Vector2(300, 90)
+    add_child(search_popup)
+    search_results = VBoxContainer.new()
+    search_results.add_theme_constant_override("separation", 7)
+    search_popup.add_child(search_results)
+    _label(search_results, "نتائج البحث", 17, TEXT)
+    var found := 0
+    for world in SaveDB.list_worlds():
+        var meta: Dictionary = world.get("metadata", {})
+        var name := str(meta.get("name", ""))
+        if q in name.to_lower():
+            found += 1
+            var b := _button("عالم: %s" % name, Vector2(0, 38))
+            search_results.add_child(b)
+            var id := str(world.get("id", ""))
+            b.pressed.connect(func(): _close_search_popup(); _resume_world(id))
+    for server in ServerDirectory.recent():
+        var text := (str(server.get("name", "")) + " " + str(server.get("address", ""))).to_lower()
+        if q in text:
+            found += 1
+            var sb := _button("خادم: %s" % str(server.get("name", "Server")), Vector2(0, 38))
+            search_results.add_child(sb)
+            var addr := str(server.get("address", ""))
+            sb.pressed.connect(func(): _close_search_popup(); _join_remote(addr))
+    for id in NetworkManager.remote_players:
+        var profile: Dictionary = NetworkManager.remote_players[id]
+        var name := str(profile.get("name", ""))
+        if q in name.to_lower():
+            found += 1
+            _label(search_results, "لاعب: %s • متصل" % name, 11, GREEN)
+    if found == 0:
+        _label(search_results, "لا توجد نتائج مطابقة من البيانات المتوفرة حاليًا.", 11, MUTED)
+
+func _toggle_notifications() -> void:
+    if notification_popup:
+        notification_popup.queue_free()
+        notification_popup = null
+        return
+    notification_popup = _panel(PANEL, 16, Color(0.22, 0.7, 1.0, 0.22))
+    notification_popup.custom_minimum_size = Vector2(360, 180)
+    notification_popup.position = Vector2(860, 90)
+    add_child(notification_popup)
+    var box := VBoxContainer.new()
+    notification_popup.add_child(box)
+    _label(box, "الإشعارات", 18, TEXT)
+    _label(box, "لا توجد إشعارات غير مقروءة محفوظة في الخدمة الحالية.", 11, MUTED)
+
+func _close_search_popup() -> void:
+    if search_popup:
+        search_popup.queue_free()
+        search_popup = null
+
+func _join_dialog() -> void:
+    var dialog := AcceptDialog.new()
+    dialog.title = "الانضمام إلى سيرفر"
+    var box := VBoxContainer.new()
+    var address := LineEdit.new()
+    address.placeholder_text = "IP أو Domain"
+    address.text = "127.0.0.1"
+    box.add_child(address)
+    dialog.add_child(box)
+    add_child(dialog)
+    dialog.confirmed.connect(func(): _join_remote(address.text))
+    dialog.popup_centered(Vector2i(520, 190))
+
+func _join_remote(address: String) -> void:
+    var normalized := address.strip_edges()
+    if normalized.is_empty():
+        return
+    if not ":" in normalized:
+        normalized += ":%d" % NetworkManager.DEFAULT_PORT
+    join_multiplayer.emit(normalized)
+
+func _add_server_dialog() -> void:
+    var dialog := AcceptDialog.new()
+    dialog.title = "إضافة سيرفر"
+    var box := VBoxContainer.new()
+    var name := LineEdit.new()
+    name.placeholder_text = "اسم السيرفر"
+    box.add_child(name)
+    var address := LineEdit.new()
+    address.placeholder_text = "127.0.0.1:31001"
+    box.add_child(address)
+    dialog.add_child(box)
+    add_child(dialog)
+    dialog.confirmed.connect(func():
+        var n := name.text.strip_edges()
+        var a := address.text.strip_edges()
+        if not a.is_empty():
+            ServerDirectory.add_favorite(a, n if not n.is_empty() else "Favorite")
+            _show_page("servers")
+    )
+    dialog.popup_centered(Vector2i(540, 220))
+
+func _probe_server(address: String, label: Label) -> void:
+    # ENet servers do not expose an HTTP/TCP status port in the current client.
+    # Never mislabel a server as online using an incompatible transport probe.
+    label.text = "محفوظ محليًا • الحالة عبر الاتصال المباشر"
+    label.add_theme_color_override("font_color", MUTED)
+
+func _resume_world(world_id: String) -> void:
+    var data := SaveDB.load_world(world_id)
+    if data.is_empty():
+        return
+    var meta: Dictionary = data.get("metadata", {})
+    AppState.pending_world_config = {
+        "name": str(meta.get("name", "World")),
+        "seed": int(meta.get("seed", 7777)),
+        "mode": str(meta.get("mode", "survival")),
+        "difficulty": str(meta.get("difficulty", "normal")),
+        "privacy": str(meta.get("privacy", "private")),
+        "resume_id": world_id,
+    }
+    play_singleplayer.emit()
+
+func _world_actions(world_id: String, world_name: String) -> void:
+    var popup := PopupMenu.new()
+    popup.add_item("تشغيل", 1)
+    popup.add_item("إعادة تسمية", 2)
+    popup.add_item("نسخة", 3)
+    popup.add_item("نسخ احتياطي", 4)
+    popup.add_item("حذف", 5)
+    add_child(popup)
+    popup.id_pressed.connect(func(id):
+        popup.queue_free()
+        match id:
+            1: _resume_world(world_id)
+            2: _rename_world_dialog(world_id, world_name)
+            3: _duplicate_world_dialog(world_id, world_name)
+            4: _backup_world(world_id)
+            5: _confirm_delete_world(world_id)
+    )
+    popup.popup_centered(Vector2i(220, 220))
+
+func _rename_world_dialog(world_id: String, old_name: String) -> void:
+    var dialog := AcceptDialog.new()
+    dialog.title = "إعادة تسمية العالم"
+    var input := LineEdit.new()
+    input.text = old_name
+    dialog.add_child(input)
+    add_child(dialog)
+    dialog.confirmed.connect(func():
+        var name := input.text.strip_edges()
+        if not name.is_empty():
+            SaveDB.rename_world(world_id, name)
+            _show_page("worlds")
+    )
+    dialog.popup_centered(Vector2i(460, 180))
+
+func _duplicate_world_dialog(world_id: String, old_name: String) -> void:
+    var dialog := AcceptDialog.new()
+    dialog.title = "نسخ العالم"
+    var input := LineEdit.new()
+    input.placeholder_text = "اسم النسخة"
+    input.text = "%s Copy" % old_name
+    dialog.add_child(input)
+    add_child(dialog)
+    dialog.confirmed.connect(func():
+        var name := input.text.strip_edges()
+        SaveDB.duplicate_world(world_id, name)
+        _show_page("worlds")
+    )
+    dialog.popup_centered(Vector2i(460, 180))
+
+func _backup_world(world_id: String) -> void:
+    var path := SaveDB.backup_world(world_id)
+    var dialog := AcceptDialog.new()
+    dialog.title = "النسخ الاحتياطي"
+    dialog.dialog_text = "تم إنشاء النسخة الاحتياطية." if not path.is_empty() else "فشل إنشاء النسخة الاحتياطية."
+    add_child(dialog)
+    dialog.popup_centered()
+
+func _confirm_delete_world(world_id: String) -> void:
+    var dialog := ConfirmationDialog.new()
+    dialog.title = "حذف العالم"
+    dialog.dialog_text = "سيتم حذف العالم من التخزين المحلي. هذا الإجراء لا يمكن التراجع عنه."
+    add_child(dialog)
+    dialog.confirmed.connect(func():
+        SaveDB.delete_world(world_id)
+        _show_page("worlds")
+    )
+    dialog.popup_centered()
+
+func _logout() -> void:
+    var root := get_parent()
+    var auth_node = root.get("auth") if root != null else null
+    if auth_node != null and auth_node.has_method("logout") and not AppState.auth_token.is_empty():
+        auth_node.logout(AppState.auth_token)
+    AppState.set_session("Guest", "")
+    _show_page("home")
+
+func _request_close() -> void:
+    var root := get_parent()
+    if root != null and root.has_method("request_close"):
+        root.request_close()
+    else:
+        get_tree().quit()
+
+func _toggle_window_mode() -> void:
+    var mode := DisplayServer.window_get_mode()
+    DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if mode == DisplayServer.WINDOW_MODE_MAXIMIZED else DisplayServer.WINDOW_MODE_MAXIMIZED)
+
+func _animate_intro() -> void:
+    modulate.a = 0.0
+    var tween := create_tween()
+    tween.tween_property(self, "modulate:a", 1.0, 0.55).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+func _panel(color: Color, radius: int, border: Color) -> PanelContainer:
+    var panel := PanelContainer.new()
+    panel.add_theme_stylebox_override("panel", _style(color, radius, border))
+    return panel
+
+func _style(color: Color, radius: int, border: Color) -> StyleBoxFlat:
+    var s := StyleBoxFlat.new()
+    s.bg_color = color
+    s.corner_radius_top_left = radius
+    s.corner_radius_top_right = radius
+    s.corner_radius_bottom_left = radius
+    s.corner_radius_bottom_right = radius
+    s.border_width_left = 1
+    s.border_width_right = 1
+    s.border_width_top = 1
+    s.border_width_bottom = 1
+    s.border_color = border
+    s.content_margin_left = 10
+    s.content_margin_right = 10
+    s.content_margin_top = 10
+    s.content_margin_bottom = 10
+    return s
+
+func _label(parent: Control, text: String, size: int, color: Color, align := HORIZONTAL_ALIGNMENT_LEFT) -> Label:
+    var l := Label.new()
+    l.text = text
+    l.horizontal_alignment = align
+    l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    l.add_theme_font_size_override("font_size", size)
+    l.add_theme_color_override("font_color", color)
+    l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    parent.add_child(l)
+    return l
+
+func _nav_button(icon: String, text: String) -> Button:
+    var b := Button.new()
+    b.text = "%s  %s" % [icon, text]
+    b.custom_minimum_size = Vector2(0, 42)
+    b.alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    b.add_theme_font_size_override("font_size", 13)
+    var normal := _style(Color(0.02,0.04,0.08,0.66), 12, Color(0.18,0.36,0.55,0.20))
+    var hover := _style(Color(0.03,0.10,0.18,0.88), 12, Color(0.22,0.67,1.0,0.55))
+    var pressed := _style(Color(0.02,0.14,0.25,0.95), 12, ACCENT)
+    b.add_theme_stylebox_override("normal", normal)
+    b.add_theme_stylebox_override("hover", hover)
+    b.add_theme_stylebox_override("pressed", pressed)
+    b.add_theme_stylebox_override("disabled", pressed)
+    return b
+
+func _button(text: String, size: Vector2) -> Button:
+    var b := Button.new()
+    b.text = text
+    b.custom_minimum_size = size
+    b.add_theme_font_size_override("font_size", 12)
+    b.add_theme_stylebox_override("normal", _style(Color(0.03,0.07,0.12,0.82), 10, Color(0.24,0.52,0.78,0.25)))
+    b.add_theme_stylebox_override("hover", _style(Color(0.04,0.12,0.20,0.94), 10, Color(0.25,0.72,1.0,0.6)))
+    b.add_theme_stylebox_override("pressed", _style(Color(0.03,0.16,0.26,0.98), 10, ACCENT))
+    return b
+
+func _primary_button(text: String, size: Vector2) -> Button:
+    var b := Button.new()
+    b.text = text
+    b.custom_minimum_size = size
+    b.add_theme_font_size_override("font_size", 15)
+    b.add_theme_color_override("font_color", Color.WHITE)
+    b.add_theme_stylebox_override("normal", _style(Color(0.02,0.34,0.72,0.92), 14, Color(0.35,0.85,1.0,0.9)))
+    b.add_theme_stylebox_override("hover", _style(Color(0.02,0.46,0.92,0.97), 14, ACCENT_BRIGHT))
+    b.add_theme_stylebox_override("pressed", _style(Color(0.02,0.22,0.52,1.0), 14, ACCENT_BRIGHT))
+    return b
+
+func _small_button(text: String, width: int) -> Button:
+    return _button(text, Vector2(width, 40))
+
+func _quick_card(parent: Control, icon: String, title: String, subtitle: String, action: Callable) -> PanelContainer:
+    var card := _panel(PANEL_2, 16, Color(0.22,0.7,1.0,0.16))
+    card.custom_minimum_size = Vector2(0, 104)
+    parent.add_child(card)
+    var box := VBoxContainer.new()
+    box.alignment = BoxContainer.ALIGNMENT_CENTER
+    card.add_child(box)
+    _label(box, icon, 18, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, title, 14, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, subtitle, 9, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    card.gui_input.connect(func(event):
+        if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+            action.call()
+    )
+    card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+    return card
+
+func _section_title(parent: Control, title: String, subtitle: String) -> void:
+    _label(parent, title, 22, TEXT)
+    _label(parent, subtitle, 10, MUTED)
+
+func _find_child_label(node_name: String) -> Label:
+    return find_child(node_name, true, false) as Label

@@ -1,0 +1,10 @@
+{
+  "game_port": 31001,
+  "max_players": 32,
+  "view_distance": 7,
+  "simulation_distance": 5,
+  "difficulty": "normal",
+  "pvp": true,
+  "world_seed": 1234567,
+  "auth_base_url": "https://auth.example.com"
+}

@@ -1,0 +1,163 @@
+name: AETHRA CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate project files
+        shell: bash
+        run: |
+          test -f project.godot
+          test -f scenes/main.tscn
+          test -f TRACEABILITY.md
+          grep -RInE "TODO[[:space:]]*:\s*(implement|placeholder)|implementation goes here" scripts server tests && exit 1 || true
+      - name: Validate asset paths
+        shell: bash
+        run: |
+          for f in assets/audio/*.wav; do test -s "$f"; done
+      - name: Inventory source count
+        shell: bash
+        run: |
+          find scripts server tests -type f | sort
+
+  windows-release:
+    name: Windows Runtime Gate
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Record source revision
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path build | Out-Null
+          $commit = (git rev-parse HEAD).Trim()
+          Write-Output "COMMIT_SHA=$commit"
+          $commit | Out-File -Encoding ascii build/commit.sha
+
+      - uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.7.2
+          use-dotnet: false
+          include-templates: true
+          cache: true
+
+      - name: Verify Godot 4.7.2
+        shell: pwsh
+        run: |
+          $version = (godot --version 2>$null | Out-String).Trim()
+          Write-Output "GODOT_VERSION=$version"
+          if (-not $version.StartsWith("4.7.2")) { throw "Godot 4.7.2 is required. Detected: $version" }
+
+      - name: Validate project files with Godot editor
+        shell: pwsh
+        run: |
+          godot --headless --path . --editor --quit
+
+      - name: Run Godot smoke test
+        shell: pwsh
+        run: |
+          godot --headless --path . --script res://tests/self_test.gd
+
+      - name: Go tests
+        shell: pwsh
+        working-directory: server/auth-service
+        run: |
+          go test ./...
+
+      - name: Go vet
+        shell: pwsh
+        working-directory: server/auth-service
+        run: |
+          go vet ./...
+
+      - name: Export Windows release
+        shell: pwsh
+        run: |
+          ./build_windows.ps1 -Godot godot -Output build/AETHRA-Wildbound.exe
+
+      - name: Verify single EXE and hash
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem build -File
+          if ($files.Count -ne 1 -or $files[0].Name -ne "AETHRA-Wildbound.exe") { throw "Standalone check failed." }
+          $sha = (Get-FileHash build/AETHRA-Wildbound.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$sha  AETHRA-Wildbound.exe" | Out-File -Encoding ascii build/AETHRA-Wildbound.sha256
+
+      - name: Write runtime verification report
+        shell: pwsh
+        run: |
+          $commit = (git rev-parse HEAD).Trim()
+          $godotVersion = (godot --version 2>$null | Out-String).Trim()
+          $exe = Get-Item "build/AETHRA-Wildbound.exe"
+          $sha = (Get-FileHash $exe.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          $lines = @(
+            "# WINDOWS RUNTIME VERIFICATION",
+            "",
+            "Source revision: $commit",
+            "Godot version: $godotVersion",
+            "Build result: PASS",
+            "EXE SHA: $sha",
+            "EXE size: $($exe.Length) bytes",
+            "Process start: PENDING - startup smoke test to run on this workflow run",
+            "GUI result: PENDING - automation depends on Windows UI test availability",
+            "Gameplay result: PENDING - not claimed without a real GUI session on Windows",
+            "Save/load result: PENDING - not claimed without a real Windows runtime",
+            "Settings result: PENDING - not claimed without a real Windows runtime",
+            "Multiplayer result: PENDING - required real Windows client/server validation",
+            "Errors found: none at build/import/self-test layer in this workflow run",
+            "Fixes performed: current source validated and exported from the checked-out commit",
+            "Remaining blockers: no real Windows process start / GUI interaction evidence until a Windows runner executes the EXE"
+          )
+          Set-Content -Path "WINDOWS-RUNTIME-VERIFICATION.md" -Value $lines -Encoding utf8
+
+      - name: Smoke-start Windows executable
+        shell: pwsh
+        run: |
+          $exe = "build/AETHRA-Wildbound.exe"
+          if (-not (Test-Path $exe)) { throw "Missing EXE: $exe" }
+          $proc = Start-Process -FilePath $exe -PassThru -WindowStyle Normal
+          Start-Sleep -Seconds 15
+          if ($proc -and -not $proc.HasExited) {
+            $proc | Stop-Process -Force
+            Write-Output "PROCESS_START_OK"
+            "Process start: PASS" | Out-File -Append -Encoding utf8 WINDOWS-RUNTIME-VERIFICATION.md
+          } elseif ($proc) {
+            Write-Output "PROCESS_EXITED:$($proc.ExitCode)"
+            "Process start: FAIL" | Out-File -Append -Encoding utf8 WINDOWS-RUNTIME-VERIFICATION.md
+            throw "EXE exited unexpectedly during startup smoke test."
+          } else {
+            "Process start: FAIL" | Out-File -Append -Encoding utf8 WINDOWS-RUNTIME-VERIFICATION.md
+            throw "Failed to start EXE process."
+          }
+
+      - name: Windows GUI automation gate
+        shell: pwsh
+        run: |
+          $report = "WINDOWS-RUNTIME-VERIFICATION.md"
+          $automationScript = "tests/windows_gui_smoke.ps1"
+          if (Test-Path $automationScript) {
+            & $automationScript -Executable "build/AETHRA-Wildbound.exe"
+            if ($LASTEXITCODE -ne 0) { throw "Windows GUI automation failed." }
+            "GUI result: PASS - real Windows GUI automation completed" | Out-File -Append -Encoding utf8 $report
+            "Gameplay result: PASS - real Windows GUI automation completed the declared flow" | Out-File -Append -Encoding utf8 $report
+          } else {
+            "GUI result: BLOCKED BY ENVIRONMENT" | Out-File -Append -Encoding utf8 $report
+            "Gameplay result: BLOCKED BY ENVIRONMENT" | Out-File -Append -Encoding utf8 $report
+            "Save/load result: BLOCKED BY ENVIRONMENT" | Out-File -Append -Encoding utf8 $report
+            "Settings result: BLOCKED BY ENVIRONMENT" | Out-File -Append -Encoding utf8 $report
+            "Multiplayer result: BLOCKED BY ENVIRONMENT" | Out-File -Append -Encoding utf8 $report
+            Write-Output "Windows GUI automation is not available on this runner. Gameplay remains blocked by environment."
+          }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AETHRA-Wildbound-Windows-x64
+          path: |
+            build/AETHRA-Wildbound.exe
+            build/AETHRA-Wildbound.sha256
+            WINDOWS-RUNTIME-VERIFICATION.md
