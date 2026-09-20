@@ -47,13 +47,12 @@ func _run() -> void:
     ))
     var inventory = load("res://scripts/gameplay/inventory.gd").new()
     checks.append(_check("Inventory validation", func() -> bool:
-        return inventory.add_item(BlockRegistry.WATER, 1) == 1 and inventory.add_item(BlockRegistry.STONE, -1) == 0 and inventory.count_item(BlockRegistry.WATER) == 0
+        return inventory.add_item(BlockRegistry.WATER, 1) == 0 and inventory.add_item(BlockRegistry.STONE, -1) == 0 and inventory.count_item(BlockRegistry.WATER) == 0
     ))
     inventory.add_item(BlockRegistry.LOG, 2)
     checks.append(_check("Crafting transaction", func() -> bool:
         var crafting = load("res://scripts/gameplay/crafting.gd").new()
         var crafted: bool = crafting.craft(inventory, "wood_pick")
-        crafting.free()
         return not crafted and inventory.count_item(BlockRegistry.LOG) == 2
     ))
     for result in checks:

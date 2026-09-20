@@ -15,7 +15,7 @@ func craft(inventory, recipe_id: String) -> bool:
         if not inventory.remove_item(int(key), int(recipe.inputs[key])):
             return false
     for key in output:
-        var remaining := inventory.add_item(int(key), int(output[key]))
+        var remaining: int = inventory.add_item(int(key), int(output[key]))
         if remaining > 0:
             return false
     return true
