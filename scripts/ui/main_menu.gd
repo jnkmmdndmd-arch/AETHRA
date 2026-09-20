@@ -278,8 +278,20 @@ func _build_social(parent: PanelContainer) -> void:
     box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     box.add_theme_constant_override("separation", 10)
     parent.add_child(box)
-    _label(box, "أصدقائي المتصلون", 18, TEXT)
-    var count := _label(box, "0 متصل", 11, MUTED)
+    var heading := HBoxContainer.new()
+    heading.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    heading.add_theme_constant_override("separation", 8)
+    box.add_child(heading)
+    var heading_icon = load("res://scripts/ui/vector_icon.gd").new()
+    heading_icon.icon_name = "players"
+    heading_icon.icon_color = ACCENT_BRIGHT
+    heading_icon.custom_minimum_size = Vector2(24, 24)
+    heading.add_child(heading_icon)
+    var heading_text := VBoxContainer.new()
+    heading_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    heading.add_child(heading_text)
+    _label(heading_text, "أصدقائي المتصلون", 18, TEXT)
+    var count := _label(heading_text, "0 متصل", 11, MUTED)
     count.name = "FriendCount"
     friends_box = VBoxContainer.new()
     friends_box.add_theme_constant_override("separation", 6)
@@ -758,14 +770,26 @@ func _refresh_friends(players: Dictionary) -> void:
         var row := _panel(PANEL_2, 12, Color(0.22, 0.7, 1.0, 0.1))
         row.custom_minimum_size = Vector2(0, 54)
         friends_box.add_child(row)
+        var inner := HBoxContainer.new()
+        inner.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+        inner.layout_direction = Control.LAYOUT_DIRECTION_RTL
+        inner.add_theme_constant_override("separation", 8)
+        row.add_child(inner)
+        var person_icon = load("res://scripts/ui/vector_icon.gd").new()
+        person_icon.icon_name = "person"
+        person_icon.icon_color = GREEN
+        person_icon.custom_minimum_size = Vector2(24, 24)
+        inner.add_child(person_icon)
         var box := VBoxContainer.new()
-        row.add_child(box)
+        box.layout_direction = Control.LAYOUT_DIRECTION_RTL
+        box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        inner.add_child(box)
         var name := str(profile.get("name", "Player"))
         _label(box, name, 12, TEXT)
         _label(box, "متصل داخل الجلسة - %s" % str(profile.get("character", "ranger")), 9, GREEN)
         var view := _button("عرض", Vector2(70, 30))
         view.pressed.connect(func(): _show_friend_profile(name, profile))
-        box.add_child(view)
+        inner.add_child(view)
     if valid == 0:
         _label(friends_box, "لا يوجد أصدقاء متصلون حاليًا.", 11, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
     var count_label := _find_child_label("FriendCount")
