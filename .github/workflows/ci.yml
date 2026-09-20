@@ -49,19 +49,25 @@ jobs:
       - name: Verify Godot 4.7.2
         shell: pwsh
         run: |
-          $version = (godot --version 2>$null | Out-String).Trim()
+          $godot = $env:GODOT
+          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = (Get-Command godot).Source }
+          $version = (& $godot --version 2>$null | Out-String).Trim()
           Write-Output "GODOT_VERSION=$version"
           if (-not $version.StartsWith("4.7.2")) { throw "Godot 4.7.2 is required. Detected: $version" }
 
       - name: Validate project files with Godot editor
         shell: pwsh
         run: |
-          godot --headless --path . --editor --quit
+          $godot = $env:GODOT
+          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = (Get-Command godot).Source }
+          & $godot --headless --path . --editor --quit
 
       - name: Run Godot smoke test
         shell: pwsh
         run: |
-          godot --headless --path . --script res://tests/self_test.gd
+          $godot = $env:GODOT
+          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = (Get-Command godot).Source }
+          & $godot --headless --path . --script res://tests/self_test.gd
 
       - name: Go tests
         shell: pwsh
@@ -78,7 +84,9 @@ jobs:
       - name: Export Windows release
         shell: pwsh
         run: |
-          ./build_windows.ps1 -Godot godot -Output build/AETHRA-Wildbound.exe
+          $godot = $env:GODOT
+          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = (Get-Command godot).Source }
+          ./build_windows.ps1 -Godot $godot -Output build/AETHRA-Wildbound.exe
 
       - name: Verify single EXE and hash
         shell: pwsh
@@ -92,7 +100,9 @@ jobs:
         shell: pwsh
         run: |
           $commit = (git rev-parse HEAD).Trim()
-          $godotVersion = (godot --version 2>$null | Out-String).Trim()
+          $godot = $env:GODOT
+          if ([string]::IsNullOrWhiteSpace($godot)) { $godot = (Get-Command godot).Source }
+          $godotVersion = (& $godot --version 2>$null | Out-String).Trim()
           $exe = Get-Item "build/AETHRA-Wildbound.exe"
           $sha = (Get-FileHash $exe.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
           $lines = @(
