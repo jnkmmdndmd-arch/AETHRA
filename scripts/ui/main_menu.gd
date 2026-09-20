@@ -3,7 +3,7 @@ extends Control
 signal play_singleplayer
 signal host_multiplayer
 signal join_multiplayer(address)
-signal open_settings
+signal open_settings(return_page)
 
 const BG_PATH := "res://assets/ui/hero_background.png"
 const ACCENT := Color("#35a8ff")
@@ -38,6 +38,8 @@ var auth_server: LineEdit
 var auth_status: Label
 var auth_register_mode := false
 var character_index := 0
+var sidebar_panel: PanelContainer
+var social_panel: PanelContainer
 var characters := [
     {"id":"ranger","name":"Ranger","ar":"المستكشف","description":"Balanced explorer and survival specialist"},
     {"id":"engineer","name":"Engineer","ar":"المهندس","description":"Builder focused on systems and construction"},
@@ -96,7 +98,8 @@ func _build_shell() -> void:
     root.add_child(columns)
 
     var sidebar := _panel(PANEL, 22, Color(0.22, 0.7, 1.0, 0.28))
-    sidebar.custom_minimum_size = Vector2(240, 0)
+    sidebar_panel = sidebar
+    sidebar.custom_minimum_size = Vector2(210, 0)
     columns.add_child(sidebar)
     _build_sidebar(sidebar)
 
@@ -120,11 +123,40 @@ func _build_shell() -> void:
     content_scroll.add_child(content)
 
     var social := _panel(PANEL, 22, Color(0.22, 0.7, 1.0, 0.22))
-    social.custom_minimum_size = Vector2(304, 0)
+    social_panel = social
+    social.custom_minimum_size = Vector2(280, 0)
     columns.add_child(social)
     _build_social(social)
 
     _build_bottom_bar(center_column)
+    get_viewport().size_changed.connect(_apply_responsive_layout)
+    _apply_responsive_layout()
+
+func _apply_responsive_layout() -> void:
+    var viewport_size := get_viewport_rect().size
+    if sidebar_panel:
+        var sidebar_width := 184 if viewport_size.x < 1280.0 else 210
+        sidebar_panel.custom_minimum_size = Vector2(sidebar_width, 0)
+    if social_panel:
+        social_panel.visible = viewport_size.x >= 1500.0
+    if auth_overlay and is_instance_valid(auth_overlay):
+        _layout_auth_overlay()
+    if content:
+        var hero_height := 300 if viewport_size.y < 820.0 else (340 if viewport_size.y < 900.0 else 370)
+        for child in content.get_children():
+            if child.get_meta("responsive_role", "") == "hero":
+                child.custom_minimum_size = Vector2(0, hero_height)
+
+func _layout_auth_overlay() -> void:
+    if auth_overlay == null or not is_instance_valid(auth_overlay):
+        return
+    var viewport_size := get_viewport_rect().size
+    var panel_size := Vector2(
+        minf(620.0, viewport_size.x - 64.0),
+        minf(520.0, viewport_size.y - 64.0)
+    )
+    auth_overlay.size = Vector2(maxf(panel_size.x, 460.0), maxf(panel_size.y, 420.0))
+    auth_overlay.position = -auth_overlay.size * 0.5
 
 func _build_sidebar(parent: PanelContainer) -> void:
     var box := VBoxContainer.new()
@@ -260,6 +292,9 @@ func _build_bottom_bar(center_column: VBoxContainer) -> void:
     status_friends.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 func _show_page(page: String) -> void:
+    if page == "settings":
+        open_settings.emit(current_page)
+        return
     current_page = page
     for key in nav_buttons:
         var b: Button = nav_buttons[key]
@@ -273,7 +308,6 @@ func _show_page(page: String) -> void:
         "servers": _page_servers()
         "worlds": _page_worlds()
         "store": _page_store()
-        "settings": open_settings.emit()
         "developer": _page_developer()
         "profile": _page_profile()
     _update_nav_state()
@@ -302,6 +336,7 @@ func _page_home() -> void:
 
 func _hero_panel() -> PanelContainer:
     var panel := PanelContainer.new()
+    panel.set_meta("responsive_role", "hero")
     panel.custom_minimum_size = Vector2(0, 370)
     panel.add_theme_stylebox_override("panel", _style(PANEL, 24, Color(0.25, 0.75, 1.0, 0.32)))
     var art := TextureRect.new()
@@ -348,9 +383,8 @@ func _build_auth_gate() -> void:
         return
     auth_overlay = _panel(Color(0.01, 0.02, 0.045, 0.96), 26, Color(0.25, 0.75, 1.0, 0.48))
     auth_overlay.set_anchors_preset(Control.PRESET_CENTER)
-    auth_overlay.position = Vector2(-310, -260)
-    auth_overlay.size = Vector2(620, 520)
     add_child(auth_overlay)
+    _layout_auth_overlay()
     var margin := MarginContainer.new()
     margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     margin.add_theme_constant_override("margin_left", 34)
@@ -769,7 +803,8 @@ func _search(query: String) -> void:
         return
     search_popup = _panel(PANEL, 16, Color(0.22, 0.7, 1.0, 0.22))
     search_popup.custom_minimum_size = Vector2(520, 340)
-    search_popup.position = Vector2(300, 90)
+    search_popup.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+    search_popup.position = Vector2(-540, 90)
     add_child(search_popup)
     search_results = VBoxContainer.new()
     search_results.add_theme_constant_override("separation", 7)
@@ -809,7 +844,8 @@ func _toggle_notifications() -> void:
         return
     notification_popup = _panel(PANEL, 16, Color(0.22, 0.7, 1.0, 0.22))
     notification_popup.custom_minimum_size = Vector2(360, 180)
-    notification_popup.position = Vector2(860, 90)
+    notification_popup.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+    notification_popup.position = Vector2(-380, 90)
     add_child(notification_popup)
     var box := VBoxContainer.new()
     notification_popup.add_child(box)
@@ -1052,6 +1088,7 @@ func _small_button(text: String, width: int) -> Button:
 func _quick_card(parent: Control, icon: String, title: String, subtitle: String, action: Callable) -> PanelContainer:
     var card := _panel(PANEL_2, 16, Color(0.22,0.7,1.0,0.16))
     card.custom_minimum_size = Vector2(0, 104)
+    card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     parent.add_child(card)
     var box := VBoxContainer.new()
     box.alignment = BoxContainer.ALIGNMENT_CENTER

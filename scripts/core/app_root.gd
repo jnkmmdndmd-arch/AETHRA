@@ -312,13 +312,20 @@ func _update_hud() -> void:
         return
     hud.set_player_stats(player.survival.health, player.survival.hunger, player.survival.stamina, Engine.get_frames_per_second())
 
-func _open_settings() -> void:
+func _open_settings(_return_page: String = "home") -> void:
+    if settings_menu != null and is_instance_valid(settings_menu):
+        return
     if menu:
         menu.hide()
     settings_menu = load("res://scripts/ui/settings_menu.gd").new()
     add_child(settings_menu)
     settings_menu.build(self)
-    settings_menu.closed.connect(func(): settings_menu.queue_free(); menu.show())
+    settings_menu.closed.connect(func():
+        settings_menu.queue_free()
+        settings_menu = null
+        if menu:
+            menu.show()
+    )
 
 func _hide_menu() -> void:
     if menu:

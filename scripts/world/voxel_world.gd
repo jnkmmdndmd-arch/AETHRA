@@ -82,13 +82,20 @@ func _apply_chunk(coord: Vector2i, data: PackedByteArray) -> void:
     pending.erase(coord)
     if chunks.has(coord):
         return
-    var chunk := load("res://scripts/world/voxel_chunk.gd").new()
+    var chunk_script: GDScript = load("res://scripts/world/voxel_chunk.gd") as GDScript
+    if chunk_script == null:
+        push_error("Unable to load VoxelChunk script.")
+        return
+    var chunk: Node3D = chunk_script.new() as Node3D
+    if chunk == null:
+        push_error("VoxelChunk script did not create a Node3D instance.")
+        return
     add_child(chunk)
     chunk.position = Vector3(coord.x * CHUNK_SIZE, 0, coord.y * CHUNK_SIZE)
-    chunk.setup(coord, data, self)
+    chunk.call("setup", coord, data, self)
     _apply_changed_to_chunk(chunk, coord)
     chunks[coord] = chunk
-    chunk.build_mesh()
+    chunk.call("build_mesh")
     chunk_ready.emit(coord)
 
 func world_to_chunk(pos: Vector3) -> Vector2i:
@@ -103,7 +110,7 @@ func get_block(pos: Vector3i) -> int:
     if changed_blocks.has(pos):
         return int(changed_blocks[pos])
     var coord := Vector2i(floori(float(pos.x) / CHUNK_SIZE), floori(float(pos.z) / CHUNK_SIZE))
-    var chunk = chunks.get(coord)
+    var chunk: Node3D = chunks.get(coord) as Node3D
     if chunk == null:
         return generator.block_at(pos.x, pos.y, pos.z)
     return chunk.get_voxel(world_to_local(pos))
@@ -116,27 +123,28 @@ func set_block(pos: Vector3i, id: int) -> bool:
         return false
     changed_blocks[pos] = id
     var coord := world_to_chunk(Vector3(pos))
-    var chunk = chunks.get(coord)
+    var chunk: Node3D = chunks.get(coord) as Node3D
     if chunk:
-        chunk.set_voxel(world_to_local(pos), id)
-        chunk.build_mesh()
+        chunk.call("set_voxel", world_to_local(pos), id)
+        chunk.call("build_mesh")
     _mark_neighbor_dirty(pos)
     block_changed.emit(pos, id)
     return true
 
 func _mark_neighbor_dirty(pos: Vector3i) -> void:
     for offset in [Vector3i.LEFT, Vector3i.RIGHT, Vector3i.FORWARD, Vector3i.BACK]:
-        var neighbor := pos + offset
+        var neighbor: Vector3i = pos + offset
         var coord := world_to_chunk(Vector3(neighbor))
         if chunks.has(coord):
-            var chunk = chunks[coord]
-            chunk.build_mesh()
+            var chunk: Node3D = chunks[coord] as Node3D
+            if chunk:
+                chunk.call("build_mesh")
 
-func _apply_changed_to_chunk(chunk, coord: Vector2i) -> void:
+func _apply_changed_to_chunk(chunk: Node3D, coord: Vector2i) -> void:
     for world_pos in changed_blocks:
         var p: Vector3i = world_pos
         if world_to_chunk(Vector3(p)) == coord:
-            chunk.set_voxel(world_to_local(p), int(changed_blocks[world_pos]))
+            chunk.call("set_voxel", world_to_local(p), int(changed_blocks[world_pos]))
 
 func save_delta() -> Dictionary:
     var packed := {}
@@ -151,7 +159,7 @@ func load_delta(data: Dictionary) -> void:
         if parts.size() == 3:
             changed_blocks[Vector3i(int(parts[0]),int(parts[1]),int(parts[2]))] = int(data[key])
     for coord in chunks:
-        var chunk = chunks[coord]
+        var chunk: Node3D = chunks[coord] as Node3D
         if is_instance_valid(chunk):
             _apply_changed_to_chunk(chunk, coord)
-            chunk.build_mesh()
+            chunk.call("build_mesh")

@@ -33,3 +33,10 @@ The project is verified for editor import, headless source validation, and clean
 - Windows CI is configured with the official Godot setup action and export templates and can be started manually with `workflow_dispatch`.
 - `build_windows.ps1 -CopyToDesktop` copies the verified EXE to the Windows user's Desktop after export.
 - The current execution environment is Linux and has no Godot 4.7.2 exporter installed, so Windows runtime remains BLOCKED BY ENVIRONMENT here.
+
+## 2026-09-20 runtime/UI bugfix batch
+- Fixed strict GDScript type inference in `scripts/world/voxel_world.gd` for runtime chunk creation and neighbor coordinates.
+- Reworked authentication HTTPRequest handling so login, registration, and logout do not collide on one busy HTTPRequest.
+- Made the main menu responsive for 1366×768 by adapting sidebar/social panels, centered auth layout, hero height, and popup anchoring.
+- Changed the default Windows window size from 1600×900 to 1366×768 to match the tested target display.
+- Runtime/Windows verification is still required after this source change; no gameplay PASS is claimed yet.

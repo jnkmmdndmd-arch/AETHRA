@@ -3,16 +3,8 @@ extends Node
 signal success(profile)
 signal failure(message)
 
-var http: HTTPRequest
 var base_url := ""
-
-func _ready() -> void:
-    http = HTTPRequest.new()
-    add_child(http)
-    http.request_completed.connect(_on_request_completed)
-
-func configure(url: String) -> void:
-    base_url = url.trim_suffix("/")
+var active_requests: Array[HTTPRequest] = []
 
 func _is_allowed_transport() -> bool:
     if base_url.begins_with("https://"):
@@ -21,11 +13,14 @@ func _is_allowed_transport() -> bool:
         return true
     return false
 
+func configure(url: String) -> void:
+    base_url = url.trim_suffix("/")
+
 func login(username: String, password: String) -> void:
-    _post("/v1/auth/login", {"username": username, "password": password})
+    _post("/v1/auth/login", {"username": username, "password": password}, "login")
 
 func register(username: String, password: String, character_id: String) -> void:
-    _post("/v1/auth/register", {"username": username, "password": password, "character": character_id})
+    _post("/v1/auth/register", {"username": username, "password": password, "character": character_id}, "register")
 
 func logout(token: String) -> void:
     if base_url.is_empty() or token.is_empty():
@@ -34,11 +29,9 @@ func logout(token: String) -> void:
         failure.emit("Remote authentication must use HTTPS.")
         return
     var headers := PackedStringArray(["Accept: application/json", "Authorization: Bearer " + token])
-    var err := http.request(base_url + "/v1/auth/logout", headers, HTTPClient.METHOD_POST)
-    if err != OK:
-        failure.emit("Logout request could not be sent.")
+    _request("/v1/auth/logout", HTTPClient.METHOD_POST, headers, "", "logout")
 
-func _post(path: String, body: Dictionary) -> void:
+func _post(path: String, body: Dictionary, operation: String) -> void:
     if base_url.is_empty():
         failure.emit("Authentication server is not configured.")
         return
@@ -46,16 +39,50 @@ func _post(path: String, body: Dictionary) -> void:
         failure.emit("Remote authentication must use HTTPS.")
         return
     var headers := PackedStringArray(["Content-Type: application/json", "Accept: application/json"])
-    var err := http.request(base_url + path, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
-    if err != OK:
-        failure.emit("Request could not be sent.")
+    _request(path, HTTPClient.METHOD_POST, headers, JSON.stringify(body), operation)
 
-func _on_request_completed(result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+func _request(path: String, method: HTTPClient.Method, headers: PackedStringArray, body: String, operation: String) -> void:
+    var request := HTTPRequest.new()
+    request.timeout = 10.0
+    add_child(request)
+    active_requests.append(request)
+    request.request_completed.connect(
+        func(result: int, response_code: int, response_headers: PackedStringArray, response_body: PackedByteArray) -> void:
+            _on_request_completed(request, operation, result, response_code, response_headers, response_body),
+        CONNECT_ONE_SHOT
+    )
+    var err := request.request(base_url + path, headers, method, body)
+    if err != OK:
+        _remove_request(request)
+        failure.emit("Request could not be sent.")
+        
+func _remove_request(request: HTTPRequest) -> void:
+    active_requests.erase(request)
+    if is_instance_valid(request):
+        request.queue_free()
+
+func _on_request_completed(request: HTTPRequest, operation: String, result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+    _remove_request(request)
     if result != HTTPRequest.RESULT_SUCCESS:
         failure.emit("Authentication service unavailable.")
         return
+
     var payload = JSON.parse_string(body.get_string_from_utf8())
+    var message := str(payload.get("error", "Authentication failed.")) if payload is Dictionary else "Authentication failed."
+
+    if operation == "logout":
+        if response_code >= 200 and response_code < 300:
+            return
+        failure.emit(message)
+        return
+
     if response_code >= 200 and response_code < 300 and payload is Dictionary:
+        var token := str(payload.get("token", ""))
+        var username := str(payload.get("username", ""))
+        if token.is_empty() or username.is_empty():
+            failure.emit("Authentication service returned an invalid session.")
+            return
         success.emit(payload)
-    else:
-        failure.emit(str(payload.get("error", "Authentication failed.")) if payload is Dictionary else "Authentication failed.")
+        return
+
+    failure.emit(message)

@@ -15,3 +15,8 @@ Verified in this environment: Godot editor validation, Godot self-test, Go auth-
 Not verified here: real Windows GUI launch, interactive gameplay validation, multiplayer runtime across Windows clients, and live auth/session integration across actual Windows clients.
 
 Architecture-dependent features intentionally remain PARTIAL when their required backend/infrastructure is not present: social friends, global server discovery, notifications, per-world thumbnail capture, full anti-cheat, and production TLS deployment.
+
+## 2026-09-20 source repair batch
+- Current source includes fixes for the confirmed `voxel_world.gd` parser issue, concurrent authentication HTTPRequest handling, and responsive UI layout.
+- Windows release artifacts must be rebuilt from the new commit before they are associated with this source state.
+- Interactive Windows gameplay/settings/auth verification remains pending until the new artifact is tested.
