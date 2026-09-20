@@ -105,10 +105,15 @@ jobs:
           & $vcpkg install sqlite3:x64-windows --triplet x64-windows
           $sqliteRoot = "$env:RUNNER_TEMP\vcpkg\installed\x64-windows"
           $sqliteRootUnix = $sqliteRoot -replace '\\', '/'
+          $sqliteHeader = Get-ChildItem -Path $sqliteRoot -Recurse -Filter "sqlite3.h" | Select-Object -First 1
+          if (-not $sqliteHeader) { throw "vcpkg sqlite3.h was not found under $sqliteRoot" }
+          $sqliteIncludeUnix = ((Split-Path -Parent $sqliteHeader.FullName) -replace '\\', '/')
           Write-Output "SQLITE_ROOT=$sqliteRoot"
-          "CGO_CFLAGS=-I$sqliteRootUnix/include" | Out-File -Encoding ascii -Append $env:GITHUB_ENV
+          Write-Output "SQLITE_HEADER=$($sqliteHeader.FullName)"
+          "CGO_CFLAGS=-I$sqliteIncludeUnix" | Out-File -Encoding ascii -Append $env:GITHUB_ENV
           "CGO_LDFLAGS=-L$sqliteRootUnix/lib -lsqlite3" | Out-File -Encoding ascii -Append $env:GITHUB_ENV
           "PKG_CONFIG_PATH=$sqliteRootUnix/lib/pkgconfig" | Out-File -Encoding ascii -Append $env:GITHUB_ENV
+          "CPATH=$sqliteIncludeUnix" | Out-File -Encoding ascii -Append $env:GITHUB_ENV
 
       - name: Go tests
         shell: pwsh
