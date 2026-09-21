@@ -788,13 +788,13 @@ func _page_profile() -> void:
     info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     identity.add_child(info)
     _label(info, AppState.get_display_name(), 24, TEXT)
-    _label(info, "الحساب: %s" % ("موثّق" if AppState.is_authenticated else "محلي"), 11, GREEN if AppState.is_authenticated else MUTED)
+    _label(info, "الحساب: %s" % ("متحقق — بيانات محفوظة فعليًا" if AppState.is_authenticated else "محلي"), 11, GREEN if AppState.is_authenticated else MUTED)
     _label(info, "الشخصية: %s" % _character_label(AppState.character_id), 11, ACCENT_BRIGHT)
 
     var name_field := LineEdit.new()
     name_field.text = AppState.get_display_name()
     name_field.placeholder_text = "اسم العرض"
-    name_field.editable = not AppState.is_authenticated
+    name_field.editable = true
     name_field.custom_minimum_size = Vector2(0, 40)
     name_field.layout_direction = Control.LAYOUT_DIRECTION_RTL
     root.add_child(name_field)
