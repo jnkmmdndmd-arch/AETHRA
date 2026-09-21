@@ -41,8 +41,10 @@ var character_index := 0
 var sidebar_panel: PanelContainer
 var social_panel: PanelContainer
 var characters := [
-    {"id":"ranger","name":"Ranger","ar":&'5£\ÌÖsK§uçâçR"Â&FW67&—F–öâ#¢$&Ææ6VBW‡Æ÷&W"æB7W'f—fÂ7V6–Æ—7B'ÒÀ¢²&–B#¢&Væv–æVW""Â&æÖR#¢$Væv–æVW""Â&"#¢#Z5‘MhÖ/ºw^~)Şw","description":"Builder focused on systems and construction"},
-    {"id":"shadow","name":"Shadow","ar":"éİyø§y×D5£Pˆ°‰‘•ÍÉ¥ÁÑ¥½¸ˆè‰¥±”•áÁ±½É•Èİ¥Ñ „ÍÑ•…±Ñ µ™½ÕÍ•¥‘•¹Ñ¥Ñä‰ô°(€€€ì‰¥ˆè‰É½Ù”ˆ°‰¹…µ”ˆè‰É½Ù•­••Á•Èˆ°‰…ÈˆèˆÖs§uçâçrbsZ7‰ÍhÙ","description":"Nature-oriented wilderness specialist"},
+    {"id":"ranger","name":"Ranger","ar":"Ø§Ù„Ù…Ø³ØªÙƒØ´Ù","description":"Balanced explorer and survival specialist"},
+    {"id":"engineer","name":"Engineer","ar":"Ø§Ù„Ù…Ù‡Ù†Ø¯Ø³","description":"Builder focused on systems and construction"},
+    {"id":"shadow","name":"Shadow","ar":"Ø§Ù„Ø¸Ù„","description":"Agile explorer with a stealth-focused identity"},
+    {"id":"grove","name":"Grovekeeper","ar":"Ø­Ø§Ø±Ø³ Ø§Ù„ØºØ§Ø¨Ø©","description":"Nature-oriented wilderness specialist"},
 ]
 
 func build(_parent: Node) -> void:
@@ -189,36 +191,88 @@ func _build_sidebar(parent: PanelContainer) -> void:
     logo.add_child(logo_art)
     _label(logo, "AETHRA", 32, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
     _label(logo, "WILDBOUND", 15, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
-    _label(logo, "5£Xéİyø§yÔ™Ös3Z5’ˆºw^~)ŞuÍMhÚ", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(logo, "Ø¨Ù‚Ø§Ø¡ ÙÙˆÙƒØ³ÙŠÙ„ÙŠ Ø£ØµÙ„ÙŠ", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
 
     var sep := HSeparator.new()
     sep.modulate.a = 0.25
     box.add_child(sep)
 
     var items := [
-        ["home", "home", &'5£\˜Öt«§uçâçR%ÒÀ¢²'6öÆò"Â'W'6öâ"Â#Z5‘hØ 5£YÖô¢%ÒÀ¢²&×VÇF—Æ–W""Â'Æ–W'2"Â.×ŸŠwr£Z7ËÈºw^~)ŞuÑh×95£y‰t°(€€€€€€€l‰Í•ÉÙ•ÉÌˆ°€‰Í•ÉÙ•ÉÌˆ°€ˆÖbãZ5Ëî×ŸŠwH—KˆÈÛÜ›È‹ÛÜ›‹ºw^~)ŞuÑhŞ'5£T‰t°(€€€€€€€l‰ÍÑ½É”ˆ°€‰ÍÑ½É”ˆ°€‹§uçâç]ÖâË§uçâçR%ÒÀ¢²'6WGF–æw2"Â'6WGF–æw2"Â#Z5‰Mhß'5£\¨‰t°(€€€t(€€€™½È¥Ñ•´¥¸¥Ñ•µÌè(€€€€€€€Ù…Èˆ€èô}¹…Ù}‰ÕÑÑ½¸¡¥Ñ•µlÅt°¥Ñ•µlÉt¤(€€€€€€€¹…Ù}‰ÕÑÑ½¹Ím¥Ñ•µlÁut€ôˆ(€€€€€€€ˆ¹ÁÉ•ÍÍ•¹½¹¹•Ğ¡™Õ¹Œ ¤è}Í¡½İ}Á…”¡¥Ñ•µlÁt¤¤(€€€€€€€‰½à¹…‘‘}¡¥±¡ˆ¤((€€€Ù…ÈÍÁ…•È€èô½¹ÑÉ½°¹¹•Ü ¤(€€€ÍÁ…•È¹Í¥é•}™±…Í}Ù•ÉÑ¥…°€ô½¹ÑÉ½°¹M%i}aA9}%10(€€€‰½à¹…‘‘}¡¥±¡ÍÁ…•È¤((€€€Ù…ÈÕÍ•È€èô}Á…¹•°¡A91|È°€ÄĞ°½±½È À¸ÈÈ°€À¸Ü°€Ä¸À°€À¸ÄØ¤¤(€€€ÕÍ•È¹ÕÍÑ½µ}µ¥¹¥µÕµ}Í¥é”€ôY•Ñ½ÈÈ À°€Øà¤(€€€‰½à¹…‘‘}¡¥±¡ÕÍ•È¤(€€€Ù…ÈÕÍ•É}É½Ü€èô!	½á½¹Ñ…¥¹•È¹¹•Ü ¤(€€€ÕÍ•É}É½Ü¹Í•Ñ}…¹¡½ÉÍ}…¹‘}½™™Í•ÑÍ}ÁÉ•Í•Ğ¡½¹ÑÉ½°¹AIMQ}U11}IP¤(€€€ÕÍ•É}É½Ü¹±…å½ÕÑ}‘¥É•Ñ¥½¸€ô½¹ÑÉ½°¹1e=UQ}%IQ%=9}IQ0(€€€ÕÍ•È¹…‘‘}¡¥±¡ÕÍ•É}É½Ü¤(€€€Ù…È…Ù…Ñ…È€ô±½… ‰É•Ìè¼½ÍÉ¥ÁÑÌ½Õ¤½…Ù…Ñ…É}É•¹‘•É•È¹ˆ¤¹¹•Ü ¤(€€€…Ù…Ñ…È¹…Ù…Ñ…É}¥¹‘•à€ôÁÁMÑ…Ñ”¹…Ù…Ñ…É}¥(€€€…Ù…Ñ…È¹ÕÍÑ½µ}µ¥¹¥µÕµ}Í¥é”€ôY•Ñ½ÈÈ Ìà°€Ìà¤(€€€ÕÍ•É}É½Ü¹…‘‘}¡¥±¡…Ù…Ñ…È¤(€€€Ù…ÈÕÍ•É}¥¹™¼€èôY	½á½¹Ñ…¥¹•È¹¹•Ü ¤(€€€ÕÍ•É}¥¹™¼¹Í¥é•}™±…Í}¡½É¥é½¹Ñ…°€ô½¹ÑÉ½°¹M%i}aA9}%10(€€€ÕÍ•É}É½Ü¹…‘‘}¡¥±¡ÕÍ•É}¥¹™¼¤(€€€}±…‰•°¡ÕÍ•É}¥¹™¼°ÁÁMÑ…Ñ”¹•Ñ}‘¥ÍÁ±…å}¹…µ” ¤°€ÄĞ°QaP¤(€€€}±…‰•°¡ÕÍ•É}¥¹™¼°€‹§uçâç\ÌÖBZ7’.×ŸŠwˆYˆ\İ]Kš\×Ø]][XØ]Y[ÙH	’hÙ 5£}éİyø§yØˆ°€ÄÀ°I8¥˜ÁÁMÑ…Ñ”¹¥Í}…ÕÑ¡•¹Ñ¥…Ñ••±Í”5UQ¤((€€€Ù…È±½½ÕĞ€èô}¹…Ù}‰ÕÑÑ½¸ ‰±½½ÕĞˆ°€‹§uçâçxÌÖäB.×ŸŠwtCZ5Ò.×ŸŠwŠBˆÙÛİ]œ™\ÜÙY˜ÛÛ›™Xİ
-ÛÙÛİ]
-Bˆ›Ş˜YØÚ[
-ÙÛİ]
-B‚™[˜ÈØZ[ÚXY\Š\™[ˆ[™[ÛÛZ[™\ŠHOˆ›ÚY‚ˆ˜\ˆ›İÈH›ŞÛÛZ[™\‹›™]Ê
-Bˆ›İËœÙ]Ø[˜ÚÜœ×Ø[™ÛÙ™œÙ]×Ü™\Ù]
-ÛÛ›Û”‘TÑUÑ•SÔ‘PÕ
-Bˆ›İË›^[İ]Ù\™Xİ[ÛˆHÛÛ›Û“VSÕUÑT‘PÕSÓ—Ó‚ˆ›İË˜Yİ[YWØÛÛœİ[Ûİ™\œšYJœÙ\\˜][Ûˆ‹L
-Bˆ\™[˜YØÚ[
-›İÊBˆÙX\˜ÚÛ[™HH[™QY]›™]Ê
-BˆÙX\˜ÚÛ[™KœXÙZÛ\—İ^Hºw^~)ŞuÊhÛ 5£X€ÖtCZ7h×/5£p€Ös›§uçâçBb;§uçâçBbSZ7Éî×ŸŠwË‹‹ˆ‚ˆÙX\˜ÚÛ[™K˜ÛX\—Ø]Û—Ù[˜X›YHYBˆÙX\˜ÚÛ[™KœÚ^™WÙ›YÜ×ÚÜš^›Û[HÛÛ›Û”ÒV‘WÑVS‘Ñ’SˆÙX\˜ÚÛ[™K˜İ\İÛWÛZ[š[][WÜÚ^™HH™XİÜŒŠŠBˆÙX\˜ÚÛ[™K›^[İ]Ù\™Xİ[ÛˆHÛÛ›Û“VSÕUÑT‘PÕSÓ—Ô•ˆÙX\˜ÚÛ[™K˜[YÛ›Y[HÔ’V“Ó•SĞSQÓ“QS•Ô’QÒˆ›İË˜YØÚ[
-ÙX\˜ÚÛ[™JBˆÙX\˜ÚÛ[™K^ØÚ[™ÙY˜ÛÛ›™Xİ
-ÜÙX\˜Ú
-B‚ˆ˜\ˆ›İXÙHHÜÛX[ÚXÛÛ—Ø]ÛŠ˜™[‹ŠBˆ›İXÙKÛÛ\İ^HhÖ%5£|œÖr¢ ¢æ÷F–6Rç&W76VBæ6öææV7B…÷FövvÆUöæ÷F–f–6F–öç2¢&÷ræFEö6†–ÆB†æ÷F–6R ¢&öf–ÆUö'WGFöâÒ÷6ÖÆÅö–6öåö'WGFöâ‚'&öf–ÆR"ÂC"¢&öf–ÆUö'WGFöâçFööÇF—÷FW‡BÒ.×ŸŠwtCZ5Hºw^~)ŞuÑhŞ5ºw^~)Şv"
+        ["home", "home", "Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©"],
+        ["solo", "person", "Ø§Ù„Ù„Ø¹Ø¨ Ø§Ù„ÙØ±Ø¯ÙŠ"],
+        ["multiplayer", "players", "Ù…ØªØ¹Ø¯Ø¯ Ø§Ù„Ù„Ø§Ø¹Ø¨ÙŠÙ†"],
+        ["servers", "servers", "Ø§Ù„Ø®ÙˆØ§Ø¯Ù…"],
+        ["worlds", "world", "Ø§Ù„Ø¹ÙˆØ§Ù„Ù…"],
+        ["store", "store", "Ø§Ù„Ù…ØªØ¬Ø±"],
+        ["settings", "settings", "Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª"],
+    ]
+    for item in items:
+        var b := _nav_button(item[1], item[2])
+        nav_buttons[item[0]] = b
+        b.pressed.connect(func(): _show_page(item[0]))
+        box.add_child(b)
+
+    var spacer := Control.new()
+    spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    box.add_child(spacer)
+
+    var user := _panel(PANEL_2, 14, Color(0.22, 0.7, 1.0, 0.16))
+    user.custom_minimum_size = Vector2(0, 68)
+    box.add_child(user)
+    var user_row := HBoxContainer.new()
+    user_row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    user_row.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    user.add_child(user_row)
+    var avatar = load("res://scripts/ui/avatar_renderer.gd").new()
+    avatar.avatar_index = AppState.avatar_id
+    avatar.custom_minimum_size = Vector2(38, 38)
+    user_row.add_child(avatar)
+    var user_info := VBoxContainer.new()
+    user_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    user_row.add_child(user_info)
+    _label(user_info, AppState.get_display_name(), 14, TEXT)
+    _label(user_info, "Ù…Ø³Ø¬Ù„ Ø¯Ø®ÙˆÙ„" if AppState.is_authenticated else "ÙˆØ¶Ø¹ Ù…Ø­Ù„ÙŠ", 10, GREEN if AppState.is_authenticated else MUTED)
+
+    var logout := _nav_button("logout", "ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø®Ø±ÙˆØ¬")
+    logout.pressed.connect(_logout)
+    box.add_child(logout)
+
+func _build_header(parent: PanelContainer) -> void:
+    var row := HBoxContainer.new()
+    row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    row.layout_direction = Control.LAYOUT_DIRECTION_LTR
+    row.add_theme_constant_override("separation", 10)
+    parent.add_child(row)
+    search_line = LineEdit.new()
+    search_line.placeholder_text = "Ø§Ø¨Ø­Ø« Ø¹Ù† Ø¹Ø§Ù„Ù…ØŒ Ø®Ø§Ø¯Ù…ØŒ Ù„Ø§Ø¹Ø¨ Ø£Ùˆ Ø¥Ø¹Ø¯Ø§Ø¯..."
+    search_line.clear_button_enabled = true
+    search_line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    search_line.custom_minimum_size = Vector2(0, 42)
+    search_line.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    search_line.alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    row.add_child(search_line)
+    search_line.text_changed.connect(_search)
+
+    var notice := _small_icon_button("bell", 42)
+    notice.tooltip_text = "Ø§Ù„Ø¥Ø´Ø¹Ø§Ø±Ø§Øª"
+    notice.pressed.connect(_toggle_notifications)
+    row.add_child(notice)
+
+    profile_button = _small_icon_button("profile", 42)
+    profile_button.tooltip_text = "Ø§Ù„Ù…Ù„Ù Ø§Ù„Ø´Ø®ØµÙŠ"
     profile_button.pressed.connect(func(): _show_page("profile"))
     row.add_child(profile_button)
 
     var min_btn := _small_icon_button("minimize", 42)
-    min_btn.tooltip_text = "5£\èÖZ5‘h×0ºw^~)Şu"
+    min_btn.tooltip_text = "ØªØµØºÙŠØ± Ø§Ù„Ù†Ø§ÙØ°Ø©"
     min_btn.pressed.connect(func(): DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_MINIMIZED))
     row.add_child(min_btn)
     var max_btn := _small_icon_button("maximize", 42)
-    max_btn.tooltip_text = "5£\ ÖòbsZ7Mhß)"éİyø§y×D5£]Ö’ ¢Ö…ö'Fâç&W76VBæ6öææV7B…÷FövvÆU÷v–æF÷uöÖöFR¢&÷ræFEö6†–ÆB†Ö…ö'Fâ¢f"6Æ÷6Uö'Fâ£Ò÷6ÖÆÅö–6öåö'WGFöâ‚&6Æ÷6R"ÂC"¢6Æ÷6Uö'FâçFööÇF—÷FW‡BÒ.×ŸŠws£Z5Ğˆºw^~)ŞuÑhß(ºw^~)Şu"
+    max_btn.tooltip_text = "ØªÙƒØ¨ÙŠØ± / Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø§Ù„Ù†Ø§ÙØ°Ø©"
+    max_btn.pressed.connect(_toggle_window_mode)
+    row.add_child(max_btn)
+    var close_btn := _small_icon_button("close", 42)
+    close_btn.tooltip_text = "Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„Ù„Ø¹Ø¨Ø©"
     close_btn.pressed.connect(_request_close)
     row.add_child(close_btn)
 
@@ -245,39 +299,44 @@ func _build_social(parent: PanelContainer) -> void:
     profile_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     profile_row.add_child(profile_text)
     _label(profile_text, AppState.get_display_name(), 14, TEXT)
-    _label(profile_text, "5£xÖéİyø§yĞˆ¥˜ÁÁMÑ…Ñ”¹¥Í}…ÕÑ¡•¹Ñ¥…Ñ••±Í”€™ Ö’Z7Ñ.×ŸŠwˆ‹LÔ‘QSˆYˆ\İ]Kš\×Ø]][XØ]Y[ÙHUUQ
-B‚ˆ˜\ˆXY[™ÈH›ŞÛÛZ[™\‹›™]Ê
-BˆXY[™Ë›^[İ]Ù\™Xİ[ÛˆHÛÛ›Û“VSÕUÑT‘PÕSÓ—Ô•ˆXY[™Ë˜Yİ[YWØÛÛœİ[Ûİ™\œšYJœÙ\\˜][Ûˆ‹
-Bˆ›Ş˜YØÚ[
-XY[™ÊBˆ˜\ˆXY[™×ÚXÛÛˆHØY
-œ™\Î‹ËÜØÜš\ËİZKİ™XİÜ—ÚXÛÛ‹™ÙŠK›™]Ê
-BˆXY[™×ÚXÛÛ‹šXÛÛ—Û˜[YHHœ^Y\œÈ‚ˆXY[™×ÚXÛÛ‹šXÛÛ—ØÛÛÜˆHPĞÑS•Ğ”’QÒˆXY[™×ÚXÛÛ‹˜İ\İÛWÛZ[š[][WÜÚ^™HH™XİÜŒŠ
-BˆXY[™Ë˜YØÚ[
-XY[™×ÚXÛÛŠBˆ˜\ˆXY[™×İ^H›ŞÛÛZ[™\‹›™]Ê
-BˆXY[™×İ^œÚ^™WÙ›YÜ×ÚÜš^›Û[HÛÛ›Û”ÒV‘WÑVS‘Ñ’SˆXY[™Ë˜YØÚ[
-XY[™×İ^
-BˆÛX™[
-XY[™×İ^h×/5£\šéİyø§yØ˜œÖr£Z5’.×ŸŠwˆ‹NV
-Bˆ˜\ˆÛİ[HÛX™[
-XY[™×İ^Œºw^~)ŞuÊhÔ", 11, MUTED)
+    _label(profile_text, "Ù…ØªØµÙ„" if AppState.is_authenticated else "ÙˆØ¶Ø¹ Ù…Ø­Ù„ÙŠ", 10, GREEN if AppState.is_authenticated else MUTED)
+
+    var heading := HBoxContainer.new()
+    heading.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    heading.add_theme_constant_override("separation", 8)
+    box.add_child(heading)
+    var heading_icon = load("res://scripts/ui/vector_icon.gd").new()
+    heading_icon.icon_name = "players"
+    heading_icon.icon_color = ACCENT_BRIGHT
+    heading_icon.custom_minimum_size = Vector2(24, 24)
+    heading.add_child(heading_icon)
+    var heading_text := VBoxContainer.new()
+    heading_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    heading.add_child(heading_text)
+    _label(heading_text, "Ø£ØµØ¯Ù‚Ø§Ø¦ÙŠ Ø§Ù„Ù…ØªØµÙ„ÙˆÙ†", 18, TEXT)
+    var count := _label(heading_text, "0 Ù…ØªØµÙ„", 11, MUTED)
     count.name = "FriendCount"
     friends_box = VBoxContainer.new()
     friends_box.add_theme_constant_override("separation", 6)
     friends_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
     box.add_child(friends_box)
-    _label(box, &'5£xÔÖt«§uçâçRdSZ5ÒhÙ:"éİyø§y×D5£]Ö¢Z5h×1ºw^~)Şu&G5£\€ÖróZ5ÉÈºw^~)Şw‘h×*"éİyø§y×D5£yéİyø§yÔ˜œÖs“Z7ŠHºw^~)ŞuĞ®×ŸŠwËˆ‹KUUQÔ’V“Ó•SĞSQÓ“QS•Ô’QÒ
-B‚™[˜ÈØZ[Ø›İÛWØ˜\ŠÙ[\—ØÛÛ[[ˆ›ŞÛÛZ[™\ŠHOˆ›ÚY‚ˆ˜\ˆ˜\ˆHÜ[™[
-S‘SÌ‹L‹ÛÛÜŠŒŒ‹ËKŒŒN
-JBˆ˜\‹˜İ\İÛWÛZ[š[][WÜÚ^™HH™XİÜŒŠÎ
-BˆÙ[\—ØÛÛ[[‹˜YØÚ[
-˜\ŠBˆ˜\ˆ›İÈH›ŞÛÛZ[™\‹›™]Ê
-Bˆ›İËœÙ]Ø[˜ÚÜœ×Ø[™ÛÙ™œÙ]×Ü™\Ù]
-ÛÛ›Û”‘TÑUÑ•SÔ‘PÕ
-Bˆ›İË˜[YÛ›Y[H›ŞÛÛZ[™\‹SQÓ“QS•ĞÑS•T‚ˆ˜\‹˜YØÚ[
-›İÊBˆİ]\×ØÛÛ›™Xİ[ÛˆHÛX™[
-›İË	‰Íh×*5£]è˜èÖZ7n×ŸŠw‹LUUQ
-Bˆİ]\×ØÛÛ›™Xİ[Û‹œÚ^™WÙ›YÜ×ÚÜš^›Û[HÛÛ›Û”ÒV‘WÑVS‘Ñ’Sˆİ]\×ÜÙ\™\ˆHÛX™[
-›İË	‰ÍhŞ'5£Tè‹§uçâçy*éİyø§yÔ™Öòò"ÂÂÕUDTB¢7FGW5÷6W'fW"ç6—¦UöfÆw5ö†÷&—¦öçFÂÒ6öçG&öÂå4•¤UôU…äEôd”ÄÀ¢7FGW5ög2ÒöÆ&VÂ‡&÷rÂ$e3¢VB"RVæv–æRævWEög&ÖW5÷W%÷6V6öæB‚’ÂÂÕUDTB¢7FGW5ög2ç6—¦UöfÆw5ö†÷&—¦öçFÂÒ6öçG&öÂå4•¤UôU…äEôd”ÄÀ¢7FGW5ög&–VæG2ÒöÆ&VÂ‡&÷rÂbsZ5ÍMhÖ'ºw^~)Şu: 0", 10, MUTED)
+    _label(box, "Ø§Ù„Ø®ØµÙˆØµÙŠØ© Ù…Ø­ÙÙˆØ¸Ø©: Ø§Ù„Ø­Ø§Ù„Ø§Øª Ø§Ù„Ø¸Ø§Ù‡Ø±Ø© Ù‡Ù†Ø§ Ù…ØµØ¯Ø±Ù‡Ø§ Ø¬Ù„Ø³Ø§Øª Ø§Ù„Ø´Ø¨ÙƒØ© Ø§Ù„ÙØ¹Ù„ÙŠØ© ÙÙ‚Ø·.", 9, MUTED, HORIZONTAL_ALIGNMENT_RIGHT)
+
+func _build_bottom_bar(center_column: VBoxContainer) -> void:
+    var bar := _panel(PANEL_2, 12, Color(0.22, 0.7, 1.0, 0.18))
+    bar.custom_minimum_size = Vector2(0, 38)
+    center_column.add_child(bar)
+    var row := HBoxContainer.new()
+    row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    row.alignment = BoxContainer.ALIGNMENT_CENTER
+    bar.add_child(row)
+    status_connection = _label(row, "Ø§Ù„Ø§ØªØµØ§Ù„: ØºÙŠØ± Ù…ØªØµÙ„", 10, MUTED)
+    status_connection.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    status_server = _label(row, "Ø§Ù„Ø®Ø§Ø¯Ù…: ØºÙŠØ± Ù…Ø­Ø¯Ø¯", 10, MUTED)
+    status_server.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    status_fps = _label(row, "FPS: %d" % Engine.get_frames_per_second(), 10, MUTED)
+    status_fps.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    status_friends = _label(row, "Ø§Ù„Ø£ØµØ¯Ù‚Ø§Ø¡: 0", 10, MUTED)
     status_friends.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 func _show_page(page: String) -> void:
@@ -317,42 +376,107 @@ func _page_home() -> void:
     quick.layout_direction = Control.LAYOUT_DIRECTION_RTL
     quick.add_theme_constant_override("separation", 10)
     content.add_child(quick)
-    _quick_card(quick, "world", &%5£Xéİyø§yÔ˜äÖdR.×ŸŠwâóZ7È‹hŞ/ºw^~)Şw&E5£]Ö’Z7ĞMhŞ)"éİyø§y×95£y.éİyø§yÜˆ°™Õ¹Œ ¤è}Á…•}É•…Ñ•}İ½É± ¤¤(€€€}ÅÕ¥­}…É¡ÅÕ¥¬°€‰Á±…å•ÉÌˆ°€ˆÖã“Z7ÈhÖD5£| Öb"Â#Z7Ë®×ŸŠw	‹h×)"éİyø§yß(ºw^~)Şu&'5£X Ö’"ÂgVæ2‚“¢÷6†÷u÷vR‚&×VÇF—Æ–W""’¢÷V–6µö6&B‡V–6²Â'6W'fW'2"Â#Z5ÉhÙ 5£X¸Örû§uçâçR"ÂbsZ7’hßE"éİyø§y×D5£}Öâ’.×ŸŠwbóZ4È‹[˜Ê
-NˆÜÚİ×ÜYÙJœÙ\™\œÈŠJBˆÜÙXİ[Û—İ]JÛÛ[	‰ÍhßH5£Y‹§uçâç]Öä£Z6H‹hÖ(5£]Ö¢Z5ˆØ]™Qˆºw^~)ŞuĞ®×ŸŠwÈŠBˆİÛÜ›ØØ\™ÊÛÛ[Ø]™Q‹›\İİÛÜ›Ê
-JB‚™[˜ÈÚ\›×Ü[™[
+    _quick_card(quick, "world", "Ø¥Ù†Ø´Ø§Ø¡ Ø¹Ø§Ù„Ù… Ø¬Ø¯ÙŠØ¯", "Ø§Ø¨Ø¯Ø£ Ù…ØºØ§Ù…Ø±Ø© Ù…Ø­ÙÙˆØ¸Ø© ÙØ¹Ù„ÙŠÙ‹Ø§", func(): _page_create_world())
+    _quick_card(quick, "players", "Ù…ØªØ¹Ø¯Ø¯ Ø§Ù„Ù„Ø§Ø¹Ø¨ÙŠÙ†", "Ø§Ø¯Ø®Ù„ Ø¬Ù„Ø³Ø© Ø¹Ø¨Ø± Ø§Ù„Ø´Ø¨ÙƒØ©", func(): _show_page("multiplayer"))
+    _quick_card(quick, "servers", "Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø®ÙˆØ§Ø¯Ù…", "Ø§Ù„Ø®ÙˆØ§Ø¯Ù… Ø§Ù„Ù…Ø­ÙÙˆØ¸Ø© Ù„Ø¯ÙŠÙƒ", func(): _show_page("servers"))
+    _section_title(content, "Ø§Ù„Ø¹ÙˆØ§Ù„Ù… Ø§Ù„Ø£Ø®ÙŠØ±Ø©", "Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ù…Ù† SaveDB ÙÙ‚Ø·")
+    _world_cards(content, SaveDB.list_worlds())
 
-HOˆ[™[ÛÛZ[™\‚ˆ˜\ˆ[™[H[™[ÛÛZ[™\‹›™]Ê
-Bˆ[™[œÙ]ÛY]Jœ™\ÜÛœÚ]™WÜ›ÛH‹š\›ÈŠBˆ[™[˜İ\İÛWÛZ[š[][WÜÚ^™HH™XİÜŒŠÍÌ
-Bˆ[™[˜Yİ[YWÜİ[X›ŞÛİ™\œšYJœ[™[‹Üİ[JS‘SÛÛÜŠŒKÍKKŒŒÌŠJJBˆ˜\ˆ\H^\™T™Xİ›™]Ê
-Bˆ\^\™HHØY
-‘×ÔU
-H\È^\™L‘ˆ\™^[™Û[ÙHH^\™T™Xİ‘VS‘ÒQÓ“Ô‘WÔÒV‘Bˆ\œİ™]ÚÛ[ÙHH^\™T™Xİ”Õ‘UÒÒÑQTĞTÔPÕĞÓÕ‘T‘Qˆ[™[˜YØÚ[
-\
-Bˆ˜\ˆİ™\›^HHÛÛÜ”™Xİ›™]Ê
-Bˆİ™\›^KœÙ]Ø[˜ÚÜœ×Ø[™ÛÙ™œÙ]×Ü™\Ù]
-ÛÛ›Û”‘TÑUÑ•SÔ‘PÕ
-Bˆİ™\›^K˜ÛÛÜˆHÛÛÜŠŒŒKŒËŒÍŠBˆ\˜YØÚ[
-İ™\›^JBˆ˜\ˆX\™Ú[ˆHX\™Ú[ÛÛZ[™\‹›™]Ê
-BˆX\™Ú[‹œÙ]Ø[˜ÚÜœ×Ø[™ÛÙ™œÙ]×Ü™\Ù]
-ÛÛ›Û”‘TÑUÑ•SÔ‘PÕ
-BˆX\™Ú[‹˜Yİ[YWØÛÛœİ[Ûİ™\œšYJ›X\™Ú[—ÛY‹ŠBˆX\™Ú[‹˜Yİ[YWØÛÛœİ[Ûİ™\œšYJ›X\™Ú[—İÜ‹ŒŠBˆX\™Ú[‹˜Yİ[YWØÛÛœİ[Ûİ™\œšYJ›X\™Ú[—ÜšYÚ‹ŠBˆX\™Ú[‹˜Yİ[YWØÛÛœİ[Ûİ™\œšYJ›X\™Ú[—Ø›İÛH‹ŒŠBˆİ™\›^K˜YØÚ[
-X\™Ú[ŠBˆ˜\ˆ›ŞH›ŞÛÛZ[™\‹›™]Ê
-Bˆ›Ş˜[YÛ›Y[H›ŞÛÛZ[™\‹SQÓ“QS•ĞÑS•T‚ˆ›Ş˜Yİ[YWØÛÛœİ[Ûİ™\œšYJœÙ\\˜][Ûˆ‹L
-BˆX\™Ú[‹˜YØÚ[
-›Ş
-BˆÛX™[
-›ŞQUH‹VÔ’V“Ó•SĞSQÓ“QS•ĞÑS•TŠBˆÛX™[
-›Ş•ÒS“ÕS‘‹ŒËPĞÑS•Ğ”’QÒÔ’V“Ó•SĞSQÓ“QS•ĞÑS•TŠBˆÛX™[
-›Şºw^~)ŞwÉÍh×C.&E5£]Öä2âd#Z7Ëˆ‹MËVÔ’V“Ó•SĞSQÓ“QS•ĞÑS•TŠBˆÛX™[
-›ŞhŞ'5£T€ÖãZ5’®×ŸŠwI‘MhŞE5£|0‹§uçâç\ÌÖsCZ5Ãºw^~)Şwh×"éİyø§yŞF5£\0‹§uçâçyÖ‚Z5ÉÍhÚ.", 11, Color(0.9,0.96,1.0,0.82), HORIZONTAL_ALIGNMENT_CENTER)
-    var play := _primary_button(&'5£|Œ‹§uçâç]Öò‚"ÂfV7F÷#"ƒ#cÂSB’¢Æ’ç&W76VBæ6öææV7B†gVæ2‚“¢Æ•÷6–ævÆWÆ–W"æVÖ—B‚’¢&÷‚æFEö6†–ÆB‡Æ’¢f"7V"£Ò„&÷„6öçF–æW"ææWr‚¢7V"æÆ–væÖVçBÒ&÷„6öçF–æW"äÄ”täÔTåEô4TåDU ¢7V"æFE÷F†VÖUö6öç7FçEö÷fW'&–FR‚'6W&F–öâ"Â‚¢&÷‚æFEö6†–ÆB‡7V"¢f"6öÆò£Òö'WGFöâ‚bsZ5n×ŸŠw	‰Íh×15£hˆ°Y•Ñ½ÈÈ ÄÔÀ°€Ìà¤¤(€€€Í½±¼¹ÁÉ•ÍÍ•¹½¹¹•Ğ¡™Õ¹Œ ¤è}Í¡½İ}Á…” ‰Í½±¼ˆ¤¤(€€€ÍÕˆ¹…‘‘}¡¥±¡Í½±¼¤(€€€Ù…ÈµÕ±Ñ¤€èô}‰ÕÑÑ½¸ ˆÖã“Z7ÈhÖD5£| Öb"ÂfV7F÷#"ƒsÂ3‚’¢×VÇF’ç&W76VBæ6öææV7B†gVæ2‚“¢÷6†÷u÷vR‚&×VÇF—Æ–W""’¢7V"æFEö6†–ÆB†×VÇF’ ¢f"FWfVÆ÷W%ö7&VF—B£Ò÷æVÂ„6öÆ÷"ƒãÂã#RÂãSRÂãs‚’Â"Â6öÆ÷"ƒã3RÂã‚ÂãÂã#"’¢FWfVÆ÷W%ö7&VF—Bç6WEöæ6†÷'5÷&W6WB„6öçG&öÂå$U4UEô$õEDôÕôÄTeB¢FWfVÆ÷W%ö7&VF—Bç÷6—F–öâÒfV7F÷#"ƒ‚ÂÓ‚¢FWfVÆ÷W%ö7&VF—Bç6—¦RÒfV7F÷#"ƒ#CÂCb¢FWfVÆ÷W%ö7&VF—BæÖ÷W6Uöf–ÇFW"Ò6öçG&öÂäÔõU4Uôd”ÅDU%ô”täõ$P¢f"7&VF—E÷&÷r£Ò„&÷„6öçF–æW"ææWr‚¢7&VF—E÷&÷rç6WEöæ6†÷'5öæEööfg6WG5÷&W6WB„6öçG&öÂå$U4UEôeTÄÅõ$T5B¢7&VF—E÷&÷ræÆ–÷WEöF—&V7F–öâÒ6öçG&öÂäÄ”õUEôD•$T5D”ôåõ%DÀ¢7&VF—E÷&÷ræFE÷F†VÖUö6öç7FçEö÷fW'&–FR‚'6W&F–öâ"Âr¢FWfVÆ÷W%ö7&VF—BæFEö6†–ÆB†7&VF—E÷&÷r¢f"FWeö–6öâÒÆöB‚'&W3¢ò÷67&—G2÷V’÷fV7F÷%ö–6öâævB"’ææWr‚¢FWeö–6öâæ–6öåöæÖRÒ&&FvR ¢FWeö–6öâæ–6öåö6öÆ÷"Ò44TåEô%$”t…@¢FWeö–6öâæ7W7FöÕöÖ–æ–×VÕ÷6—¦RÒfV7F÷#"ƒ#BÂ#B¢7&VF—E÷&÷ræFEö6†–ÆB†FWeö–6öâ¢f"7&VF—E÷FW‡B£Òd&÷„6öçF–æW"ææWr‚¢7&VF—E÷FW‡Bç6—¦UöfÆw5ö†÷&—¦öçFÂÒ6öçG&öÂå4•¤UôU…äEôd”ÄÀ¢7&VF—E÷&÷ræFEö6†–ÆB†7&VF—E÷FW‡B¢öÆ&VÂ†7&VF—E÷FW‡BÂbsZ5ÍÍhÑ:"éİyø§yß(5£]ÖrZ5Ì®×ŸŠwH‹LV
-BˆÛX™[
-Ü™Y]İ^h×E5£d€ÖãsZ7ŒN‰Mhß'5£Y‹§uçâçXœÖR"Â’ÂÕUDTB ¢&WGW&âæVÀ ¦gVæ2ö'V–ÆEöWF…övFR‚’Óâfö–C ¢–b7FFRæ—5öWF†VçF–6FVC ¢&WGW&à¢WF…ö÷fW&Æ’Ò÷æVÂ„6öÆ÷"ƒãÂã"ÂãCRÂã“b’Â#bÂ6öÆ÷"ƒã#RÂãsRÂãÂãC‚’¢WF…ö÷fW&Æ’ç6WEöæ6†÷'5öæEööfg6WG5÷&W6WB„6öçG&öÂå$U4UEõDõôÄTeB¢FEö6†–ÆB†WF…ö÷fW&Æ’¢öÆ–÷WEöWF…ö÷fW&Æ’‚¢f"Ö&v–â£ÒÖ&v–ä6öçF–æW"ææWr‚¢Ö&v–âç6WEöæ6†÷'5öæEööfg6WG5÷&W6WB„6öçG&öÂå$U4UEôeTÄÅõ$T5B¢Ö&v–âæFE÷F†VÖUö6öç7FçEö÷fW'&–FR‚&Ö&v–åöÆVgB"Â3B¢Ö&v–âæFE÷F†VÖUö6öç7FçEö÷fW'&–FR‚&Ö&v–å÷F÷"Â3¢Ö&v–âæFE÷F†VÖUö6öç7FçEö÷fW'&–FR‚&Ö&v–å÷&–v‡B"Â3B¢Ö&v–âæFE÷F†VÖUö6öç7FçEö÷fW'&–FR‚&Ö&v–åö&÷GFöÒ"Â3¢WF…ö÷fW&Æ’æFEö6†–ÆB†Ö&v–â¢f"&÷‚£Òd&÷„6öçF–æW"ææWr‚¢&÷‚æFE÷F†VÖUö6öç7FçEö÷fW'&–FR‚'6W&F–öâ"Â¢Ö&v–âæFEö6†–ÆB†&÷‚¢öÆ&VÂ†&÷‚Âb£Z7’®×ŸŠw	‰Íhß.5£P€Öd’UD…$"Â#rÂDU…BÂ„õ$•¤ôåDÅôÄ”täÔTåEô4TåDU"¢öÆ&VÂ†&÷‚Â#Z5Éî×ŸŠw	‹MhŞBºw^~)Şv&E5£]"éİyø§yĞ˜äÖ’Z5‰Èºw^~)ŞuÑh×'5£p€Ös’.×ŸŠwäƒZ4HhßEºw^~)Şu&'5£|ÌÖ‚Z5ŠhŞ/ºw^~)Şu&*5£\¨ÖôR.×ŸŠwäCZ5Éhß'.", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+func _hero_panel() -> PanelContainer:
+    var panel := PanelContainer.new()
+    panel.set_meta("responsive_role", "hero")
+    panel.custom_minimum_size = Vector2(0, 370)
+    panel.add_theme_stylebox_override("panel", _style(PANEL, 24, Color(0.25, 0.75, 1.0, 0.32)))
+    var art := TextureRect.new()
+    art.texture = load(BG_PATH) as Texture2D
+    art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+    art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+    panel.add_child(art)
+    var overlay := ColorRect.new()
+    overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    overlay.color = Color(0.0, 0.01, 0.03, 0.36)
+    art.add_child(overlay)
+    var margin := MarginContainer.new()
+    margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    margin.add_theme_constant_override("margin_left", 26)
+    margin.add_theme_constant_override("margin_top", 22)
+    margin.add_theme_constant_override("margin_right", 26)
+    margin.add_theme_constant_override("margin_bottom", 22)
+    overlay.add_child(margin)
+    var box := VBoxContainer.new()
+    box.alignment = BoxContainer.ALIGNMENT_CENTER
+    box.add_theme_constant_override("separation", 10)
+    margin.add_child(box)
+    _label(box, "AETHRA", 44, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "WILDBOUND", 23, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "Ø¹Ø§Ù„Ù…Ùƒ. Ù…ØºØ§Ù…Ø±ØªÙƒ. Ù‚ØµØªÙƒ.", 17, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "Ø¹ÙˆØ§Ù„Ù… Ø¥Ø¬Ø±Ø§Ø¦ÙŠØ© Ù…Ø³ØªÙ…Ø±Ø©ØŒ Ø§Ø³ØªÙƒØ´Ø§ÙØŒ Ø¨Ù‚Ø§Ø¡ØŒ Ø¨Ù†Ø§Ø¡ØŒ ÙˆÙ„Ø¹Ø¨ Ø¬Ù…Ø§Ø¹ÙŠ.", 11, Color(0.9,0.96,1.0,0.82), HORIZONTAL_ALIGNMENT_CENTER)
+    var play := _primary_button("Ø§Ø¨Ø¯Ø£ Ø§Ù„Ù„Ø¹Ø¨", Vector2(260, 54))
+    play.pressed.connect(func(): play_singleplayer.emit())
+    box.add_child(play)
+    var sub := HBoxContainer.new()
+    sub.alignment = BoxContainer.ALIGNMENT_CENTER
+    sub.add_theme_constant_override("separation", 8)
+    box.add_child(sub)
+    var solo := _button("Ø§Ù„Ù„Ø¹Ø¨ Ø§Ù„ÙØ±Ø¯ÙŠ", Vector2(150, 38))
+    solo.pressed.connect(func(): _show_page("solo"))
+    sub.add_child(solo)
+    var multi := _button("Ù…ØªØ¹Ø¯Ø¯ Ø§Ù„Ù„Ø§Ø¹Ø¨ÙŠÙ†", Vector2(170, 38))
+    multi.pressed.connect(func(): _show_page("multiplayer"))
+    sub.add_child(multi)
+
+    var developer_credit := _panel(Color(0.01, 0.025, 0.055, 0.78), 12, Color(0.35, 0.8, 1.0, 0.22))
+    developer_credit.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+    developer_credit.position = Vector2(18, -18)
+    developer_credit.size = Vector2(240, 46)
+    developer_credit.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var credit_row := HBoxContainer.new()
+    credit_row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    credit_row.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    credit_row.add_theme_constant_override("separation", 7)
+    developer_credit.add_child(credit_row)
+    var dev_icon = load("res://scripts/ui/vector_icon.gd").new()
+    dev_icon.icon_name = "badge"
+    dev_icon.icon_color = ACCENT_BRIGHT
+    dev_icon.custom_minimum_size = Vector2(24, 24)
+    credit_row.add_child(dev_icon)
+    var credit_text := VBoxContainer.new()
+    credit_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    credit_row.add_child(credit_text)
+    _label(credit_text, "Ø§Ù„Ù…Ø·ÙˆØ±: Ø¹Ø¨Ø¯Ø§Ù„Ù„Ù‡ Ù„Ø§Ø²Ù…", 10, TEXT)
+    _label(credit_text, "Ø¨Ø±Ù…Ø¬Ø© ÙˆØªØ·ÙˆÙŠØ±: Ø¹Ø¨Ø¯Ø§Ù„Ù„Ù‡ Ù„Ø§Ø²Ù…", 9, MUTED)
+
+    return panel
+
+func _build_auth_gate() -> void:
+    if AppState.is_authenticated:
+        return
+    auth_overlay = _panel(Color(0.01, 0.02, 0.045, 0.96), 26, Color(0.25, 0.75, 1.0, 0.48))
+    auth_overlay.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+    add_child(auth_overlay)
+    _layout_auth_overlay()
+    var margin := MarginContainer.new()
+    margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    margin.add_theme_constant_override("margin_left", 34)
+    margin.add_theme_constant_override("margin_top", 30)
+    margin.add_theme_constant_override("margin_right", 34)
+    margin.add_theme_constant_override("margin_bottom", 30)
+    auth_overlay.add_child(margin)
+    var box := VBoxContainer.new()
+    box.add_theme_constant_override("separation", 10)
+    margin.add_child(box)
+    _label(box, "ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ø¥Ù„Ù‰ AETHRA", 27, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "Ø­Ø³Ø§Ø¨ Ø­Ù‚ÙŠÙ‚ÙŠ Ù…Ø­ÙÙˆØ¸ Ø¹Ù„Ù‰ Ù‡Ø°Ø§ Ø§Ù„Ø¬Ù‡Ø§Ø²ØŒ ÙˆÙ…Ø¹ ØªÙˆÙØ± Ø®Ø¯Ù…Ø© Ø§Ù„Ø­Ø³Ø§Ø¨ Ø§Ù„Ø¨Ø¹ÙŠØ¯Ø© ØªÙØ³ØªØ®Ø¯Ù… ØªÙ„Ù‚Ø§Ø¦ÙŠÙ‹Ø§.", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
     auth_server = LineEdit.new()
     auth_server.text = str(Settings.get_value("auth_server_url", "http://127.0.0.1:8090"))
     auth_server.visible = false
     auth_user = LineEdit.new()
-    auth_user.placeholder_text = "éİyø§y×3ºw^~)Şu&'5£\ÌÖâû§uçâçR ¢WF…÷W6W"æÆ–væÖVçBÒ„õ$•¤ôåDÅôÄ”täÔTåEõ$”t…@¢WF…÷W6W"æ7W7FöÕöÖ–æ–×VÕ÷6—¦RÒfV7F÷#"ƒÂCB¢&÷‚æFEö6†–ÆB†WF…÷W6W"¢WF…÷77v÷&BÒÆ–æTVF—BææWr‚¢WF…÷77v÷&BçÆ6V†öÆFW%÷FW‡BÒd3Z5ÊHºw^~)ŞuÑh×Hºw^~)Şu"
+    auth_user.placeholder_text = "Ø§Ø³Ù… Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù…"
+    auth_user.alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    auth_user.custom_minimum_size = Vector2(0, 44)
+    box.add_child(auth_user)
+    auth_password = LineEdit.new()
+    auth_password.placeholder_text = "ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±"
     auth_password.secret = true
     auth_password.alignment = HORIZONTAL_ALIGNMENT_RIGHT
     auth_password.custom_minimum_size = Vector2(0, 44)
@@ -367,10 +491,36 @@ BˆÛX™[
     var row := HBoxContainer.new()
     row.add_theme_constant_override("separation", 8)
     box.add_child(row)
-    var submit := _primary_button("éİyø§yŞ35£y‹§uçâç]Öä‹§uçâçB"ÂfV7F÷#"ƒ“ÂCb’¢7V&Ö—Bç&W76VBæ6öææV7B…÷7V&Ö—EöWF‚¢&÷ræFEö6†–ÆB‡7V&Ö—B¢f"FövvÆR£Òö'WGFöâ‚bSZ5‰î×ŸŠwI‹Mh×(", Vector2(150, 46))
+    var submit := _primary_button("ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„", Vector2(190, 46))
+    submit.pressed.connect(_submit_auth)
+    row.add_child(submit)
+    var toggle := _button("Ø¥Ù†Ø´Ø§Ø¡ Ø­Ø³Ø§Ø¨", Vector2(150, 46))
     toggle.pressed.connect(func():
         auth_register_mode = not auth_register_mode
-        submit.text = &%5£Xéİyø§yÔ˜œÖó3Z6ˆYˆ]]Ü™YÚ\İ\—Û[ÙH[ÙH	ŠhŞJºw^~)Şt&'5£|¸ÖB ¢FövvÆRçFW‡BÒ#Z7Òˆºw^~)ŞwÌÍhØ" if auth_register_mode else &%5£Xéİyø§yÔ˜´Ör‚ ¢¢&÷ræFEö6†–ÆB‡FövvÆR¢f"öffÆ–æR£Òö'WGFöâ‚dSZ5ÊhÙ 5£y‹§uçâç|ÌÖ‚"ÂfV7F÷#"ƒƒÂC"’¢öffÆ–æRç&W76VBæ6öææV7B†gVæ2‚“¢WF…ö÷fW&Æ’çVWVUög&VR‚“²WF…ö÷fW&Æ’ÒçVÆÂ¢&÷‚æFEö6†–ÆB†öffÆ–æR¢WF…÷7FGW2ÒöÆ&VÂ†&÷‚Â#Z5‹MhÖ):&Aºw^~)Şv&'5£xàÖZ7ËhÔ 5£xœÖr«§uçâçr"ÂÂÕUDTBÂ„õ$•¤ôåDÅôÄ”täÔTåEô4TåDU"¢öÆ&VÂ†&÷‚Â.×ŸŠwtCZ7’®×ŸŠwI’hÖ-5£X¤‹§uçâç]Öä3Z6Hh× 5£|äÖã.×ŸŠwr£Z5ŠHºw^~)ŞuÑ.×ŸŠwÉŠhß 5£xéİyø§yÔ˜œÖâóZ6HhÖA5£Y*éİyø§yÔ¸ˆ°€ä°½±½È À¸ØÔ°À¸Üà°À¸ä°À¸ÜÔ¤°!=I%i=9Q1}1%959Q}9QH¤()™Õ¹Œ}ÍÕ‰µ¥Ñ}…ÕÑ  ¤€´øÙ½¥è(€€€¥˜…ÕÑ¡}ÕÍ•È¹Ñ•áĞ¹ÍÑÉ¥Á}•‘•Ì ¤¹¥Í}•µÁÑä ¤½È…ÕÑ¡}Á…ÍÍİ½É¹Ñ•áĞ¹±•¹Ñ  ¤€ğ€àè(€€€€€€€…ÕÑ¡}ÍÑ…ÑÕÌ¹Ñ•áĞ€ô€‹§uçâç]ÖtK§uçâçS¢Z5ÑHºw^~)ŞuÑh×*5£}‹§uçâç] ‹§uçâç]Ö’Z5‘MhŞ1"éİyø§yŞJºw^~)Şu&55£X¶éİyø§yÔ¸ˆ(€€€€€€€…ÕÑ¡}ÍÑ…ÑÕÌ¹…‘‘}Ñ¡•µ•}½±½É}½Ù•ÉÉ¥‘” ‰™½¹Ñ}½±½Èˆ°I¤(€€€€€€€É•ÑÕÉ¸(€€€Ù…ÈÉ½½Ğ€ô•Ñ}Á…É•¹Ğ ¤(€€€Ù…È…ÕÑ¡}¹½‘”€ôÉ½½Ğ¹•Ğ ‰…ÕÑ ˆ¤¥˜É½½Ğ€„ô¹Õ±°•±Í”¹Õ±°(€€€¥˜…ÕÑ¡}¹½‘”€ôô¹Õ±°è(€€€€€€€…ÕÑ¡}ÍÑ…ÑÕÌ¹Ñ•áĞ€ô€ˆÖbÓZ5ŠN‰‹h×)"éİyø§y×D5£\œÖb’.×ŸŠwä«§uçâçRdSZ5Ën×ŸŠwIn×ŸŠw‰‰ÍhŞ75£y¸ˆ(€€€€€€€É•ÑÕÉ¸(€€€Ù…È…ÕÑ¡}ÕÉ°€èô…ÕÑ¡}Í•ÉÙ•È¹Ñ•áĞ¹ÍÑÉ¥Á}•‘•Ì ¤(€€€M•ÑÑ¥¹Ì¹Í•Ñ}Ù…±Õ” ‰…ÕÑ¡}Í•ÉÙ•É}ÕÉ°ˆ°…ÕÑ¡}ÕÉ°¤(€€€…ÕÑ¡}¹½‘”¹½¹™¥ÕÉ”¡…ÕÑ¡}ÕÉ°¤(€€€…ÕÑ¡}ÍÑ…ÑÕÌ¹Ñ•áĞ€ô€˜œÖòsZ6Nˆºw^~)Şw‰Íhİ 5£XœÖr{§uçâçBbƒZ5‹h×)..."
+        submit.text = "Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ø­Ø³Ø§Ø¨" if auth_register_mode else "ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„"
+        toggle.text = "Ù„Ø¯ÙŠ Ø­Ø³Ø§Ø¨" if auth_register_mode else "Ø¥Ù†Ø´Ø§Ø¡ Ø­Ø³Ø§Ø¨"
+    )
+    row.add_child(toggle)
+    var offline := _button("Ù…ØªØ§Ø¨Ø¹Ø© Ø¯ÙˆÙ† Ø­Ø³Ø§Ø¨", Vector2(180, 42))
+    offline.pressed.connect(func(): auth_overlay.queue_free(); auth_overlay = null)
+    box.add_child(offline)
+    auth_status = _label(box, "Ø§Ù„Ø­Ø§Ù„Ø©: ÙÙŠ Ø§Ù†ØªØ¸Ø§Ø± Ø¥Ø¯Ø®Ø§Ù„ Ø¨ÙŠØ§Ù†Ø§ØªÙƒ", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "Ø§Ù„Ù‡ÙˆÙŠØ© ÙˆØ§Ù„Ø­Ø§Ù„Ø© Ø§Ù„Ø´Ø¨ÙƒÙŠØ© Ù„Ø§ ØªÙØ¹ØªØ¨Ø± Ù…ØªØµÙ„Ø© Ø¥Ù„Ø§ Ø¨Ø¹Ø¯ Ù†Ø¬Ø§Ø­ Ø§Ù„Ø®Ø¯Ù…Ø© Ø§Ù„ÙØ¹Ù„ÙŠØ©.", 9, Color(0.65,0.78,0.9,0.75), HORIZONTAL_ALIGNMENT_CENTER)
+
+func _submit_auth() -> void:
+    if auth_user.text.strip_edges().is_empty() or auth_password.text.length() < 8:
+        auth_status.text = "Ø§Ù„Ø­Ø§Ù„Ø©: Ø§Ø³Ù… Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø£Ùˆ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ØºÙŠØ± ØµØ§Ù„Ø­Ø©."
+        auth_status.add_theme_color_override("font_color", RED)
+        return
+    var root = get_parent()
+    var auth_node = root.get("auth") if root != null else null
+    if auth_node == null:
+        auth_status.text = "Ø§Ù„Ø­Ø§Ù„Ø©: Ø®Ø¯Ù…Ø© Ø§Ù„Ù…ØµØ§Ø¯Ù‚Ø© ØºÙŠØ± Ù…ØªØ§Ø­Ø© ÙÙŠ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚."
+        return
+    var auth_url := auth_server.text.strip_edges()
+    Settings.set_value("auth_server_url", auth_url)
+    auth_node.configure(auth_url)
+    auth_status.text = "Ø§Ù„Ø­Ø§Ù„Ø©: Ø¬Ø§Ø±Ù Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ø§Ù„Ø®Ø¯Ù…Ø©..."
     auth_status.add_theme_color_override("font_color", YELLOW)
     var character := str(characters[character_index].id)
     if auth_register_mode:
@@ -380,111 +530,261 @@ BˆÛX™[
 
 func set_connection_status(text: String) -> void:
     if status_connection:
-        status_connection.text = &'5£\¨ÖtC¢"²FW‡@¢7FGW5ö6öææV7F–öâæFE÷F†VÖUö6öÆ÷%ö÷fW'&–FR‚&föçEö6öÆ÷""Â”TÄÄõr ¦gVæ2&Vg&W6…÷&öf–ÆR‚’Óâfö–C ¢–b&öf–ÆUö'WGFöã ¢&öf–ÆUö'WGFöâçFööÇF—÷FW‡BÒ"W2ÒW2"R´7FFRçÆ–W%öæÖRÂ.×ŸŠwr£Z5ˆYˆ\İ]Kš\×Ø]][XØ]Y[ÙHhÖ9"éİyø§y×-5£h‰t(€€€¥˜…ÕÑ¡}½Ù•É±…ä…¹ÁÁMÑ…Ñ”¹¥Í}…ÕÑ¡•¹Ñ¥…Ñ•è(€€€€€€€…ÕÑ¡}½Ù•É±…ä¹ÅÕ•Õ•}™É•” ¤(€€€€€€€…ÕÑ¡}½Ù•É±…ä€ô¹Õ±°()™Õ¹Œ¹½Ñ¥™å}…ÕÑ¡}™…¥±ÕÉ”¡µ•ÍÍ…”èMÑÉ¥¹œ¤€´øÙ½¥è(€€€¥˜…ÕÑ¡}ÍÑ…ÑÕÌè(€€€€€€€…ÕÑ¡}ÍÑ…ÑÕÌ¹Ñ•áĞ€ô€˜œÖòsZ6Nˆˆ
-ÈY\ÜØYÙBˆ]]Üİ]\Ë˜Yİ[YWØÛÛÜ—Ûİ™\œšYJ™›ÛØÛÛÜˆ‹‘Q
-B‚™[˜ÈÜYÙWØÜ™X]WİÛÜ›
+        status_connection.text = "Ø§Ù„Ø§ØªØµØ§Ù„: " + text
+        status_connection.add_theme_color_override("font_color", YELLOW)
 
-HOˆ›ÚY‚ˆ›ÜˆÚ[[ˆÛÛ[™Ù]ØÚ[™[Š
-N‚ˆÚ[œ]Y]YWÙœ™YJ
-BˆÜÙXİ[Û—İ]JÛÛ[hÖ45£D€ÖtK§uçâçRbÃZ7‹È‹ºw^~)ŞuÑºw^~)Şu’hÙ 5£Xœ‹§uçâçy<Ös‚.×ŸŠws’.×ŸŠwtCZ5Ñ.×ŸŠwHŠBˆ˜\ˆ[™[HÜ[™[
-S‘SŒÛÛÜŠŒŒ‹ËKŒŒŠJBˆ[™[˜İ\İÛWÛZ[š[][WÜÚ^™HH™XİÜŒŠ
-BˆÛÛ[˜YØÚ[
-[™[
-Bˆ˜\ˆ›Ü›HH›ŞÛÛZ[™\‹›™]Ê
-Bˆ›Ü›K›^[İ]Ù\™Xİ[ÛˆHÛÛ›Û“VSÕUÑT‘PÕSÓ—Ô•ˆ›Ü›K˜Yİ[YWØÛÛœİ[Ûİ™\œšYJœÙ\\˜][Ûˆ‹L
-Bˆ[™[˜YØÚ[
-›Ü›JBˆ˜\ˆ˜[YWÙšY[H[™QY]›™]Ê
-Bˆ˜[YWÙšY[›˜[YHH•ÛÜ›˜[YH‚ˆ˜[YWÙšY[œXÙZÛ\—İ^Hºw^~)ŞuÌî×ŸŠwI‰Íhß'5£Tˆ(€€€¹…µ•}™¥•±¹Ñ•áĞ€ô€‰]¥±‘‰½Õ¹]½É±ˆ(€€€™½É´¹…‘‘}¡¥±¡¹…µ•}™¥•±¤(€€€Ù…ÈÍ••‘}™¥•±€èô1¥¹•‘¥Ğ¹¹•Ü ¤(€€€Í••‘}™¥•±¹Á±…•¡½±‘•É}Ñ•áĞ€ô€ˆÖbƒZ5ÊHºw^~)ŞuÒºw^~)ŞuÊh×Gºw^~)Şw&95£xœÖâ’ ¢6VVEöf–VÆBçFW‡BÒ7G"‡&æF•÷&ævRƒÂ#CsCƒ’¢f÷&ÒæFEö6†–ÆB‡6VVEöf–VÆB¢f"ÖöFR£Ò÷F–öä'WGFöâææWr‚¢ÖöFRæFEö—FVÒ‚#Z5‰î×ŸŠwHŠBˆ[ÙK˜YÚ][J	‰Mhß'5£hˆ¤(€€€Ù…Èµ½‘•}¥‘Ì€èôl‰ÍÕÉÙ¥Ù…°ˆ°€‰É•…Ñ¥Ù”‰t(€€€™½É´¹…‘‘}¡¥±¡µ½‘”¤((€€€Ù…Èİ½É±‘}ÑåÁ”€èô=ÁÑ¥½¹	ÕÑÑ½¸¹¹•Ü ¤(€€€İ½É±‘}ÑåÁ”¹…‘‘}¥Ñ•´ ‹§uçâç|œÖRZ7’hÚ")
-    world_type.add_item("5£]éİyø§yÔ˜ÔÖrsZ6ˆŠBˆÛÜ›İ\K˜YÚ][Jh×Dºw^~)Şu&:5£x¤ˆ¤(€€€İ½É±‘}ÑåÁ”¹…‘‘}¥Ñ•´ ‹§uçâç|œÖRZ5’hÚ")
+func refresh_profile() -> void:
+    if profile_button:
+        profile_button.tooltip_text = "%s - %s" % [AppState.player_name, "Ù…ØªØµÙ„" if AppState.is_authenticated else "ÙˆØ¶Ø¹ Ù…Ø­Ù„ÙŠ"]
+    if auth_overlay and AppState.is_authenticated:
+        auth_overlay.queue_free()
+        auth_overlay = null
+
+func notify_auth_failure(message: String) -> void:
+    if auth_status:
+        auth_status.text = "Ø§Ù„Ø­Ø§Ù„Ø©: " + message
+        auth_status.add_theme_color_override("font_color", RED)
+
+func _page_create_world() -> void:
+    for child in content.get_children():
+        child.queue_free()
+    _section_title(content, "Ø¥Ù†Ø´Ø§Ø¡ Ø¹Ø§Ù„Ù… Ø¬Ø¯ÙŠØ¯", "ÙƒÙ„ Ù‚ÙŠÙ…Ø© Ù‡Ù†Ø§ ØªÙØ­ÙØ¸ Ù…Ø¹ Ø§Ù„Ø¹Ø§Ù„Ù…")
+    var panel := _panel(PANEL, 20, Color(0.22, 0.7, 1.0, 0.2))
+    panel.custom_minimum_size = Vector2(0, 440)
+    content.add_child(panel)
+    var form := VBoxContainer.new()
+    form.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    form.add_theme_constant_override("separation", 10)
+    panel.add_child(form)
+    var name_field := LineEdit.new()
+    name_field.name = "WorldName"
+    name_field.placeholder_text = "Ø§Ø³Ù… Ø§Ù„Ø¹Ø§Ù„Ù…"
+    name_field.text = "Wildbound World"
+    form.add_child(name_field)
+    var seed_field := LineEdit.new()
+    seed_field.placeholder_text = "Ø§Ù„Ø¨Ø°Ø±Ø© Ø£Ùˆ Ø§ØªØ±ÙƒÙ‡Ø§ Ø¹Ø´ÙˆØ§Ø¦ÙŠØ©"
+    seed_field.text = str(randi_range(1, 2147480000))
+    form.add_child(seed_field)
+    var mode := OptionButton.new()
+    mode.add_item("Ø¨Ù‚Ø§Ø¡")
+    mode.add_item("Ø¥Ø¨Ø¯Ø§Ø¹ÙŠ")
+    var mode_ids := ["survival", "creative"]
+    form.add_child(mode)
+
+    var world_type := OptionButton.new()
+    world_type.add_item("Ø¹Ø§Ù„Ù… Ø·Ø¨ÙŠØ¹ÙŠ")
+    world_type.add_item("Ø¹Ø§Ù„Ù… ØµØ­Ø±Ø§ÙˆÙŠ")
+    world_type.add_item("Ø¹Ø§Ù„Ù… ØºØ§Ø¨Ø©")
+    world_type.add_item("Ø¹Ø§Ù„Ù… Ø¬Ù„ÙŠØ¯ÙŠ")
     var world_type_ids := ["", "arid", "grove", "frost"]
     form.add_child(world_type)
     var difficulty := OptionButton.new()
-    difficulty.add_item("5£Yéİyø§yØˆ¤(€€€‘¥™™¥Õ±Ñä¹…‘‘}¥Ñ•´ ˜ÌÖB"¢F–ff–7VÇG’æFEö—FVÒ‚#Z5Ëî×ŸŠwˆŠBˆY™šXİ[K˜YÚ][J	MhØ")
+    difficulty.add_item("Ø³Ù„Ù…ÙŠ")
+    difficulty.add_item("Ø³Ù‡Ù„")
+    difficulty.add_item("Ø¹Ø§Ø¯ÙŠ")
+    difficulty.add_item("ØµØ¹Ø¨")
     var difficulty_ids := ["peaceful", "easy", "normal", "hard"]
     difficulty.select(2)
     form.add_child(difficulty)
     var height := OptionButton.new()
-    height.add_item("éİyø§yßEºw^~)Şv 500")
-    height.add_item(&95£H€àÀÀˆ¤(€€€¡•¥¡Ğ¹…‘‘}¥Ñ•´ ˆÖt""¢†V–v‡Bç6VÆV7Bƒ¢f÷&ÒæFEö6†–ÆB††V–v‡B¢f"&—f7’£Ò÷F–öä'WGFöâææWr‚¢&—f7’æFEö—FVÒ‚c“Z5HŠBˆš]˜XŞK˜YÚ][Jh×5")
-    privacy.add_item("éİyø§yÖD5£\¼Ör.×ŸŠwt+§uçâçr"¢f"&—f7•ö–G2£Ò²'V&Æ–2"Â'&—fFR"Â&g&–VæG5ööæÇ’%Ğ¢&—f7’ç6VÆV7Bƒ¢f÷&ÒæFEö6†–ÆB‡&—f7’¢f"7G'V7GW&W2£Ò6†V6´&÷‚ææWr‚¢7G'V7GW&W2çFW‡BÒ.×ŸŠwtcZ5ÈHºw^~)ŞuÑhŞ'5£h€ÖcsZ7MhÙ"
+    height.add_item("Ø¹Ù…Ù‚ 500")
+    height.add_item("Ø¹Ù…Ù‚ 800")
+    height.add_item("Ø¹Ù…Ù‚ 1000")
+    height.select(0)
+    form.add_child(height)
+    var privacy := OptionButton.new()
+    privacy.add_item("Ø¹Ø§Ù…")
+    privacy.add_item("Ø®Ø§Øµ")
+    privacy.add_item("Ù„Ù„Ø£ØµØ¯Ù‚Ø§Ø¡ ÙÙ‚Ø·")
+    var privacy_ids := ["public", "private", "friends_only"]
+    privacy.select(1)
+    form.add_child(privacy)
+    var structures := CheckBox.new()
+    structures.text = "Ø¥Ù†Ø´Ø§Ø¡ Ø§Ù„Ù…Ø¨Ø§Ù†ÙŠ Ø§Ù„Ø·Ø¨ÙŠØ¹ÙŠØ©"
     structures.button_pressed = true
     form.add_child(structures)
     var creatures := CheckBox.new()
-    creatures.text = "éİyø§y×D5£yÖb{§uçâçb ¢7&VGW&W2æ'WGFöå÷&W76VBÒG'VP¢f÷&ÒæFEö6†–ÆB†7&VGW&W2¢f"vVF†W"£Ò6†V6´&÷‚ææWr‚¢vVF†W"çFW‡BÒ#Z5ÍhÓ"
+    creatures.text = "Ø§Ù„Ù…Ø®Ù„ÙˆÙ‚Ø§Øª"
+    creatures.button_pressed = true
+    form.add_child(creatures)
+    var weather := CheckBox.new()
+    weather.text = "Ø§Ù„Ø·Ù‚Ø³"
     weather.button_pressed = true
     form.add_child(weather)
     var starting_inventory := LineEdit.new()
-    starting_inventory.placeholder_text = "éİyø§y×.5£y‹§uçâç]ÖòsZ7Ãºw^~)ŞuÊÍhÔ: 1=64, 2=32"
+    starting_inventory.placeholder_text = "Ù…Ø®Ø²ÙˆÙ† Ø§Ù„Ø¨Ø¯Ø§ÙŠØ©ØŒ Ù…Ø«Ø§Ù„: 1=64, 2=32"
     form.add_child(starting_inventory)
     var controls := HBoxContainer.new()
     controls.alignment = BoxContainer.ALIGNMENT_END
     form.add_child(controls)
-    var cancel := _button(&%5£xéİyø§yÔˆ°Y•Ñ½ÈÈ ÄÈÀ°€ĞÈ¤¤(€€€…¹•°¹ÁÉ•ÍÍ•¹½¹¹•Ğ¡™Õ¹Œ ¤è}Í¡½İ}Á…” ‰¡½µ”ˆ¤¤(€€€½¹ÑÉ½±Ì¹…‘‘}¡¥±¡…¹•°¤(€€€Ù…ÈÉ•…Ñ”€èô}ÁÉ¥µ…Éå}‰ÕÑÑ½¸ ˜”Öb{§uçâçRdƒZ7‹î×ŸŠwÈ‹™XİÜŒŠNL
-JBˆÜ™X]Kœ™\ÜÙY˜ÛÛ›™Xİ
-[˜Ê
-N‚ˆ˜\ˆÙYYİ˜[YHH[
-ÙYYÙšY[^
-HYˆÙYYÙšY[^š\×İ˜[YÚ[
+    var cancel := _button("Ø¥Ù„ØºØ§Ø¡", Vector2(120, 42))
+    cancel.pressed.connect(func(): _show_page("home"))
+    controls.add_child(cancel)
+    var create := _primary_button("Ø¥Ù†Ø´Ø§Ø¡ ÙˆØ§Ø¨Ø¯Ø£", Vector2(190, 48))
+    create.pressed.connect(func():
+        var seed_value := int(seed_field.text) if seed_field.text.is_valid_int() else randi_range(1, 2147480000)
+        AppState.pending_world_config = {
+            "name": name_field.text.strip_edges() if not name_field.text.strip_edges().is_empty() else "Wildbound World",
+            "seed": seed_value,
+            "mode": mode_ids[mode.selected],
+            "world_type": world_type_ids[world_type.selected],
+            "difficulty": difficulty_ids[difficulty.selected],
+            "world_height": [500, 800, 1000][height.selected],
+            "world_radius": 32768,
+            "privacy": privacy_ids[privacy.selected],
+            "structures": structures.button_pressed,
+            "creatures": creatures.button_pressed,
+            "weather": weather.button_pressed,
+            "starting_inventory": _parse_starting_inventory(starting_inventory.text),
+        }
+        play_singleplayer.emit()
+    )
+    controls.add_child(create)
 
-H[ÙH˜[™WÜ˜[™ÙJKŒMÍ
-Bˆ\İ]Kœ[™[™×İÛÜ›ØÛÛ™šYÈHÂˆ›˜[YHˆ˜[YWÙšY[^œİš\ÙYÙ\Ê
-HYˆ›İ˜[YWÙšY[^œİš\ÙYÙ\Ê
-Kš\×Ù[\J
-H[ÙH•Ú[›İ[™ÛÜ›‹ˆœÙYYˆÙYYİ˜[YKˆ›[ÙHˆ[ÙWÚYÖÛ[ÙKœÙ[XİYKˆÛÜ›İ\HˆÛÜ›İ\WÚYÖİÛÜ›İ\KœÙ[XİYKˆ™Y™šXİ[HˆY™šXİ[WÚYÖÙY™šXİ[KœÙ[XİYKˆÛÜ›ÚZYÚˆÍLLVÚZYÚœÙ[XİYKˆÛÜ›Ü˜Y]\ÈˆÌÍˆœš]˜XŞHˆš]˜XŞWÚYÖÜš]˜XŞKœÙ[XİYKˆœİXİ\™\ÈˆİXİ\™\Ë˜]Û—Ü™\ÜÙYˆ˜Ü™X]\™\ÈˆÜ™X]\™\Ë˜]Û—Ü™\ÜÙYˆÙX]\ˆˆÙX]\‹˜]Û—Ü™\ÜÙYˆœİ\[™×Ú[™[ÜHˆÜ\œÙWÜİ\[™×Ú[™[ÜJİ\[™×Ú[™[ÜK^
-KˆBˆ^WÜÚ[™Û\^Y\‹™[Z]
+func _page_solo() -> void:
+    _section_title(content, "Ø§Ù„Ù„Ø¹Ø¨ Ø§Ù„ÙØ±Ø¯ÙŠ", "Ø¹ÙˆØ§Ù„Ù… Ù…Ø­ÙÙˆØ¸Ø© Ø¹Ù„Ù‰ Ø¬Ù‡Ø§Ø²Ùƒ")
+    var new_world := _primary_button("Ø¥Ù†Ø´Ø§Ø¡ Ø¹Ø§Ù„Ù… Ø¬Ø¯ÙŠØ¯", Vector2(240, 48))
+    new_world.pressed.connect(_page_create_world)
+    content.add_child(new_world)
+    _world_cards(content, SaveDB.list_worlds())
 
-Bˆ
-BˆÛÛ›ÛË˜YØÚ[
-Ü™X]JB‚™[˜ÈÜYÙWÜÛÛÊ
-HOˆ›ÚY‚ˆÜÙXİ[Û—İ]JÛÛ[ºw^~)ŞuÑhß("éİyø§y×D5£\¾éİyø§yØˆ°€˜äÖtK§uçâçRdSZ5ÒhÙ 5£Y$‹§uçâçyÖd2"¢f"æWu÷v÷&ÆB£Ò÷&–Ö'•ö'WGFöâ‚bSZ5‰î×ŸŠwIMhÖE"éİyø§yŞ/5£|ˆ°Y•Ñ½ÈÈ ÈĞÀ°€Ğà¤¤(€€€¹•İ}İ½É±¹ÁÉ•ÍÍ•¹½¹¹•Ğ¡}Á…•}É•…Ñ•}İ½É±¤(€€€½¹Ñ•¹Ğ¹…‘‘}¡¥±¡¹•İ}İ½É±¤(€€€}İ½É±‘}…É‘Ì¡½¹Ñ•¹Ğ°M…Ù•¹±¥ÍÑ}İ½É±‘Ì ¤¤()™Õ¹Œ}Á…ÉÍ•}ÍÑ…ÉÑ¥¹}¥¹Ù•¹Ñ½Éä¡Ñ•áĞèMÑÉ¥¹œ¤€´ø¥Ñ¥½¹…Éäè(€€€Ù…ÈÉ•ÍÕ±Ğ€èôíô(€€€™½ÈÁ…ÉĞ¥¸Ñ•áĞ¹ÍÁ±¥Ğ ˆ°ˆ¤è(€€€€€€€Ù…ÈÁ…¥È€èôÁ…ÉĞ¹ÍÑÉ¥Á}•‘•Ì ¤¹ÍÁ±¥Ğ ˆôˆ¤(€€€€€€€¥˜Á…¥È¹Í¥é” ¤€ôô€È…¹Á…¥ÉlÁt¹¥Í}Ù…±¥‘}¥¹Ğ ¤…¹Á…¥ÉlÅt¹¥Í}Ù…±¥‘}¥¹Ğ ¤è(€€€€€€€€€€€Ù…È¥Ñ•µ}¥€èô¥¹Ğ¡Á…¥ÉlÁt¤(€€€€€€€€€€€Ù…È…µ½Õ¹Ğ€èôµ…á¤ À°¥¹Ğ¡Á…¥ÉlÅt¤¤(€€€€€€€€€€€¥˜¥Ñ•µ}¥€øô€À…¹…µ½Õ¹Ğ€ø€Àè(€€€€€€€€€€€€€€€É•ÍÕ±Ñm¥Ñ•µ}¥‘t€ô…µ½Õ¹Ğ(€€€É•ÑÕÉ¸É•ÍÕ±Ğ()™Õ¹Œ}Á…•}İ½É±‘Ì ¤€´øÙ½¥è(€€€}Í•Ñ¥½¹}Ñ¥Ñ±”¡½¹Ñ•¹Ğ°€‹§uçâç]ÖâsZ5H‹hß'5£d€Öc“Z5Ñ.×ŸŠwI‰Íh×-5£xâéİyø§yÔˆ¤(€€€}İ½É±‘}…É‘Ì¡½¹Ñ•¹Ğ°M…Ù•¹±¥ÍÑ}İ½É±‘Ì ¤°ÑÉÕ”¤()™Õ¹Œ}İ½É±‘}…É‘Ì¡Á…É•¹Ğè½¹ÑÉ½°°İ½É±‘ÌèÉÉ…ä°µ…¹…”€èô™…±Í”¤€´øÙ½¥è(€€€¥˜İ½É±‘Ì¹¥Í}•µÁÑä ¤è(€€€€€€€Ù…È•µÁÑä€èô}Á…¹•°¡A91|È°€Äà°½±½È À¸ÈÈ°€À¸Ü°€Ä¸À°€À¸ÄÈ¤¤(€€€€€€€Á…É•¹Ğ¹…‘‘}¡¥±¡•µÁÑä¤(€€€€€€€}±…‰•°¡•µÁÑä°€‹§uçâçXœ‹§uçâçy ÖòZ7‰ÍhÕ 5£}Öâ’.×ŸŠwã›§uçâçrâ"ÂBÂÕUDTBÂ„õ$•¤ôåDÅôÄ”täÔTåEô4TåDU"¢&WGW&à¢f"w&–B£Òw&–D6öçF–æW"ææWr‚¢w&–Bæ6öÇVÖç2Ò ¢w&–BæÆ–÷WEöF—&V7F–öâÒ6öçG&öÂäÄ”õUEôD•$T5D”ôåõ%DÀ¢w&–BæFE÷F†VÖUö6öç7FçEö÷fW'&–FR‚&…÷6W&F–öâ"Â¢w&–BæFE÷F†VÖUö6öç7FçEö÷fW'&–FR‚'e÷6W&F–öâ"Â¢&VçBæFEö6†–ÆB†w&–B¢f÷"v÷&ÆB–âv÷&ÆG3 ¢f"6&B£Ò÷æVÂ…äTÅó"ÂbÂ6öÆ÷"ƒã#"ÂãrÂãÂãB’¢6&Bæ7W7FöÕöÖ–æ–×VÕ÷6—¦RÒfV7F÷#"ƒÂS¢w&–BæFEö6†–ÆB†6&B¢f"Ö&v–â£ÒÖ&v–ä6öçF–æW"ææWr‚¢Ö&v–âæFE÷F†VÖUö6öç7FçEö÷fW'&–FR‚&Ö&v–åöÆVgB"ÂB¢Ö&v–âæFE÷F†VÖUö6öç7FçEö÷fW'&–FR‚&Ö&v–å÷F÷"Â"¢Ö&v–âæFE÷F†VÖUö6öç7FçEö÷fW'&–FR‚&Ö&v–å÷&–v‡B"ÂB¢Ö&v–âæFE÷F†VÖUö6öç7FçEö÷fW'&–FR‚&Ö&v–åö&÷GFöÒ"Â"¢6&BæFEö6†–ÆB†Ö&v–â¢f"&÷‚£Òd&÷„6öçF–æW"ææWr‚¢&÷‚æFE÷F†VÖUö6öç7FçEö÷fW'&–FR‚'6W&F–öâ"Âb¢Ö&v–âæFEö6†–ÆB†&÷‚¢f"F‡VÖ"£ÒFW‡GW&U&V7BææWr‚¢F‡VÖ"çFW‡GW&RÒÆöB„$uõD‚’2FW‡GW&S$@¢F‡VÖ"æ7W7FöÕöÖ–æ–×VÕ÷6—¦RÒfV7F÷#"ƒÂs‚¢F‡VÖ"æW‡æEöÖöFRÒFW‡GW&U&V7BäU…äEô”täõ$Uõ4•¤P¢F‡VÖ"ç7G&WF6…öÖöFRÒFW‡GW&U&V7Bå5E$UD4…ô´TUô5T5Eô4õdU$T@¢F‡VÖ"æÖ÷W6Uöf–ÇFW"Ò6öçG&öÂäÔõU4Uôd”ÅDU%ô”täõ$P¢&÷‚æFEö6†–ÆB‡F‡VÖ"¢f"ÖWF¢F–7F–öæ'’Òv÷&ÆBævWB‚&ÖWFFF"Â·Ò¢öÆ&VÂ†&÷‚Â7G"†ÖWFævWB‚&æÖR"Âv÷&ÆBævWB‚&–B"Â%v÷&ÆB"’’’ÂrÂDU…B¢öÆ&VÂ†&÷‚Â#Z5‘h×: %s" % _mode_label(str(meta.get("mode", "unknown")) ), 10, MUTED)
-        _label(box, "5£X Ör“¢W2"R7G"†ÖWFævWB‚'6VVB"Â#Z7ŒHºw^~)ŞuËMhß")), 10, MUTED)
-        _label(box, "5£xÄ‹§uçâçXæéİyø§yĞè€•Ìˆ€”ÍÑÈ¡µ•Ñ„¹•Ğ ‰Í…Ù•‘}…Ğˆ°€˜èÖZ7Ëî×ŸŠwÈŠJKKUUQ
-Bˆ˜\ˆXİ[ÛœÈH›ŞÛÛZ[™\‹›™]Ê
-BˆXİ[ÛœË˜[YÛ›Y[H›ŞÛÛZ[™\‹SQÓ“QS•ÑS‘ˆ›Ş˜YØÚ[
-Xİ[ÛœÊBˆ˜\ˆ^HHØ]ÛŠh×*5£Xéİyø§yÔˆ°Y•Ñ½ÈÈ ÄÄÀ°€ÌĞ¤¤(€€€€€€€Ù…Èİ½É±‘}¥€èôÍÑÈ¡İ½É±¹•Ğ ‰¥ˆ°€ˆˆ¤¤(€€€€€€€Á±…ä¹ÁÉ•ÍÍ•¹½¹¹•Ğ¡™Õ¹Œ ¤è}É•ÍÕµ•}İ½É±¡İ½É±‘}¥¤¤(€€€€€€€…Ñ¥½¹Ì¹…‘‘}¡¥±¡Á±…ä¤(€€€€€€€¥˜µ…¹…”è(€€€€€€€€€€€Ù…Èµ•¹Õ}‰ÕÑÑ½¸€èô}‰ÕÑÑ½¸ ˜¸ÖsZ6ˆ‹™XİÜŒŠÍ
-JBˆY[WØ]Û‹œ™\ÜÙY˜ÛÛ›™Xİ
-[˜Ê
-NˆİÛÜ›ØXİ[ÛœÊÛÜ›ÚYİŠY]K™Ù]
-›˜[YH‹•ÛÜ›ŠJJJBˆXİ[ÛœË˜YØÚ[
-Y[WØ]ÛŠB‚™[˜ÈÜYÙWÛ][\^Y\Š
-HOˆ›ÚY‚ˆÜÙXİ[Û—İ]JÛÛ[ºw^~)ŞuÊhß/"éİyø§y×D5£\äÖäb"Â.×ŸŠwr£Z5Ñºw^~)ŞwĞhÖJ"éİyø§yß(ºw^~)Şu&E5£xÄ‹§uçâç]Öä;§uçâçR"¢f"&÷r£Ò„&÷„6öçF–æW"ææWr‚¢&÷ræFE÷F†VÖUö6öç7FçEö÷fW'&–FR‚'6W&F–öâ"Â¢6öçFVçBæFEö6†–ÆB‡&÷r¢f"†÷7B£Ò÷V–6µö6&B‡&÷rÂ&†÷7B"Â#Z5Êh×Aºw^~)Şu", &*5£y*éİyø§yĞ˜°Ör’TæWBZ7ÑhÙ", func(): host_multiplayer.emit())
+func _parse_starting_inventory(text: String) -> Dictionary:
+    var result := {}
+    for part in text.split(","):
+        var pair := part.strip_edges().split("=")
+        if pair.size() == 2 and pair[0].is_valid_int() and pair[1].is_valid_int():
+            var item_id := int(pair[0])
+            var amount := maxi(0, int(pair[1]))
+            if item_id >= 0 and amount > 0:
+                result[item_id] = amount
+    return result
+
+func _page_worlds() -> void:
+    _section_title(content, "Ø§Ù„Ø¹ÙˆØ§Ù„Ù…", "Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø¹ÙˆØ§Ù„Ù… Ø§Ù„Ù…Ø­ÙÙˆØ¸Ø©")
+    _world_cards(content, SaveDB.list_worlds(), true)
+
+func _world_cards(parent: Control, worlds: Array, manage := false) -> void:
+    if worlds.is_empty():
+        var empty := _panel(PANEL_2, 18, Color(0.22, 0.7, 1.0, 0.12))
+        parent.add_child(empty)
+        _label(empty, "Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¹ÙˆØ§Ù„Ù… Ù…Ø­ÙÙˆØ¸Ø© Ø¨Ø¹Ø¯.", 14, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+        return
+    var grid := GridContainer.new()
+    grid.columns = 2
+    grid.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    grid.add_theme_constant_override("h_separation", 10)
+    grid.add_theme_constant_override("v_separation", 10)
+    parent.add_child(grid)
+    for world in worlds:
+        var card := _panel(PANEL_2, 16, Color(0.22, 0.7, 1.0, 0.14))
+        card.custom_minimum_size = Vector2(0, 150)
+        grid.add_child(card)
+        var margin := MarginContainer.new()
+        margin.add_theme_constant_override("margin_left", 14)
+        margin.add_theme_constant_override("margin_top", 12)
+        margin.add_theme_constant_override("margin_right", 14)
+        margin.add_theme_constant_override("margin_bottom", 12)
+        card.add_child(margin)
+        var box := VBoxContainer.new()
+        box.add_theme_constant_override("separation", 6)
+        margin.add_child(box)
+        var thumb := TextureRect.new()
+        thumb.texture = load(BG_PATH) as Texture2D
+        thumb.custom_minimum_size = Vector2(0, 78)
+        thumb.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+        thumb.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+        thumb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        box.add_child(thumb)
+        var meta: Dictionary = world.get("metadata", {})
+        _label(box, str(meta.get("name", world.get("id", "World"))), 17, TEXT)
+        _label(box, "Ø§Ù„Ù†Ù…Ø·: %s" % _mode_label(str(meta.get("mode", "unknown")) ), 10, MUTED)
+        _label(box, "Ø§Ù„Ø¨Ø°Ø±Ø©: %s" % str(meta.get("seed", "ØºÙŠØ± Ù…Ø­Ø¯Ø¯")), 10, MUTED)
+        _label(box, "Ø¢Ø®Ø± Ù„Ø¹Ø¨: %s" % str(meta.get("saved_at", "ØºÙŠØ± Ù…Ø­Ø¯Ø¯")), 9, MUTED)
+        var actions := HBoxContainer.new()
+        actions.alignment = BoxContainer.ALIGNMENT_END
+        box.add_child(actions)
+        var play := _button("Ø§Ø³ØªØ¦Ù†Ø§Ù", Vector2(110, 34))
+        var world_id := str(world.get("id", ""))
+        play.pressed.connect(func(): _resume_world(world_id))
+        actions.add_child(play)
+        if manage:
+            var menu_button := _button("Ø®ÙŠØ§Ø±Ø§Øª", Vector2(80, 34))
+            menu_button.pressed.connect(func(): _world_actions(world_id, str(meta.get("name", "World"))))
+            actions.add_child(menu_button)
+
+func _page_multiplayer() -> void:
+    _section_title(content, "Ù…ØªØ¹Ø¯Ø¯ Ø§Ù„Ù„Ø§Ø¹Ø¨ÙŠÙ†", "Ø§ØªØµØ§Ù„ Ø­Ù‚ÙŠÙ‚ÙŠ Ø¹Ø¨Ø± Ù…Ø¯ÙŠØ± Ø§Ù„Ø´Ø¨ÙƒØ©")
+    var row := HBoxContainer.new()
+    row.add_theme_constant_override("separation", 10)
+    content.add_child(row)
+    var host := _quick_card(row, "host", "Ø§Ø³ØªØ¶Ø§ÙØ©", "ØªØ´ØºÙŠÙ„ Ø¬Ù„Ø³Ø© ENet ÙØ¹Ù„ÙŠØ©", func(): host_multiplayer.emit())
     host.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    var join := _quick_card(row, "join", "5£XØÖtR"Â.×ŸŠwtCZ7MhÔ 5£}Ötb.×ŸŠwt£Z5ÌHºw^~)ŞuÎMhÚ", func(): _join_dialog())
+    var join := _quick_card(row, "join", "Ø§Ù†Ø¶Ù…Ø§Ù…", "Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ø¹Ù†ÙˆØ§Ù† Ø³ÙŠØ±ÙØ± ÙØ¹Ù„ÙŠ", func(): _join_dialog())
     join.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    var servers := _quick_card(row, "servers", "5£X¸Örû§uçâçR"ÂbsZ5ĞMhÖ)"éİyø§yŞ'5£\¨ÖtB.×ŸŠwtCZ7‰ÍhÑ", func(): _show_page("servers"))
+    var servers := _quick_card(row, "servers", "Ø§Ù„Ø®ÙˆØ§Ø¯Ù…", "Ø§Ù„Ù…ÙØ¶Ù„Ø© ÙˆØ§Ù„Ø§ØªØµØ§Ù„ Ø§Ù„Ù…Ø¨Ø§Ø´Ø±", func(): _show_page("servers"))
     servers.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    _section_title(content, "5£XŒÖô#Z4Hh×.ºw^~)Şt&'5£yÖ’"Â#Z5Èhß1ºw^~)Şv&%5£\€ÖdCZ7ÊhÖ 5£YÖäƒZ7‘ˆºw^~)ŞuÒˆºw^~)ŞuÑhÖ3ºw^~)Şu&'5£|œÖâ’"¢÷&Vg&W6…ög&–VæG2„æWGv÷&´ÖævW"ç&VÖ÷FU÷Æ–W'2 ¦gVæ2÷vU÷6W'fW'2‚’Óâfö–C ¢÷6V7F–öå÷F—FÆR†6öçFVçBÂ.×ŸŠwbsZ5ÊHºw^~)ŞuÑhŞ'5£Tˆ°€ˆÖd#Z5HhÖE5£] Ö’Z5ˆhÖ45£\¤‹§uçâç]ÖôCZ6HhØ 5£X€ÖscZ5Ê®×ŸŠwÉ‰Íh×-5£xâéİyø§yÔˆ¤(€€€Ù…È…‘€èô}ÁÉ¥µ…Éå}‰ÕÑÑ½¸ ˆÖbsZ6HhŞ15£Dˆ°Y•Ñ½ÈÈ ÄäÀ°€ĞĞ¤¤(€€€…‘¹ÁÉ•ÍÍ•¹½¹¹•Ğ¡}…‘‘}Í•ÉÙ•É}‘¥…±½œ¤(€€€½¹Ñ•¹Ğ¹…‘‘}¡¥±¡…‘¤(€€€Ù…È™…Ù½É¥Ñ•Ì€èôM•ÉÙ•É¥É•Ñ½Éä¹É••¹Ğ ¤(€€€¥˜™…Ù½É¥Ñ•Ì¹¥Í}•µÁÑä ¤è(€€€€€€€Ù…È•µÁÑä€èô}Á…¹•°¡A91|È°€Äà°½±½È À¸ÈÈ°€À¸Ü°€Ä¸À°€À¸ÄÈ¤¤(€€€€€€€½¹Ñ•¹Ğ¹…‘‘}¡¥±¡•µÁÑä¤(€€€€€€€}±…‰•°¡•µÁÑä°€‹§uçâçXœ‹§uçâçy ÖòZ7‰ÍhÕ 5£}Öâ’âb3Z4HhÖH5£X€ÖãZ4HhŞ/ºw^~)Şu&'5£\¨ÖtBâ"Â2ÂÕUDTBÂ„õ$•¤ôåDÅôÄ”täÔTåEô4TåDU"¢VÇ6S ¢f÷"6W'fW"–âff÷&—FW3 ¢÷6W'fW%ö6&B‡6W'fW" ¦gVæ2÷6W'fW%ö6&B‡6W'fW#¢F–7F–öæ'’’Óâfö–C ¢f"6&B£Ò÷æVÂ…äTÅó"ÂbÂ6öÆ÷"ƒã#"ÂãrÂãÂãB’¢6&Bæ7W7FöÕöÖ–æ–×VÕ÷6—¦RÒfV7F÷#"ƒÂ“"¢6öçFVçBæFEö6†–ÆB†6&B¢f"&÷r£Ò„&÷„6öçF–æW"ææWr‚¢&÷rç6WEöæ6†÷'5öæEööfg6WG5÷&W6WB„6öçG&öÂå$U4UEôeTÄÅõ$T5B¢&÷ræFE÷F†VÖUö6öç7FçEö÷fW'&–FR‚'6W&F–öâ"Â¢6&BæFEö6†–ÆB‡&÷r¢f"–æfò£Òd&÷„6öçF–æW"ææWr‚¢–æfòç6—¦UöfÆw5ö†÷&—¦öçFÂÒ6öçG&öÂå4•¤UôU…äEôd”ÄÀ¢&÷ræFEö6†–ÆB†–æfò¢öÆ&VÂ†–æfòÂ7G"‡6W'fW"ævWB‚&æÖR"Âc3Z5Ğn×ŸŠwHŠJKMKV
-Bˆ˜\ˆY™\Ü×ÛX™[HÛX™[
-[™›ËİŠÙ\™\‹™Ù]
-˜Y™\ÜÈ‹ˆŠJKLUUQ
-BˆY™\Ü×ÛX™[›^[İ]Ù\™Xİ[ÛˆHÛÛ›Û“VSÕUÑT‘PÕSÓ—Ó‚ˆY™\Ü×ÛX™[šÜš^›Û[Ø[YÛ›Y[HÔ’V“Ó•SĞSQÓ“QS•ÓQ•ˆ˜\ˆİ]HHÛX™[
-[™›Ëh×1ºw^~)Şu&A5£T€ÖbsZ5Éî×ŸŠw‹‹ˆ‹LQSÕÊBˆÜ›Ø™WÜÙ\™\ŠİŠÙ\™\‹™Ù]
-˜Y™\ÜÈ‹ˆŠJKİ]JBˆ˜\ˆ›Ú[ˆHØ]ÛŠ	‹ÍhŞD", Vector2(100, 38))
+    _section_title(content, "Ø§Ù„Ø£ØµØ¯Ù‚Ø§Ø¡ Ø¯Ø§Ø®Ù„ Ø§Ù„Ø¬Ù„Ø³Ø©", "Ù„Ø§ ÙŠØ¹Ø±Ø¶ Ø¥Ù„Ø§ Ø§Ù„Ù„Ø§Ø¹Ø¨ÙŠÙ† Ø§Ù„Ù…ÙˆØ¬ÙˆØ¯ÙŠÙ† ÙÙŠ Ø§Ù„Ø¬Ù„Ø³Ø© Ø§Ù„Ø­Ø§Ù„ÙŠØ©")
+    _refresh_friends(NetworkManager.remote_players)
+
+func _page_servers() -> void:
+    _section_title(content, "Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø®ÙˆØ§Ø¯Ù…", "Ø§Ù„Ù‚ÙŠÙ… Ø§Ù„Ù…Ø¹Ø±ÙˆØ¶Ø© Ù…Ù† Ø§Ù„Ø´Ø¨ÙƒØ© Ø§Ù„ÙØ¹Ù„ÙŠØ© Ø£Ùˆ Ù…Ù† Ù…ÙØ¶Ù„Ø§ØªÙƒ Ø§Ù„Ù…Ø­ÙÙˆØ¸Ø©")
+    var add := _primary_button("Ø¥Ø¶Ø§ÙØ© Ø³ÙŠØ±ÙØ±", Vector2(190, 44))
+    add.pressed.connect(_add_server_dialog)
+    content.add_child(add)
+    var favorites := ServerDirectory.recent()
+    if favorites.is_empty():
+        var empty := _panel(PANEL_2, 18, Color(0.22, 0.7, 1.0, 0.12))
+        content.add_child(empty)
+        _label(empty, "Ù„Ø§ ØªÙˆØ¬Ø¯ Ø®ÙˆØ§Ø¯Ù… Ù…Ø­ÙÙˆØ¸Ø©. Ø£Ø¶Ù Ø¹Ù†ÙˆØ§Ù† Ø³ÙŠØ±ÙØ± Ù„Ø¨Ø¯Ø¡ Ø§Ù„Ø§ØªØµØ§Ù„.", 13, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    else:
+        for server in favorites:
+            _server_card(server)
+
+func _server_card(server: Dictionary) -> void:
+    var card := _panel(PANEL_2, 16, Color(0.22, 0.7, 1.0, 0.14))
+    card.custom_minimum_size = Vector2(0, 92)
+    content.add_child(card)
+    var row := HBoxContainer.new()
+    row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    row.add_theme_constant_override("separation", 10)
+    card.add_child(row)
+    var info := VBoxContainer.new()
+    info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    row.add_child(info)
+    _label(info, str(server.get("name", "Ø³ÙŠØ±ÙØ±")), 15, TEXT)
+    var address_label := _label(info, str(server.get("address", "")), 10, MUTED)
+    address_label.layout_direction = Control.LAYOUT_DIRECTION_LTR
+    address_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+    var state := _label(info, "Ø¬Ø§Ø±Ù ÙØ­Øµ Ø§Ù„Ø§ØªØµØ§Ù„...", 10, YELLOW)
+    _probe_server(str(server.get("address", "")), state)
+    var join := _button("Ø¯Ø®ÙˆÙ„", Vector2(100, 38))
     join.pressed.connect(func(): _join_remote(str(server.get("address", ""))))
     row.add_child(join)
-    var remove := _button("éİyø§yß0ºw^~)Şu", Vector2(80, 38))
+    var remove := _button("Ø­Ø°Ù", Vector2(80, 38))
     remove.pressed.connect(func(): ServerDirectory.remove_favorite(str(server.get("address", ""))); _show_page("servers"))
     row.add_child(remove)
 
 func _page_store() -> void:
-    _section_title(content, "5£YÖã"Â.×ŸŠwt#Z5Éî×ŸŠwÉ‘MhÖJ"éİyø§y×-5£xà‹§uçâç\äÖä»§uçâçrd[§uçâçRdSZ5‘ˆºw^~)ŞuÍh×J5£hˆ¤(€€€Ù…Èİ…±±•Ğèõ}Á…¹•°¡A91|È°€Äà°½±½È À¸ÈÈ°€À¸Ü°€Ä¸À°€À¸ÄĞ¤¤ì½¹Ñ•¹Ğ¹…‘‘}¡¥±¡İ…±±•Ğ¤(€€€Ù…Èİ‰½àèõ!	½á½¹Ñ…¥¹•È¹¹•Ü ¤ìİ…±±•Ğ¹…‘‘}¡¥±¡İ‰½à¤(€€€Ù…È½¥¹Í}±…‰•°èõ}±…‰•°¡İ‰½à°€‹§uçâç]Öt«§uçâçs¢VB"RV6öæö×’æ6ö–ç2Â‚Â44TåEô%$”t…B“²6ö–ç5öÆ&VÂç6—¦UöfÆw5ö†÷&—¦öçFÃÔ6öçG&öÂå4•¤UôU…äEôd”ÄÀ¢V6öæö×’çvÆÆWEö6†ævVBæ6öææV7B†gVæ2‡fÇVS¦–çB“¢–b—5ö–ç7Fæ6U÷fÆ–B†6ö–ç5öÆ&VÂ“¢6ö–ç5öÆ&VÂçFW‡CÒ.×ŸŠwtCZ5Ò®×ŸŠwÎˆ	Yˆ	H˜[YJBˆ˜\ˆÜšYQÜšYÛÛZ[™\‹›™]Ê
-NÈÜšY˜ÛÛ[[œÏLÈÜšY˜Yİ[YWØÛÛœİ[Ûİ™\œšYJšÜÙ\\˜][Ûˆ‹LŠNÈÜšY˜Yİ[YWØÛÛœİ[Ûİ™\œšYJ—ÜÙ\\˜][Ûˆ‹LŠNÈÛÛ[˜YØÚ[
-ÜšY
-Bˆ›ÜˆÙ™™\ˆ[ˆXÛÛ›Û^KœÚÜØØ][ÙÊ
-N‚ˆ˜\ˆØ\™WÜ[™[
-S‘SÌ‹MÛÛÜŠŒMKŒŒŒM
-JNÈØ\™˜İ\İÛWÛZ[š[][WÜÚ^™OU™XİÜŒŠLL
-NÈÜšY˜YØÚ[
-Ø\™
-Bˆ˜\ˆ›ŞU›ŞÛÛZ[™\‹›™]Ê
-NÈ›Ş˜Yİ[YWØÛÛœİ[Ûİ™\œšYJœÙ\\˜][Ûˆ‹ŠNÈØ\™˜YØÚ[
-›Ş
-BˆÛX™[
-›ŞİŠÙ™™\‹™Ù]
-›˜[YH‹’][HŠJKM‹V
-BˆÛX™[
-›Ş‰Y5ÉŠhß1 %d" % [int(offer.get("amount",1)),int(offer.get("price",0))], 11, MUTED)
-        var buy:=_primary_button("5£\éİyø§yÔˆ°Y•Ñ½ÈÈ ÄÈÀ°ÌØ¤¤(€€€€€€€‰Õä¹ÁÉ•ÍÍ•¹½¹¹•Ğ¡™Õ¹Œ¡¥èõ¥¹Ğ¡½™™•È¹•Ğ ‰¥Ñ•µ}¥ˆ°À¤¤°…µ½Õ¹Ğèõ¥¹Ğ¡½™™•È¹•Ğ ‰…µ½Õ¹Ğˆ°Ä¤¤°ÁÉ¥”èõ¥¹Ğ¡½™™•È¹•Ğ ‰ÁÉ¥”ˆ°À¤¤¤è(€€€€€€€€€€€Ù…È½¬èõ½¹½µä¹ÁÕÉ¡…Í”¡¥±…µ½Õ¹Ğ±ÁÉ¥”¤(€€€€€€€€€€€}Í¡½İ}Á…” ‰ÍÑ½É”ˆ¤¥˜¹½Ğ½¬•±Í”}Í¡½İ}Á…” ‰ÍÑ½É”ˆ¤(€€€€€€€€¤(€€€€€€€‰½à¹…‘‘}¡¥±¡‰Õä¤()™Õ¹Œ}Á…•}ÁÉ½™¥±” ¤€´øÙ½¥è(€€€}Í•Ñ¥½¹}Ñ¥Ñ±”¡½¹Ñ•¹Ğ°€‹§uçâç]Öd.×ŸŠwtCZ7n×ŸŠwˆ‹	Šh×F5£h€ÖbÓZ5Êºw^~)Şw‰Íh×H5£d€ÖdSZ5ÒhÙ")
+    _section_title(content, "Ø§Ù„Ù…ØªØ¬Ø±", "Ø§Ù‚ØªØµØ§Ø¯ Ù…Ø­Ù„ÙŠ Ù…Ø­ÙÙˆØ¸ ÙØ¹Ù„ÙŠÙ‹Ø§ Ù…Ø¹ Ù…Ø®Ø²Ù† Ù…Ø´ØªØ±ÙŠØ§Øª")
+    var wallet:=_panel(PANEL_2, 18, Color(0.22, 0.7, 1.0, 0.14)); content.add_child(wallet)
+    var wbox:=HBoxContainer.new(); wallet.add_child(wbox)
+    var coins_label:=_label(wbox, "Ø§Ù„Ø±ØµÙŠØ¯: %d" % Economy.coins, 18, ACCENT_BRIGHT); coins_label.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+    Economy.wallet_changed.connect(func(value:int): if is_instance_valid(coins_label): coins_label.text="Ø§Ù„Ø±ØµÙŠØ¯: %d" % value)
+    var grid:=GridContainer.new(); grid.columns=2; grid.add_theme_constant_override("h_separation",12); grid.add_theme_constant_override("v_separation",12); content.add_child(grid)
+    for offer in Economy.shop_catalog():
+        var card:=_panel(PANEL_2, 14, Color(0.15,0.20,0.28,0.94)); card.custom_minimum_size=Vector2(280,110); grid.add_child(card)
+        var box:=VBoxContainer.new(); box.add_theme_constant_override("separation",6); card.add_child(box)
+        _label(box, str(offer.get("name","Item")), 16, TEXT)
+        _label(box, "%d Ã— Ø¨Ø³Ø¹Ø± %d" % [int(offer.get("amount",1)),int(offer.get("price",0))], 11, MUTED)
+        var buy:=_primary_button("Ø´Ø±Ø§Ø¡", Vector2(120,36))
+        buy.pressed.connect(func(id:=int(offer.get("item_id",0)), amount:=int(offer.get("amount",1)), price:=int(offer.get("price",0))):
+            var ok:=Economy.purchase(id,amount,price)
+            _show_page("store") if not ok else _show_page("store")
+        )
+        box.add_child(buy)
+
+func _page_profile() -> void:
+    _section_title(content, "Ø§Ù„Ù…Ù„Ù Ø§Ù„Ø´Ø®ØµÙŠ", "Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø­Ø³Ø§Ø¨ ÙˆØ§Ù„ØµÙˆØ±Ø© Ø§Ù„Ù…Ø­ÙÙˆØ¸Ø©")
     var panel := _panel(PANEL, 22, Color(0.22, 0.7, 1.0, 0.2))
     content.add_child(panel)
     var root := VBoxContainer.new()
@@ -506,14 +806,18 @@ BˆÛX™[
     info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     identity.add_child(info)
     _label(info, AppState.get_display_name(), 24, TEXT)
-    _label(info, "éİyø§y×D5£\éİyø§yĞè€•Ìˆ€”€ ™Öô+§uçâçbºw^~)ŞuB.×ŸŠwä£Z5‰î×ŸŠw‰‘Mh×H5£d€ÖôCZ7ÉÈˆYˆ\İ]Kš\×Ø]][XØ]Y[ÙHºw^~)ŞuËMhÚ"), 11, GREEN if AppState.is_authenticated else MUTED)
-    _label(info, "5£XĞÖt«§uçâçS¢W2"Rö6†&7FW%öÆ&VÂ„7FFRæ6†&7FW%ö–B’ÂÂ44TåEô%$”t…B ¢f"æÖUöf–VÆB£ÒÆ–æTVF—BææWr‚¢æÖUöf–VÆBçFW‡BÒ7FFRævWEöF—7Æ•öæÖR‚¢æÖUöf–VÆBçÆ6V†öÆFW%÷FW‡BÒ#Z5ÑHºw^~)ŞuÑh×6"
+    _label(info, "Ø§Ù„Ø­Ø³Ø§Ø¨: %s" % ("Ù…ØªØ­Ù‚Ù‚ â€” Ø¨ÙŠØ§Ù†Ø§Øª Ù…Ø­ÙÙˆØ¸Ø© ÙØ¹Ù„ÙŠÙ‹Ø§" if AppState.is_authenticated else "Ù…Ø­Ù„ÙŠ"), 11, GREEN if AppState.is_authenticated else MUTED)
+    _label(info, "Ø§Ù„Ø´Ø®ØµÙŠØ©: %s" % _character_label(AppState.character_id), 11, ACCENT_BRIGHT)
+
+    var name_field := LineEdit.new()
+    name_field.text = AppState.get_display_name()
+    name_field.placeholder_text = "Ø§Ø³Ù… Ø§Ù„Ø¹Ø±Ø¶"
     name_field.editable = true
     name_field.custom_minimum_size = Vector2(0, 40)
     name_field.layout_direction = Control.LAYOUT_DIRECTION_RTL
     root.add_child(name_field)
 
-    _label(root, "5£xªéİyø§yÔ˜ÔÖr’.×ŸŠwsZ7‘hÙ", 16, TEXT)
+    _label(root, "Ø§Ø®ØªØ± ØµÙˆØ±Ø© ÙƒØ±ØªÙˆÙ†ÙŠØ©", 16, TEXT)
     var grid := GridContainer.new()
     grid.columns = 5
     grid.layout_direction = Control.LAYOUT_DIRECTION_RTL
@@ -533,7 +837,23 @@ BˆÛX™[
         avatar.custom_minimum_size = Vector2(72, 72)
         button.add_child(avatar)
         var text := Label.new()
-        text.text = "éİyø§y×D5£xÆéİyø§yÔ€”ÀÉˆ€”m¥¹‘•à€¬€Åt(€€€€€€€Ñ•áĞ¹¡½É¥é½¹Ñ…±}…±¥¹µ•¹Ğ€ô!=I%i=9Q1}1%959Q}9QH(€€€€€€€Ñ•áĞ¹±…å½ÕÑ}‘¥É•Ñ¥½¸€ô½¹ÑÉ½°¹1e=UQ}%IQ%=9}IQ0(€€€€€€€Ñ•áĞ¹µ½ÕÍ•}™¥±Ñ•È€ô½¹ÑÉ½°¹5=UM}%1QI}%9=I(€€€€€€€‰ÕÑÑ½¸¹…‘‘}¡¥±¡Ñ•áĞ¤(€€€€€€€‰ÕÑÑ½¸¹ÁÉ•ÍÍ•¹½¹¹•Ğ¡™Õ¹Œ¡Í•±•Ñ•‘}¥¹‘•à€èô¥¹‘•à¤è(€€€€€€€€€€€ÁÁMÑ…Ñ”¹…Ù…Ñ…É}¥€ôÍ•±•Ñ•‘}¥¹‘•à(€€€€€€€€€€€™½ÈÁ••È¥¸…Ù…Ñ…É}‰ÕÑÑ½¹Ìè(€€€€€€€€€€€€€€€Á••È¹‰ÕÑÑ½¹}ÁÉ•ÍÍ•€ô™…±Í”(€€€€€€€€€€€‰ÕÑÑ½¸¹‰ÕÑÑ½¹}ÁÉ•ÍÍ•€ôÑÉÕ”(€€€€€€€€€€€ÁÉ•Ù¥•Ü¹…Ù…Ñ…É}¥¹‘•à€ôÍ•±•Ñ•‘}¥¹‘•à(€€€€€€€€€€€ÁÉ•Ù¥•Ü¹ÅÕ•Õ•}É•‘É…Ü ¤(€€€€€€€€¤(€€€€€€€É¥¹…‘‘}¡¥±¡‰ÕÑÑ½¸¤(€€€€€€€…Ù…Ñ…É}‰ÕÑÑ½¹Ì¹…ÁÁ•¹¡‰ÕÑÑ½¸¤((€€€Ù…ÈÍ…Ù”€èô}ÁÉ¥µ…Éå}‰ÕÑÑ½¸ ‹§uçâç}éİyø§yĞ˜œÖtK§uçâçRbsZ5‹hÚ", Vector2(220, 46))
+        text.text = "Ø§Ù„ØµÙˆØ±Ø© %02d" % [index + 1]
+        text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        text.layout_direction = Control.LAYOUT_DIRECTION_RTL
+        text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        button.add_child(text)
+        button.pressed.connect(func(selected_index := index):
+            AppState.avatar_id = selected_index
+            for peer in avatar_buttons:
+                peer.button_pressed = false
+            button.button_pressed = true
+            preview.avatar_index = selected_index
+            preview.queue_redraw()
+        )
+        grid.add_child(button)
+        avatar_buttons.append(button)
+
+    var save := _primary_button("Ø­ÙØ¸ Ø§Ù„Ù…Ù„Ù Ø§Ù„Ø´Ø®ØµÙŠ", Vector2(220, 46))
     save.pressed.connect(func():
         if AppState.is_authenticated:
             var root = get_parent()
@@ -547,18 +867,82 @@ BˆÛX™[
     root.add_child(save)
     
 func _page_developer() -> void:
-    _section_title(content, "5£} Ö¢Z5‘MhŞ1", "éİyø§y×B5£y*éİyø§yÜ˜¨Öä«§uçâçBdZ5’®×ŸŠwIMh×")
+    _section_title(content, "Ø£Ø¯ÙˆØ§Øª Ø§Ù„Ù…Ø·ÙˆØ±", "Ù…Ù‚Ø§ÙŠÙŠØ³ ØªØ´ØºÙŠÙ„ ÙØ¹Ù„ÙŠØ© ÙÙ‚Ø·")
     var grid := GridContainer.new()
     grid.columns = 2
     grid.add_theme_constant_override("h_separation", 10)
     grid.add_theme_constant_override("v_separation", 10)
     content.add_child(grid)
     _metric(grid, "FPS", str(Engine.get_frames_per_second()))
-    _metric(grid, "5£XÀÖs§uçâçR"Â"Sã&bÔ""R…W&f÷&Öæ6RævWEöÖöæ—F÷"…W&f÷&Öæ6RäÔTÔõ%•õ5DD”2’òCƒSsbã’¢öÖWG&–2†w&–BÂ#Z5ÎMhØ 5£XĞÖr’"Â7G"†×VÇF—Æ–W"ævWE÷VW'2‚’ç6—¦R‚’’¢öÖWG&–2†w&–BÂbsZ7ÒhÖE"éİyø§y×D5£}Öâ’"Â7G"…6fTD"æÆ—7E÷v÷&ÆG2‚’ç6—¦R‚’’¢öÖWG&–2†w&–BÂc“Z7ÈhÖE5£\¼ˆ°ÍÑÈ¡•Ñ}ÑÉ•” ¤¹•Ñ}¹½‘•}½Õ¹Ğ ¤¤¤(€€€}µ•ÑÉ¥Œ¡É¥°€˜œÖr£Z5Ñ‹ºw^~)ŞuÊhÔ" if multiplayer.multiplayer_peer != null else &:5£D€Öã[§uçâçB"¢f"6öç6öÆR£Òö'WGFöâ‚dZ7Hhß/ºw^~)Şu&'5£\ÜÖ„c‚’"ÂfV7F÷#"ƒ#sÂCB’¢6öç6öÆRç&W76VBæ6öææV7B†gVæ2‚“ ¢f"&ö÷B£ÒvWE÷&VçB‚¢–b&ö÷BæB&ö÷Bæ†5öÖWF†öB‚'FövvÆUöFWfVÆ÷W%ö6öç6öÆR"“ ¢&ö÷BçFövvÆUöFWfVÆ÷W%ö6öç6öÆR‚¢¢6öçFVçBæFEö6†–ÆB†6öç6öÆR ¦gVæ2öÖWG&–2‡&VçC¢6öçG&öÂÂF—FÆS¢7G&–ærÂfÇVS¢7G&–ær’Óâfö–C ¢f"6&B£Ò÷æVÂ…äTÅó"ÂBÂ6öÆ÷"ƒã#"ÂãrÂãÂã"’¢6&Bæ7W7FöÕöÖ–æ–×VÕ÷6—¦RÒfV7F÷#"ƒÂ“"¢&VçBæFEö6†–ÆB†6&B¢f"&÷‚£Òd&÷„6öçF–æW"ææWr‚¢&÷‚æÆ–væÖVçBÒ&÷„6öçF–æW"äÄ”täÔTåEô4TåDU ¢6&BæFEö6†–ÆB†&÷‚¢öÆ&VÂ†&÷‚ÂF—FÆRÂÂÕUDTB¢f"fÇVUöÆ&VÂ£ÒöÆ&VÂ†&÷‚ÂfÇVRÂ#BÂ44TåEô%$”t…B¢fÇVUöÆ&VÂææÖRÒ$ÖWG&–5fÇVR  ¦gVæ2÷&Vg&W6…ög&–VæG2‡Æ–W'3¢F–7F–öæ'’’Óâfö–C ¢–bg&–VæG5ö&÷‚ÓÒçVÆÃ ¢&WGW&à¢f÷"6†–ÆB–âg&–VæG5ö&÷‚ævWEö6†–ÆG&Vâ‚“ ¢6†–ÆBçVWVUög&VR‚¢f"fÆ–B£Ò ¢f÷"–B–âÆ–W'3 ¢f"&öf–ÆS¢F–7F–öæ'’ÒÆ–W'5¶–EĞ¢–b&öf–ÆRæ—5öV×G’‚“ ¢6öçF–çVP¢fÆ–B³Ò¢f"&÷r£Ò÷æVÂ…äTÅó"Â"Â6öÆ÷"ƒã#"ÂãrÂãÂã’¢&÷ræ7W7FöÕöÖ–æ–×VÕ÷6—¦RÒfV7F÷#"ƒÂSB¢g&–VæG5ö&÷‚æFEö6†–ÆB‡&÷r¢f"–ææW"£Ò„&÷„6öçF–æW"ææWr‚¢–ææW"ç6WEöæ6†÷'5öæEööfg6WG5÷&W6WB„6öçG&öÂå$U4UEôeTÄÅõ$T5B¢–ææW"æÆ–÷WEöF—&V7F–öâÒ6öçG&öÂäÄ”õUEôD•$T5D”ôåõ%DÀ¢–ææW"æFE÷F†VÖUö6öç7FçEö÷fW'&–FR‚'6W&F–öâ"Â‚¢&÷ræFEö6†–ÆB†–ææW"¢f"W'6öåö–6öâÒÆöB‚'&W3¢ò÷67&—G2÷V’÷fV7F÷%ö–6öâævB"’ææWr‚¢W'6öåö–6öâæ–6öåöæÖRÒ'W'6öâ ¢W'6öåö–6öâæ–6öåö6öÆ÷"Òu$TTà¢W'6öåö–6öâæ7W7FöÕöÖ–æ–×VÕ÷6—¦RÒfV7F÷#"ƒ#BÂ#B¢–ææW"æFEö6†–ÆB‡W'6öåö–6öâ¢f"&÷‚£Òd&÷„6öçF–æW"ææWr‚¢&÷‚æÆ–÷WEöF—&V7F–öâÒ6öçG&öÂäÄ”õUEôD•$T5D”ôåõ%DÀ¢&÷‚ç6—¦UöfÆw5ö†÷&—¦öçFÂÒ6öçG&öÂå4•¤UôU…äEôd”ÄÀ¢–ææW"æFEö6†–ÆB†&÷‚¢f"æÖR£Ò7G"‡&öf–ÆRævWB‚&æÖR"Â%Æ–W""’¢öÆ&VÂ†&÷‚ÂæÖRÂ"ÂDU…B¢öÆ&VÂ†&÷‚Â#Z7n×ŸŠw	‹ÍhŞD"éİyø§y×D5£XÎéİyø§yÔ€´€•Ìˆ€”}¡…É…Ñ•É}±…‰•°¡ÍÑÈ¡ÁÉ½™¥±”¹•Ğ ‰¡…É…Ñ•Èˆ°€‰É…¹•Èˆ¤¤¤°€ä°I8¤(€€€€€€€Ù…ÈÙ¥•Ü€èô}‰ÕÑÑ½¸ ˆÖsb"ÂfV7F÷#"ƒsÂ3’¢f–Wrç&W76VBæ6öææV7B†gVæ2‚“¢÷6†÷uög&–VæE÷&öf–ÆR†æÖRÂ&öf–ÆR’¢–ææW"æFEö6†–ÆB‡f–Wr¢–bfÆ–BÓÒ ¢öÆ&VÂ†g&–VæG5ö&÷‚Â.×ŸŠwbr.×ŸŠwäƒZ7Èh×/5£\„‹§uçâç\¨Öd‹§uçâçbbÓZ5’h×.", 11, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    _metric(grid, "Ø§Ù„Ø°Ø§ÙƒØ±Ø©", "%0.2f MB" % (Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0))
+    _metric(grid, "Ù„Ø§Ø¹Ø¨Ùˆ Ø§Ù„Ø´Ø¨ÙƒØ©", str(multiplayer.get_peers().size()))
+    _metric(grid, "Ø§Ù„Ø¹ÙˆØ§Ù„Ù… Ø§Ù„Ù…Ø­ÙÙˆØ¸Ø©", str(SaveDB.list_worlds().size()))
+    _metric(grid, "Ø¹Ù‚Ø¯ Ø§Ù„Ù…Ø´Ù‡Ø¯", str(get_tree().get_node_count()))
+    _metric(grid, "Ø§Ù„Ø§ØªØµØ§Ù„", "Ù…ØªØµÙ„" if multiplayer.multiplayer_peer != null else "ØºÙŠØ± Ù…ØªØµÙ„")
+    var console := _button("ÙØªØ­ ÙˆØ­Ø¯Ø© Ø§Ù„Ù…Ø·ÙˆØ± (F8)", Vector2(270, 44))
+    console.pressed.connect(func():
+        var root := get_parent()
+        if root and root.has_method("toggle_developer_console"):
+            root.toggle_developer_console()
+    )
+    content.add_child(console)
+
+func _metric(parent: Control, title: String, value: String) -> void:
+    var card := _panel(PANEL_2, 14, Color(0.22, 0.7, 1.0, 0.12))
+    card.custom_minimum_size = Vector2(0, 92)
+    parent.add_child(card)
+    var box := VBoxContainer.new()
+    box.alignment = BoxContainer.ALIGNMENT_CENTER
+    card.add_child(box)
+    _label(box, title, 11, MUTED)
+    var value_label := _label(box, value, 24, ACCENT_BRIGHT)
+    value_label.name = "MetricValue"
+
+func _refresh_friends(players: Dictionary) -> void:
+    if friends_box == null:
+        return
+    for child in friends_box.get_children():
+        child.queue_free()
+    var valid := 0
+    for id in players:
+        var profile: Dictionary = players[id]
+        if profile.is_empty():
+            continue
+        valid += 1
+        var row := _panel(PANEL_2, 12, Color(0.22, 0.7, 1.0, 0.1))
+        row.custom_minimum_size = Vector2(0, 54)
+        friends_box.add_child(row)
+        var inner := HBoxContainer.new()
+        inner.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+        inner.layout_direction = Control.LAYOUT_DIRECTION_RTL
+        inner.add_theme_constant_override("separation", 8)
+        row.add_child(inner)
+        var person_icon = load("res://scripts/ui/vector_icon.gd").new()
+        person_icon.icon_name = "person"
+        person_icon.icon_color = GREEN
+        person_icon.custom_minimum_size = Vector2(24, 24)
+        inner.add_child(person_icon)
+        var box := VBoxContainer.new()
+        box.layout_direction = Control.LAYOUT_DIRECTION_RTL
+        box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        inner.add_child(box)
+        var name := str(profile.get("name", "Player"))
+        _label(box, name, 12, TEXT)
+        _label(box, "Ù…ØªØµÙ„ Ø¯Ø§Ø®Ù„ Ø§Ù„Ø¬Ù„Ø³Ø© - %s" % _character_label(str(profile.get("character", "ranger"))), 9, GREEN)
+        var view := _button("Ø¹Ø±Ø¶", Vector2(70, 30))
+        view.pressed.connect(func(): _show_friend_profile(name, profile))
+        inner.add_child(view)
+    if valid == 0:
+        _label(friends_box, "Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø£ØµØ¯Ù‚Ø§Ø¡ Ù…ØªØµÙ„ÙˆÙ† Ø­Ø§Ù„ÙŠÙ‹Ø§.", 11, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
     var count_label := _find_child_label("FriendCount")
     if count_label:
-        count_label.text = "%d 5£xÖéİyø§yĞˆ€”Ù…±¥(€€€ÍÑ…ÑÕÍ}™É¥•¹‘Ì¹Ñ•áĞ€ô€˜œÖsSZ5‰î×ŸŠwNˆ	Yˆ	H˜[Y‚™[˜ÈÜÚİ×ÙœšY[™Ü›Ùš[J˜[YNˆİš[™Ë›Ùš[NˆXİ[Û˜\JHOˆ›ÚY‚ˆ˜\ˆX[ÙÈHXØÙ\X[ÙË›™]Ê
-BˆX[ÙË]HH	‘MhÑ 5£YÖò‚ ¢F–ÆöræF–Æöu÷FW‡BÒ"W5ÆâsZ5‹hŞ): %s\n5£X´Öb“¢dSZ5Ñºw^~)ŞwÉÍhÔ 5£X°Ör’.×ŸŠwtCZ5ÑhÙ" % [name, _character_label(str(profile.get("character", "ranger")))]
+        count_label.text = "%d Ù…ØªØµÙ„" % valid
+    status_friends.text = "Ø§Ù„Ø£ØµØ¯Ù‚Ø§Ø¡: %d" % valid
+
+func _show_friend_profile(name: String, profile: Dictionary) -> void:
+    var dialog := AcceptDialog.new()
+    dialog.title = "Ù…Ù„Ù Ø§Ù„Ù„Ø§Ø¹Ø¨"
+    dialog.dialog_text = "%s\nØ§Ù„Ø´Ø®ØµÙŠØ©: %s\nØ§Ù„Ø­Ø§Ù„Ø©: Ù…ØªØµÙ„ Ø¯Ø§Ø®Ù„ Ø§Ù„Ø¬Ù„Ø³Ø© Ø§Ù„Ø­Ø§Ù„ÙŠØ©" % [name, _character_label(str(profile.get("character", "ranger")))]
     add_child(dialog)
     dialog.popup_centered(Vector2i(420, 220))
 
@@ -567,24 +951,50 @@ func _refresh_status() -> void:
         return
     var state := str(NetworkManager.connection_state)
     var online := state in ["connected", "hosting"]
-    status_connection.text = "éİyø§y×D5£xÔÖC¢W2"R‡²&6öææV7FVB#¢.×ŸŠwr£Z5‹šÜİ[™Èˆºw^~)ŞuÌÍhÖJºw^~)Şu", "connecting":"5£\Æéİyø§yÔ˜œÖr£Z5Ñ‹›Ù™›[™H‰hÑ 5£xÖéİyø§yĞ‰ô¹•Ğ¡ÍÑ…Ñ”°ÍÑ…Ñ”¤¤(€€€ÍÑ…ÑÕÍ}½¹¹•Ñ¥½¸¹…‘‘}Ñ¡•µ•}½±½É}½Ù•ÉÉ¥‘” ‰™½¹Ñ}½±½Èˆ°I8¥˜½¹±¥¹”•±Í”€¡e11=\¥˜ÍÑ…Ñ”€ôô€‰½¹¹•Ñ¥¹œˆ•±Í”5UQ¤¤(€€€ÍÑ…ÑÕÍ}Í•ÉÙ•È¹Ñ•áĞ€ô€ˆÖbãZ7ÑN‰‘MhŞ65£Dˆ¥˜9•Ñİ½É­5…¹…•È¹Í•ÉÙ•É}ÍÑ…ÉÑ••±Í”€‹§uçâç]Örû§uçâçS¢Z5Ò®×ŸŠw‚ˆİ]\×ÙœË^H‘”Îˆ	Yˆ	H[™Ú[™K™Ù]Ùœ˜[Y\×Ü\—ÜÙXÛÛ™
+    status_connection.text = "Ø§Ù„Ø§ØªØµØ§Ù„: %s" % ({"connected":"Ù…ØªØµÙ„", "hosting":"Ù…Ø³ØªØ¶ÙŠÙ", "connecting":"Ø¬Ø§Ø±Ù Ø§Ù„Ø§ØªØµØ§Ù„", "offline":"ØºÙŠØ± Ù…ØªØµÙ„"}.get(state, state))
+    status_connection.add_theme_color_override("font_color", GREEN if online else (YELLOW if state == "connecting" else MUTED))
+    status_server.text = "Ø§Ù„Ø®Ø§Ø¯Ù…: Ù…Ø³ØªØ¶Ø§Ù" if NetworkManager.server_started else "Ø§Ù„Ø®Ø§Ø¯Ù…: Ø¹Ù…ÙŠÙ„"
+    status_fps.text = "FPS: %d" % Engine.get_frames_per_second()
 
-B‚™[˜ÈÜ›ØÙ\ÜÊÙ[Nˆ›Ø]
-HOˆ›ÚY‚ˆYˆİ]\×ÙœÎ‚ˆİ]\×ÙœË^H‘”Îˆ	Yˆ	H[™Ú[™K™Ù]Ùœ˜[Y\×Ü\—ÜÙXÛÛ™
+func _process(_delta: float) -> void:
+    if status_fps:
+        status_fps.text = "FPS: %d" % Engine.get_frames_per_second()
+    if current_page == "developer" and content:
+        for child in content.get_children():
+            if child is GridContainer:
+                _refresh_metric_grid(child)
 
-BˆYˆİ\œ™[ÜYÙHOH™]™[Ü\ˆˆ[™ÛÛ[‚ˆ›ÜˆÚ[[ˆÛÛ[™Ù]ØÚ[™[Š
-N‚ˆYˆÚ[\ÈÜšYÛÛZ[™\‚ˆÜ™Yœ™\ÚÛY]šX×ÙÜšY
-Ú[
-B‚™[˜ÈÜ™Yœ™\ÚÛY]šX×ÙÜšY
-ÜšYˆÜšYÛÛZ[™\ŠHOˆ›ÚY‚ˆ˜\ˆ˜[Y\ÈHÂˆİŠ[™Ú[™K™Ù]Ùœ˜[Y\×Ü\—ÜÙXÛÛ™
+func _refresh_metric_grid(grid: GridContainer) -> void:
+    var values := [
+        str(Engine.get_frames_per_second()),
+        "%0.2f MB" % (Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0),
+        str(multiplayer.get_peers().size()),
+        str(SaveDB.list_worlds().size()),
+        str(get_tree().get_node_count()),
+        "Ù…ØªØµÙ„" if multiplayer.multiplayer_peer != null else "ØºÙŠØ± Ù…ØªØµÙ„"
+    ]
+    var i := 0
+    for card in grid.get_children():
+        var labels := card.find_children("Label", "Label", true, false)
+        if labels.size() >= 2 and i < values.size():
+            labels[1].text = values[i]
+        i += 1
 
-JKˆ‰LŒ™ˆPˆˆ	H
-\™›Ü›X[˜ÙK™Ù]Û[Ûš]ÜŠ\™›Ü›X[˜ÙK“QSSÔ–WÔÕUPÊHÈLMÍ‹Œ
-KˆİŠ][\^Y\‹™Ù]ÜY\œÊ
-KœÚ^™J
-JKˆİŠØ]™Q‹›\İİÛÜ›Ê
-KœÚ^™J
-JKˆİŠÙ]İ™YJ
-K™Ù]Û›ÙWØÛİ[
-
-JKˆºw^~)ŞuÊhÔ" if multiplayer.multiplayer_peer != null else &:5£D€Öã[§uçâçB ¢Ğ¢f"’£Ò ¢f÷"6&B–âw&–BævWEö6†–ÆG&Vâ‚“ ¢f"Æ&VÇ2£Ò6&Bæf–æEö6†–ÆG&Vâ‚$Æ&VÂ"Â$Æ&VÂ"ÂG'VRÂfÇ6R¢–bÆ&VÇ2ç6—¦R‚’ãÒ"æB’ÂfÇVW2ç6—¦R‚“ ¢Æ&VÇ5³ÒçFW‡BÒfÇVW5¶•Ğ¢’³Ò ¦gVæ2÷6V&6‚‡VW'“¢7G&–ær’Óâfö–C ¢ö6Æ÷6U÷6V&6…÷÷W‚¢f"£ÒVW'’ç7G&—öVFvW2‚’çFõöÆ÷vW"‚¢–bæ—5öV×G’‚“ ¢&WGW&à¢6V&6…÷÷WÒ÷æVÂ…äTÂÂbÂ6öÆ÷"ƒã#"ÂãrÂãÂã#"’¢6V&6…÷÷Wæ7W7FöÕöÖ–æ–×VÕ÷6—¦RÒfV7F÷#"ƒS#Â3C¢6V&6…÷÷Wç6WEöæ6†÷'5÷&W6WB„6öçG&öÂå$U4UEõDõõ$”t…B¢6V&6…÷÷Wç÷6—F–öâÒfV7F÷#"‚ÓSCÂ“¢FEö6†–ÆB‡6V&6…÷÷W¢6V&6…÷&W7VÇG2Òd&÷„6öçF–æW"ææWr‚¢6V&6…÷&W7VÇG2æFE÷F†VÖUö6öç7FçEö÷fW'&–FR‚'6W&F–öâ"Âr¢6V&6…÷÷WæFEö6†–ÆB‡6V&6…÷&W7VÇG2¢öÆ&VÂ‡6V&6…÷&W7VÇG2Â#Z7‰ÍhÜ 5£X Ö²"ÂrÂDU…B¢f"f÷VæB£Ò ¢f÷"v÷&ÆB–â6fTD"æÆ—7E÷v÷&ÆG2‚“ ¢f"ÖWF¢F–7F–öæ'’Òv÷&ÆBævWB‚&ÖWFFF"Â·Ò¢f"æÖR£Ò7G"†ÖWFævWB‚&æÖR"Â""’
+func _search(query: String) -> void:
+    _close_search_popup()
+    var q := query.strip_edges().to_lower()
+    if q.is_empty():
+        return
+    search_popup = _panel(PANEL, 16, Color(0.22, 0.7, 1.0, 0.22))
+    search_popup.custom_minimum_size = Vector2(520, 340)
+    search_popup.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+    search_popup.position = Vector2(-540, 90)
+    add_child(search_popup)
+    search_results = VBoxContainer.new()
+    search_results.add_theme_constant_override("separation", 7)
+    search_popup.add_child(search_results)
+    _label(search_results, "Ù†ØªØ§Ø¦Ø¬ Ø§Ù„Ø¨Ø­Ø«", 17, TEXT)
+    var found := 0
+    for world in SaveDB.list_worlds():
+        var meta: Dictionary = world.get("metadata", {})
+        var name := str(meta.get("name", ""))
