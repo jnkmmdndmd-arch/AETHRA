@@ -221,6 +221,8 @@ func _on_auth_success(profile: Dictionary) -> void:
     var token := str(profile.get("token", ""))
     AppState.set_session(str(profile.get("username", "Guest")), token)
     AppState.character_id = str(profile.get("character", AppState.character_id))
+    AppState.avatar_id = clampi(int(profile.get("avatar_id", AppState.avatar_id)), 0, AppState.MAX_AVATARS - 1)
+    AppState.save_profile(AppState.get_display_name(), AppState.avatar_id)
     if not token.is_empty():
         AppState.save_session()
     if menu and menu.has_method("refresh_profile"):
