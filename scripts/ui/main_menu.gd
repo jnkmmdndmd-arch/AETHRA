@@ -160,8 +160,10 @@ func _layout_auth_overlay() -> void:
         minf(620.0, viewport_size.x - 64.0),
         minf(520.0, viewport_size.y - 64.0)
     )
-    auth_overlay.size = Vector2(maxf(panel_size.x, 460.0), maxf(panel_size.y, 420.0))
-    auth_overlay.size = Vector2(minf(560.0, maxf(500.0, viewport_size.x - 80.0)), minf(460.0, maxf(400.0, viewport_size.y - 80.0)))
+    auth_overlay.size = Vector2(
+        minf(560.0, maxf(500.0, viewport_size.x - 80.0)),
+        minf(460.0, maxf(400.0, viewport_size.y - 80.0))
+    )
     auth_overlay.position = (viewport_size - auth_overlay.size) * 0.5
 
 func _build_sidebar(parent: PanelContainer) -> void:
