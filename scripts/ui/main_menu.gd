@@ -195,7 +195,7 @@ func _build_sidebar(parent: PanelContainer) -> void:
 
     var items := [
         ["home", "home", "الرئيسية"],
-        ["solo", "play", "اللعب الفردي"],
+        ["solo", "person", "اللعب الفردي"],
         ["multiplayer", "players", "متعدد اللاعبين"],
         ["servers", "servers", "الخوادم"],
         ["worlds", "world", "العوالم"],
@@ -277,7 +277,30 @@ func _build_social(parent: PanelContainer) -> void:
     box.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     box.add_theme_constant_override("separation", 10)
     parent.add_child(box)
+
+    var profile := _panel(PANEL_2, 14, Color(0.22, 0.7, 1.0, 0.16))
+    profile.custom_minimum_size = Vector2(0, 66)
+    box.add_child(profile)
+    var profile_row := HBoxContainer.new()
+    profile_row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    profile_row.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    profile_row.add_theme_constant_override("separation", 9)
+    profile.add_child(profile_row)
+    var profile_icon = load("res://scripts/ui/vector_icon.gd").new()
+    profile_icon.icon_name = "person"
+    profile_icon.icon_color = ACCENT_BRIGHT
+    profile_icon.custom_minimum_size = Vector2(30, 30)
+    profile_row.add_child(profile_icon)
+    var profile_text := VBoxContainer.new()
+    profile_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    profile_row.add_child(profile_text)
+    _label(profile_text, AppState.player_name, 14, TEXT)
+    _label(profile_text, "متصل" if AppState.is_authenticated else "وضع محلي", 10, GREEN if AppState.is_authenticated else MUTED)
+
     var heading := HBoxContainer.new()
+    heading.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    heading.add_theme_constant_override("separation", 8)
+    box.add_child(heading)
     heading.layout_direction = Control.LAYOUT_DIRECTION_RTL
     heading.add_theme_constant_override("separation", 8)
     box.add_child(heading)

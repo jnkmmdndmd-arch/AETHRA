@@ -71,6 +71,12 @@ func _draw() -> void:
             draw_line(Vector2(side * 0.64, side * 0.20), Vector2(side * 0.82, center.y), c, w, true)
             draw_line(Vector2(side * 0.82, center.y), Vector2(side * 0.64, side * 0.80), c, w, true)
             draw_line(Vector2(side * 0.56, side * 0.16), Vector2(side * 0.44, side * 0.84), c, w, true)
+        "gamepad":
+            draw_rect(Rect2(side * 0.18, side * 0.30, side * 0.64, side * 0.40), c, false, w)
+            draw_line(Vector2(side * 0.34, side * 0.50), Vector2(side * 0.34, side * 0.66), c, w, true)
+            draw_line(Vector2(side * 0.26, side * 0.58), Vector2(side * 0.42, side * 0.58), c, w, true)
+            draw_circle(Vector2(side * 0.68, side * 0.52), side * 0.045, c)
+            draw_circle(Vector2(side * 0.77, side * 0.60), side * 0.045, c)
         "logout", "join":
             draw_rect(Rect2(side * 0.20, side * 0.16, side * 0.44, side * 0.68), c, false, w)
             draw_line(Vector2(side * 0.48, center.y), Vector2(side * 0.88, center.y), c, w, true)
