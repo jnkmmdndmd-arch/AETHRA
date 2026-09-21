@@ -27,233 +27,540 @@ var weather_controller: Node3D
 
 func _ready() -> void:
     randomize()
-    DisplayServer.window_set_title("AETHRA: Wildbound ºw^~)Şt&95£|œÖdr.×ŸŠwbsZ5HŠBˆÙ]İÚ[™İÊ
-K›Z[—ÜÚ^™HH™XİÜŒšJLLŒ
-BˆÜ™\İÜ™WİÚ[™İ×Üİ]J
-BˆØZ[ÛYÚ[™Ê
-BˆØ\WÙÜ˜\XÜ×Ü›Ùš[J
-BˆØZ[Ùœ×Ûİ™\›^J
-BˆYˆ›İÙ][™ÜËœÙ][™Ü×ØÚ[™ÙYš\×ØÛÛ›™XİY
-Ø\WÙÜ˜\XÜ×Ü›Ùš[JN‚ˆÙ][™ÜËœÙ][™Ü×ØÚ[™ÙY˜ÛÛ›™Xİ
-Ø\WÙÜ˜\XÜ×Ü›Ùš[JBˆØZ[Ø]]
+    DisplayServer.window_set_title("AETHRA: Wildbound â€” Ø¹Ø¨Ø¯Ø§Ù„Ù„Ù‡ Ù„Ø§Ø²Ù…")
+    get_window().min_size = Vector2i(1120, 680)
+    _restore_window_state()
+    _build_lighting()
+    _apply_graphics_profile()
+    _build_fps_overlay()
+    if not Settings.settings_changed.is_connected(_apply_graphics_profile):
+        Settings.settings_changed.connect(_apply_graphics_profile)
+    _build_auth()
+    _build_menu()
+    _build_remote_players_root()
+    _wire_network_presence()
+    _ensure_bootstrap_controls()
 
-BˆØZ[ÛY[J
-BˆØZ[Ü™[[İWÜ^Y\œ×Ü›Ûİ
+func _ensure_bootstrap_controls() -> void:
+    Settings.apply_input_map()
+    AudioManager.apply_settings()
 
-BˆİÚ\™WÛ™]ÛÜš×Ü™\Ù[˜ÙJ
-BˆÙ[œİ\™WØ›Ûİİ˜\ØÛÛ›ÛÊ
-B‚™[˜ÈÙ[œİ\™WØ›Ûİİ˜\ØÛÛ›ÛÊ
-HOˆ›ÚY‚ˆÙ][™ÜË˜\WÚ[œ]ÛX\
+func _restore_window_state() -> void:
+    var width := int(Settings.get_value("window_width", 1366))
+    var height := int(Settings.get_value("window_height", 768))
+    get_window().size = Vector2i(clampi(width, 1120, 3840), clampi(height, 680, 2160))
+    var mode := int(Settings.get_value("window_mode", 0))
+    match mode:
+        1: get_window().mode = Window.MODE_MAXIMIZED
+        2: get_window().mode = Window.MODE_FULLSCREEN
+        _: get_window().mode = Window.MODE_WINDOWED
 
-Bˆ]Y[ÓX[˜YÙ\‹˜\WÜÙ][™ÜÊ
-B‚™[˜ÈÜ™\İÜ™WİÚ[™İ×Üİ]J
-HOˆ›ÚY‚ˆ˜\ˆÚYH[
-Ù][™ÜË™Ù]İ˜[YJÚ[™İ×İÚY‹LÍŠJBˆ˜\ˆZYÚH[
-Ù][™ÜË™Ù]İ˜[YJÚ[™İ×ÚZYÚ‹Í
-JBˆÙ]İÚ[™İÊ
-KœÚ^™HH™XİÜŒšJÛ[\JÚYLLŒÎ
-KÛ[\JZYÚŒMŒ
-JBˆ˜\ˆ[ÙHH[
-Ù][™ÜË™Ù]İ˜[YJÚ[™İ×Û[ÙH‹
-JBˆX]Ú[ÙN‚ˆNˆÙ]İÚ[™İÊ
-K›[ÙHHÚ[™İË“SÑWÓPVSRV‘QˆˆÙ]İÚ[™İÊ
-K›[ÙHHÚ[™İË“SÑWÑ•SĞÔ‘QS‚ˆÎˆÙ]İÚ[™İÊ
-K›[ÙHHÚ[™İË“SÑWÕÒS‘ÕÑQ‚™[˜ÈÜØ]™WİÚ[™İ×Üİ]J
-HOˆ›ÚY‚ˆ˜\ˆÚ^™HHÙ]İÚ[™İÊ
-KœÚ^™BˆÙ][™ÜË˜[Y\ÖÈÚ[™İ×İÚY—HHÚ^™KˆÙ][™ÜË˜[Y\ÖÈÚ[™İ×ÚZYÚ—HHÚ^™KBˆX]ÚÙ]İÚ[™İÊ
-K›[ÙN‚ˆÚ[™İË“SÑWÓPVSRV‘QˆÙ][™ÜË˜[Y\ÖÈÚ[™İ×Û[ÙH—HHBˆÚ[™İË“SÑWÑ•SĞÔ‘QS‹Ú[™İË“SÑWÑVÓTÒU‘WÑ•SĞÔ‘QSˆÙ][™ÜË˜[Y\ÖÈÚ[™İ×Û[ÙH—HH‚ˆÎˆÙ][™ÜË˜[Y\ÖÈÚ[™İ×Û[ÙH—HHˆÙ][™ÜËœØ]™WÜÙ][™ÜÊ
-B‚™[˜ÈØZ[ÛYÚ[™Ê
-HOˆ›ÚY‚ˆ˜\ˆ[ˆHÛÜ›[š\›Û›Y[›™]Ê
-BˆÛÜ›Ù[š\›Û›Y[H[š\›Û›Y[›™]Ê
-Bˆ˜\ˆ[š\›Û›Y[ˆ[š\›Û›Y[HÛÜ›Ù[š\›Û›Y[ˆ[š\›Û›Y[˜˜XÚÙÜ›İ[™Û[ÙHH[š\›Û›Y[‘×ÔÒÖBˆ˜\ˆÚŞHHÚŞK›™]Ê
-Bˆ˜\ˆÚŞWÛX]\šX[H\ÚXØ[ÚŞSX]\šX[›™]Ê
-BˆÚŞWÛX]\šX[œ˜^[ZYÚØÛÙY™šXÚY[HKÂˆÚŞWÛX]\šX[›ZYWØÛÙY™šXÚY[HŒˆÚŞWÛX]\šX[œİ[—Ù\Ú×ÜØØ[HHKŒ‚ˆÚŞKœÚŞWÛX]\šX[HÚŞWÛX]\šX[ˆ[š\›Û›Y[œÚŞHHÚŞBˆ[š\›Û›Y[˜[XšY[ÛYÚÜÛİ\˜ÙHH[š\›Û›Y[SP’QS•ÔÓÕTÑWĞÓÓÔ‚ˆ[š\›Û›Y[˜[XšY[ÛYÚØÛÛÜˆHÛÛÜŠˆÍØXMÙHŠBˆ[š\›Û›Y[˜[XšY[ÛYÚÙ[™\™ŞHHBˆ[š\›Û›Y[Û™[X\Û[ÙHH[š\›Û›Y[•Ó‘WÓPTT—Ñ’SRPÂˆ[‹™[š\›Û›Y[H[š\›Û›Y[ˆYØÚ[
-[ŠBˆİ[—ÛYÚH\™Xİ[Û˜[YÚÑ›™]Ê
-Bˆİ[—ÛYÚœ›İ][Û—ÙYÜ™Y\ÈH™XİÜŒÊMMKLÍK
-Bˆİ[—ÛYÚ›YÚÙ[™\™ŞHHKŒMBˆİ[—ÛYÚœÚYİ×Ù[˜X›YH˜[ÙBˆYØÚ[
-İ[—ÛYÚ
-Bˆ[YWÜŞ\İ[HHØY
-œ™\Î‹ËÜØÜš\ËİÛÜ›İÛÜ›İ[YK™ÙŠK›™]Ê
-Bˆ[YWÜŞ\İ[K›˜[YHH•ÛÜ›[YH‚ˆYØÚ[
-[YWÜŞ\İ[JBˆ[YWÜŞ\İ[KœÙ]\
-İ[—ÛYÚ[š\›Û›Y[
-B‚™[˜ÈØ\WÙÜ˜\XÜ×Ü›Ùš[J
-HOˆ›ÚY‚ˆYˆÛÜ›Ù[š\›Û›Y[OH[Üˆİ[—ÛYÚOH[‚ˆ™]\›‚ˆ˜\ˆ]X[]HHİŠÙ][™ÜË™Ù]İ˜[YJ™Ü˜\XÜ×Ü]X[]H‹›İÈŠJBˆ˜\ˆ˜\ÙWÜØØ[HHÍBˆX]Ú]X[]N‚ˆ›YY][H‚ˆ˜\ÙWÜØØ[HHBˆšYÚ‹[˜H‚ˆ˜\ÙWÜØØ[HHKŒˆÎ‚ˆ˜\ÙWÜØØ[HHÍB‚ˆ\™›Ü›X[˜ÙWÜØØ[HH˜\ÙWÜØØ[Bˆ[™Ú[™K›X^ÙœÈH[
-È›İÈˆŒ›YY][HˆLšYÚˆLŒ[˜HˆMK™Ù]
-]X[]KŒ
-JBˆ\™›Ü›X[˜ÙWÜØ[\Wİ[YHHŒˆ\™›Ü›X[˜ÙWÙœ˜[YWÜİ[HHŒˆ\™›Ü›X[˜ÙWÙœ˜[YWØÛİ[Hˆ\™›Ü›X[˜ÙWÛİ×İ[YHHŒˆ\™›Ü›X[˜ÙWÚYÚİ[YHHŒ‚ˆ˜\ˆšY]ÜÜHÙ]İšY]ÜÜ
+func _save_window_state() -> void:
+    var size := get_window().size
+    Settings.values["window_width"] = size.x
+    Settings.values["window_height"] = size.y
+    match get_window().mode:
+        Window.MODE_MAXIMIZED: Settings.values["window_mode"] = 1
+        Window.MODE_FULLSCREEN, Window.MODE_EXCLUSIVE_FULLSCREEN: Settings.values["window_mode"] = 2
+        _: Settings.values["window_mode"] = 0
+    Settings.save_settings()
 
-BˆšY]ÜÜœØØ[[™×ÌÙÛ[ÙHHšY]ÜÜ”ĞĞSS‘×ÌÑÓSÑWĞ’SS‘PT‚ˆšY]ÜÜœØØ[[™×ÌÙÜØØ[HH\™›Ü›X[˜ÙWÜØØ[Bˆİ[—ÛYÚœÚYİ×Ù[˜X›YH]X[]H[ˆÈšYÚ‹[˜H—BˆÛÜ›Ù[š\›Û›Y[˜˜XÚÙÜ›İ[™Û[ÙHH[š\›Û›Y[‘×ĞÓÓÔˆYˆ]X[]HOH›İÈˆ[ÙH[š\›Û›Y[‘×ÔÒÖBˆÛÜ›Ù[š\›Û›Y[˜˜XÚÙÜ›İ[™ØÛÛÜˆHÛÛÜŠˆÌMÌÌMˆŠBˆÛÜ›Ù[š\›Û›Y[Û™[X\Û[ÙHH[š\›Û›Y[•Ó‘WÓPTT—ÓS‘PT‚ˆÛÜ›Ù[š\›Û›Y[™›Ù×Ù[˜X›YH]X[]HOH›İÈ‚‚™[˜ÈØY\]™WÜ™\ÛÛ][ÛŠ[Nˆ›Ø]
-HOˆ›ÚY‚ˆYˆÛÜ›OH[‚ˆ™]\›‚ˆ˜\ˆ]X[]HHİŠÙ][™ÜË™Ù]İ˜[YJ™Ü˜\XÜ×Ü]X[]H‹›İÈŠJBˆYˆ]X[]H›İ[ˆÈ›İÈ‹›YY][H—N‚ˆ™]\›‚‚ˆ\™›Ü›X[˜ÙWÜØ[\Wİ[YH
-ÏH[Bˆ\™›Ü›X[˜ÙWÙœ˜[YWÜİ[H
-ÏHKŒÈX^Š[KŒJBˆ\™›Ü›X[˜ÙWÙœ˜[YWØÛİ[
-ÏHBˆYˆ\™›Ü›X[˜ÙWÜØ[\Wİ[YHÍHÜˆ\™›Ü›X[˜ÙWÙœ˜[YWØÛİ[‚ˆ™]\›‚‚ˆ˜\ˆ]™\˜YÙWÙœÈH\™›Ü›X[˜ÙWÙœ˜[YWÜİ[HÈ\™›Ü›X[˜ÙWÙœ˜[YWØÛİ[ˆ˜\ˆZ[—ÜØØ[HHŒYˆ]X[]HOH›İÈˆ[ÙHÌˆ˜\ˆX^ÜØØ[HHHYˆ]X[]HOH›İÈˆ[ÙHMB‚ˆYˆ]™\˜YÙWÙœÈŒ‚ˆ\™›Ü›X[˜ÙWÛİ×İ[YH
-ÏH\™›Ü›X[˜ÙWÜØ[\Wİ[YBˆ\™›Ü›X[˜ÙWÚYÚİ[YHHŒˆ[Yˆ]™\˜YÙWÙœÈˆŒŒ‚ˆ\™›Ü›X[˜ÙWÚYÚİ[YH
-ÏH\™›Ü›X[˜ÙWÜØ[\Wİ[YBˆ\™›Ü›X[˜ÙWÛİ×İ[YHHŒˆ[ÙN‚ˆ\™›Ü›X[˜ÙWÛİ×İ[YHHX^ŠŒ\™›Ü›X[˜ÙWÛİ×İ[YHHŒJBˆ\™›Ü›X[˜ÙWÚYÚİ[YHHX^ŠŒ\™›Ü›X[˜ÙWÚYÚİ[YHHŒJB‚ˆYˆ\™›Ü›X[˜ÙWÛİ×İ[YHHKN‚ˆ\™›Ü›X[˜ÙWÜØØ[HHX^ŠZ[—ÜØØ[K\™›Ü›X[˜ÙWÜØØ[HHŒJBˆÙ]İšY]ÜÜ
+func _build_lighting() -> void:
+    var env := WorldEnvironment.new()
+    world_environment = Environment.new()
+    var environment: Environment = world_environment
+    environment.background_mode = Environment.BG_SKY
+    var sky := Sky.new()
+    var sky_material := PhysicalSkyMaterial.new()
+    sky_material.rayleigh_coefficient = 1.7
+    sky_material.mie_coefficient = 0.004
+    sky_material.sun_disk_scale = 1.2
+    sky.sky_material = sky_material
+    environment.sky = sky
+    environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+    environment.ambient_light_color = Color("#7aa7d9")
+    environment.ambient_light_energy = 0.85
+    environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+    env.environment = environment
+    add_child(env)
+    sun_light = DirectionalLight3D.new()
+    sun_light.rotation_degrees = Vector3(-55,-35,0)
+    sun_light.light_energy = 1.15
+    sun_light.shadow_enabled = false
+    add_child(sun_light)
+    time_system = load("res://scripts/world/world_time.gd").new()
+    time_system.name = "WorldTime"
+    add_child(time_system)
+    time_system.setup(sun_light, environment)
 
-KœØØ[[™×ÌÙÜØØ[HH\™›Ü›X[˜ÙWÜØØ[Bˆ\™›Ü›X[˜ÙWÛİ×İ[YHHŒˆ[Yˆ\™›Ü›X[˜ÙWÚYÚİ[YHH‹Œ‚ˆ\™›Ü›X[˜ÙWÜØØ[HHZ[™ŠX^ÜØØ[K\™›Ü›X[˜ÙWÜØØ[H
-ÈŒJBˆÙ]İšY]ÜÜ
+func _apply_graphics_profile() -> void:
+    if world_environment == null or sun_light == null:
+        return
+    var quality := str(Settings.get_value("graphics_quality", "low"))
+    var base_scale := 0.75
+    match quality:
+        "medium":
+            base_scale = 0.85
+        "high", "ultra":
+            base_scale = 1.0
+        _:
+            base_scale = 0.75
 
-KœØØ[[™×ÌÙÜØØ[HH\™›Ü›X[˜ÙWÜØØ[Bˆ\™›Ü›X[˜ÙWÚYÚİ[YHHŒ‚ˆ\™›Ü›X[˜ÙWÜØ[\Wİ[YHHŒˆ\™›Ü›X[˜ÙWÙœ˜[YWÜİ[HHŒˆ\™›Ü›X[˜ÙWÙœ˜[YWØÛİ[H‚™[˜ÈØZ[Ü™[[İWÜ^Y\œ×Ü›Ûİ
+    performance_scale = base_scale
+    Engine.max_fps = int({"low": 60, "medium": 90, "high": 120, "ultra": 144}.get(quality, 60))
+    performance_sample_time = 0.0
+    performance_frame_sum = 0.0
+    performance_frame_count = 0
+    performance_low_time = 0.0
+    performance_high_time = 0.0
 
-HOˆ›ÚY‚ˆ™[[İWÜ^Y\œ×Ü›ÛİH›ÙLÑ›™]Ê
-Bˆ™[[İWÜ^Y\œ×Ü›Ûİ›˜[YHH”™[[İT^Y\œÈ‚ˆYØÚ[
-™[[İWÜ^Y\œ×Ü›Ûİ
-B‚™[˜ÈİÚ\™WÛ™]ÛÜš×Ü™\Ù[˜ÙJ
-HOˆ›ÚY‚ˆYˆ›İ™]ÛÜšÓX[˜YÙ\‹œ^Y\—Üİ]WØÚ[™ÙYš\×ØÛÛ›™XİY
-ÛÛ—Ü™[[İWÜ^Y\—Üİ]\ÊN‚ˆ™]ÛÜšÓX[˜YÙ\‹œ^Y\—Üİ]WØÚ[™ÙY˜ÛÛ›™Xİ
-ÛÛ—Ü™[[İWÜ^Y\—Üİ]\ÊBˆYˆ›İ™]ÛÜšÓX[˜YÙ\‹œ^Y\—Ü™\Ù[˜ÙWØÚ[™ÙYš\×ØÛÛ›™XİY
-ÛÛ—Ü™[[İWÜ™\Ù[˜ÙJN‚ˆ™]ÛÜšÓX[˜YÙ\‹œ^Y\—Ü™\Ù[˜ÙWØÚ[™ÙY˜ÛÛ›™Xİ
-ÛÛ—Ü™[[İWÜ™\Ù[˜ÙJBˆYˆ›İ™]ÛÜšÓX[˜YÙ\‹š[™[ÜWÜÛ˜\ÚİÜ™XÙZ]™Yš\×ØÛÛ›™XİY
-ÛÛ—Ú[™[ÜWÜÛ˜\Úİ
-N‚ˆ™]ÛÜšÓX[˜YÙ\‹š[™[ÜWÜÛ˜\ÚİÜ™XÙZ]™Y˜ÛÛ›™Xİ
-ÛÛ—Ú[™[ÜWÜÛ˜\Úİ
-B‚™[˜ÈÛÛ—Ü™[[İWÜ™\Ù[˜ÙJ^Y\œÎˆXİ[Û˜\JHOˆ›ÚY‚ˆ›ÜˆY[ˆ™[[İWÜ^Y\—Û›Ù\ËšÙ^\Ê
-N‚ˆYˆ›İ^Y\œËš\ÊY
-H[™[
-Y
-HOH][\^Y\‹™Ù]İ[š\]YWÚY
+    var viewport := get_viewport()
+    viewport.scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR
+    viewport.scaling_3d_scale = performance_scale
+    sun_light.shadow_enabled = quality in ["high", "ultra"]
+    world_environment.background_mode = Environment.BG_COLOR if quality == "low" else Environment.BG_SKY
+    world_environment.background_color = Color("#17314b")
+    world_environment.tonemap_mode = Environment.TONE_MAPPER_LINEAR
+    world_environment.fog_enabled = quality != "low"
 
-N‚ˆ˜\ˆ›ÙHH™[[İWÜ^Y\—Û›Ù\ÖÚYBˆYˆ\×Ú[œİ[˜ÙWİ˜[Y
-›ÙJN‚ˆ›ÙKœ]Y]YWÙœ™YJ
-Bˆ™[[İWÜ^Y\—Û›Ù\Ë™\˜\ÙJY
-B‚™[˜ÈÛÛ—Ü™[[İWÜ^Y\—Üİ]\Ê^Y\œÎˆXİ[Û˜\JHOˆ›ÚY‚ˆ›ÜˆÙ^H[ˆ^Y\œÎ‚ˆ˜\ˆYH[
-Ù^JBˆYˆYOH][\^Y\‹™Ù]İ[š\]YWÚY
+func _adaptive_resolution(delta: float) -> void:
+    if world == null:
+        return
+    var quality := str(Settings.get_value("graphics_quality", "low"))
+    if quality not in ["low", "medium"]:
+        return
 
-N‚ˆÛÛ[YBˆ˜\ˆ›İÎˆXİ[Û˜\HH^Y\œÖÚÙ^WBˆ˜\ˆ›ÙHH™[[İWÜ^Y\—Û›Ù\Ë™Ù]
-Y
-BˆYˆ›ÙHOH[Üˆ›İ\×Ú[œİ[˜ÙWİ˜[Y
-›ÙJN‚ˆ›ÙHHØY
-œ™\Î‹ËÜØÜš\ËÛ™]ÛÜšËÜ™[[İWÜ^Y\—Ø]˜]\‹™ÙŠK›™]Ê
-Bˆ™[[İWÜ^Y\œ×Ü›Ûİ˜YØÚ[
-›ÙJBˆ›ÙKœÙ]\
-YİŠ›İË™Ù]
-›˜[YH‹”^Y\ˆŠJKİŠ›İË™Ù]
-˜Ú\˜Xİ\ˆ‹œ˜[™Ù\ˆŠJKÛ[\J[
-›İË™Ù]
-˜]˜]\—ÚY‹
-JKJJBˆ™[[İWÜ^Y\—Û›Ù\ÖÚYHH›ÙBˆ›ÙK˜\WÜİ]J›İË™Ù]
-œÜÚ][Ûˆ‹™XİÜŒË–‘T“ÊK›Ø]
-›İË™Ù]
-X]È‹Œ
-JJB‚™[˜ÈØZ[Ø]]
+    performance_sample_time += delta
+    performance_frame_sum += 1.0 / maxf(delta, 0.001)
+    performance_frame_count += 1
+    if performance_sample_time < 0.75 or performance_frame_count < 8:
+        return
 
-HOˆ›ÚY‚ˆ]]HØY
-œ™\Î‹ËÜØÜš\ËØ]]Ø]]ØÛY[™ÙŠK›™]Ê
-BˆYØÚ[
-]]
-Bˆ]]˜ÛÛ™šYİ\™JİŠÙ][™ÜË™Ù]İ˜[YJ˜]]ÜÙ\™\—İ\›‹š‹ËÌLËŒŒŒNLŠJJBˆ]]œİXØÙ\ÜË˜ÛÛ›™Xİ
-ÛÛ—Ø]]ÜİXØÙ\ÜÊBˆ]]™˜Z[\™K˜ÛÛ›™Xİ
-ÛÛ—Ø]]Ù˜Z[\™JBˆ]]œÙ\ÜÚ[Û—Ú[˜[Y˜ÛÛ›™Xİ
-ÛÛ—ÜØ]™YÜÙ\ÜÚ[Û—Ú[˜[Y
-Bˆ˜\ˆØ]™YÜÙ\ÜÚ[ÛˆH\İ]K›ØYÜØ]™YÜÙ\ÜÚ[ÛŠ
-Bˆ˜\ˆØ]™YİÚÙ[ˆHİŠØ]™YÜÙ\ÜÚ[Û‹™Ù]
-ÚÙ[ˆ‹ˆŠJBˆYˆ›İØ]™YİÚÙ[‹š\×Ù[\J
-N‚ˆ\İ]K˜Ú\˜Xİ\—ÚYHİŠØ]™YÜÙ\ÜÚ[Û‹™Ù]
-˜Ú\˜Xİ\ˆ‹\İ]K˜Ú\˜Xİ\—ÚY
-JBˆ\İ]K˜]˜]\—ÚYHÛ[\J[
-Ø]™YÜÙ\ÜÚ[Û‹™Ù]
-˜]˜]\—ÚY‹\İ]K˜]˜]\—ÚY
-JK\İ]K“PVĞUUT”ÈHJBˆ]]œ™\İÜ™WÜÙ\ÜÚ[ÛŠØ]™YİÚÙ[ŠB‚™[˜ÈØZ[Ùœ×Ûİ™\›^J
-HOˆ›ÚY‚ˆ˜\ˆ^Y\ˆHØ[˜\Ó^Y\‹›™]Ê
-Bˆ^Y\‹›^Y\ˆHLˆYØÚ[
-^Y\ŠB‚ˆ›ÛİÛİ™\›^HHÛÛ›Û›™]Ê
-Bˆ›ÛİÛİ™\›^KœÙ]Ø[˜ÚÜœ×Ø[™ÛÙ™œÙ]×Ü™\Ù]
-ÛÛ›Û”‘TÑUÑ•SÔ‘PÕ
-Bˆ›ÛİÛİ™\›^K›[İ\ÙWÙš[\ˆHÛÛ›Û“SÕTÑWÑ’ST—ÒQÓ“Ô‘Bˆ^Y\‹˜YØÚ[
-›ÛİÛİ™\›^JB‚ˆ˜\ˆ›ÛİØ™ÈHÛÛÜ”™Xİ›™]Ê
-Bˆ›ÛİØ™ËœÙ]Ø[˜ÚÜœ×Ø[™ÛÙ™œÙ]×Ü™\Ù]
-ÛÛ›Û”‘TÑUÑ•SÔ‘PÕ
-Bˆ›ÛİØ™Ë˜ÛÛÜˆHÛÛÜŠˆÌŒLLXÈŠBˆ›ÛİØ™Ë›[İ\ÙWÙš[\ˆHÛÛ›Û“SÕTÑWÑ’ST—ÒQÓ“Ô‘Bˆ›ÛİÛİ™\›^K˜YØÚ[
-›ÛİØ™ÊB‚ˆ˜\ˆ›ÛİØ›ŞH›ŞÛÛZ[™\‹›™]Ê
-Bˆ›ÛİØ›ŞœÙ]Ø[˜ÚÜœ×Ü™\Ù]
-ÛÛ›Û”‘TÑUĞÑS•TŠBˆ›ÛİØ›ŞœÜÚ][ÛˆH™XİÜŒŠLNMMJBˆ›ÛİØ›ŞœÚ^™HH™XİÜŒŠÍŒLL
-Bˆ›ÛİØ›Ş˜[YÛ›Y[H›ŞÛÛZ[™\‹SQÓ“QS•ĞÑS•T‚ˆ›ÛİØ›Ş˜Yİ[YWØÛÛœİ[Ûİ™\œšYJœÙ\\˜][Ûˆ‹ŠBˆ›ÛİÛİ™\›^K˜YØÚ[
-›ÛİØ›Ş
-Bˆ˜\ˆ]HHX™[›™]Ê
-Bˆ]K^HQUH‚ˆ]KšÜš^›Û[Ø[YÛ›Y[HÔ’V“Ó•SĞSQÓ“QS•ĞÑS•T‚ˆ]K˜Yİ[YWÙ›ÛÜÚ^™WÛİ™\œšYJ™›ÛÜÚ^™H‹Í
-Bˆ]K˜Yİ[YWØÛÛÜ—Ûİ™\œšYJ™›ÛØÛÛÜˆ‹ÛÛÜŠˆÍÎ™ˆŠJBˆ›ÛİØ›Ş˜YØÚ[
-]JBˆ˜\ˆİX]HHX™[›™]Ê
-BˆİX]K^H•ÒS“ÕS‘‚ˆİX]KšÜš^›Û[Ø[YÛ›Y[HÔ’V“Ó•SĞSQÓ“QS•ĞÑS•T‚ˆİX]K˜Yİ[YWÙ›ÛÜÚ^™WÛİ™\œšYJ™›ÛÜÚ^™H‹MJBˆİX]K˜Yİ[YWØÛÛÜ—Ûİ™\œšYJ™›ÛØÛÛÜˆ‹ÛÛÜŠˆÙXY™™ˆŠJBˆ›ÛİØ›Ş˜YØÚ[
-İX]JBˆ˜\ˆØY[™ÈHX™[›™]Ê
-BˆØY[™Ë^Hh×1ºw^~)Şv&*5£]*éİyø§yĞ˜œÖòsZ5K‹‹ˆ‚ˆØY[™ËšÜš^›Û[Ø[YÛ›Y[HÔ’V“Ó•SĞSQÓ“QS•ĞÑS•T‚ˆØY[™Ë˜Yİ[YWÙ›ÛÜÚ^™WÛİ™\œšYJ™›ÛÜÚ^™H‹LJBˆØY[™Ë˜Yİ[YWØÛÛÜ—Ûİ™\œšYJ™›ÛØÛÛÜˆ‹ÛÛÜŠˆÎLXNX™ˆŠJBˆ›ÛİØ›Ş˜YØÚ[
-ØY[™ÊB‚ˆœ×Ûİ™\›^HHX™[›™]Ê
-Bˆœ×Ûİ™\›^K›˜[YHH›Ûİ”È‚ˆœ×Ûİ™\›^K^H‘”ÎˆÈ	Yˆ	H[™Ú[™K›X^ÙœÂˆœ×Ûİ™\›^KœÜÚ][ÛˆH™XİÜŒŠM‹L
-Bˆœ×Ûİ™\›^KœÚ^™HH™XİÜŒŠNÌ
-Bˆœ×Ûİ™\›^K^Ù\™Xİ[ÛˆHÛÛ›Û•VÑT‘PÕSÓ—Ó‚ˆœ×Ûİ™\›^K›^[İ]Ù\™Xİ[ÛˆHÛÛ›Û“VSÕUÑT‘PÕSÓ—Ó‚ˆœ×Ûİ™\›^KšÜš^›Û[Ø[YÛ›Y[HÔ’V“Ó•SĞSQÓ“QS•ÓQ•ˆœ×Ûİ™\›^K™\XØ[Ø[YÛ›Y[H‘T•PĞSĞSQÓ“QS•ĞÑS•T‚ˆœ×Ûİ™\›^K˜Yİ[YWÙ›ÛÜÚ^™WÛİ™\œšYJ™›ÛÜÚ^™H‹M
-Bˆœ×Ûİ™\›^K˜Yİ[YWØÛÛÜ—Ûİ™\œšYJ™›ÛØÛÛÜˆ‹ÛÛÜŠˆÙXY™™ˆŠJBˆœ×Ûİ™\›^K˜Yİ[YWØÛÛÜ—Ûİ™\œšYJ™›ÛÜÚYİ×ØÛÛÜˆ‹ÛÛÜŠJJBˆœ×Ûİ™\›^K˜Yİ[YWØÛÛœİ[Ûİ™\œšYJœÚYİ×ÛÙ™œÙ]Ş‹ŠBˆœ×Ûİ™\›^K˜Yİ[YWØÛÛœİ[Ûİ™\œšYJœÚYİ×ÛÙ™œÙ]ŞH‹ŠBˆ^Y\‹˜YØÚ[
-œ×Ûİ™\›^JB‚™[˜ÈØZ[ÛY[J
-HOˆ›ÚY‚ˆY[HHØY
-œ™\Î‹ËÜØÜš\ËİZKÛXZ[—ÛY[K™ÙŠK›™]Ê
-BˆYØÚ[
-Y[JBˆY[K˜Z[
-Ù[ŠBˆYˆ›ÛİÛİ™\›^H[™\×Ú[œİ[˜ÙWİ˜[Y
-›ÛİÛİ™\›^JN‚ˆ›ÛİÛİ™\›^Kœ]Y]YWÙœ™YJ
-Bˆ›ÛİÛİ™\›^HH[ˆY[Kœ^WÜÚ[™Û\^Y\‹˜ÛÛ›™Xİ
-Üİ\ÜÚ[™Û\^Y\ŠBˆY[KšÜİÛ][\^Y\‹˜ÛÛ›™Xİ
-ÚÜİ
-BˆY[Kš›Ú[—Û][\^Y\‹˜ÛÛ›™Xİ
-Ú›Ú[ŠBˆY[K›Ü[—ÜÙ][™ÜË˜ÛÛ›™Xİ
-ÛÜ[—ÜÙ][™ÜÊB‚™[˜ÈÛÛ—Ø]]ÜİXØÙ\ÜÊ›Ùš[NˆXİ[Û˜\JHOˆ›ÚY‚ˆ˜\ˆÚÙ[ˆHİŠ›Ùš[K™Ù]
-ÚÙ[ˆ‹ˆŠJBˆ\İ]KœÙ]ÜÙ\ÜÚ[ÛŠİŠ›Ùš[K™Ù]
-\Ù\›˜[YH‹‘İY\İŠJKÚÙ[ŠBˆ\İ]K˜Ú\˜Xİ\—ÚYHİŠ›Ùš[K™Ù]
-˜Ú\˜Xİ\ˆ‹\İ]K˜Ú\˜Xİ\—ÚY
-JBˆ\İ]K˜]˜]\—ÚYHÛ[\J[
-›Ùš[K™Ù]
-˜]˜]\—ÚY‹\İ]K˜]˜]\—ÚY
-JK\İ]K“PVĞUUT”ÈHJBˆ\İ]KœØ]™WÜ›Ùš[J\İ]K™Ù]Ù\Ü^WÛ˜[YJ
-K\İ]K˜]˜]\—ÚY
-BˆYˆ›İÚÙ[‹š\×Ù[\J
-N‚ˆ\İ]KœØ]™WÜÙ\ÜÚ[ÛŠ
-BˆYˆY[H[™Y[Kš\×ÛY]Ù
-œ™Yœ™\ÚÜ›Ùš[HŠN‚ˆY[Kœ™Yœ™\ÚÜ›Ùš[J
-B‚™[˜ÈÛÛ—Ø]]Ù˜Z[\™JY\ÜØYÙNˆİš[™ÊHOˆ›ÚY‚ˆYˆY[H[™Y[Kš\×ÛY]Ù
-››İYWØ]]Ù˜Z[\™HŠN‚ˆY[K››İYWØ]]Ù˜Z[\™JY\ÜØYÙJB‚™[˜ÈÛÛ—ÜØ]™YÜÙ\ÜÚ[Û—Ú[˜[Y
+    var average_fps := performance_frame_sum / performance_frame_count
+    var min_scale := 0.60 if quality == "low" else 0.70
+    var max_scale := 0.85 if quality == "low" else 0.95
 
-HOˆ›ÚY‚ˆ\İ]KœÙ]ÜÙ\ÜÚ[ÛŠ‘İY\İ‹ˆŠBˆ\İ]K˜ÛX\—ÜØ]™YÜÙ\ÜÚ[ÛŠ
-B‚™[˜ÈÜİ\ÜÚ[™Û\^Y\Š
-HOˆ›ÚY‚ˆ˜\ˆÛÛ™šYÈH\İ]Kœ[™[™×İÛÜ›ØÛÛ™šYË™\XØ]JYJBˆYˆÛÛ™šYËš\×Ù[\J
-N‚ˆÛÛ™šYÈHÈ›˜[YHˆ]\›Ü˜H˜[^H‹œÙYYœ˜[™J
-H	HŒMÍ›[ÙHˆœİ\š]˜[ŸBˆÚYWÛY[J
-BˆÜİ\İÛÜ›
-[
-ÛÛ™šYË™Ù]
-œÙYY‹ÍÍÍÊJKİŠÛÛ™šYË™Ù]
-›˜[YH‹•ÛÜ›ŠJKİŠÛÛ™šYË™Ù]
-›[ÙH‹œİ\š]˜[ŠJJB‚™[˜ÈÚÜİ
+    if average_fps < 48.0:
+        performance_low_time += performance_sample_time
+        performance_high_time = 0.0
+    elif average_fps > 60.0:
+        performance_high_time += performance_sample_time
+        performance_low_time = 0.0
+    else:
+        performance_low_time = maxf(0.0, performance_low_time - 0.25)
+        performance_high_time = maxf(0.0, performance_high_time - 0.25)
 
-HOˆ›ÚY‚ˆÚYWÛY[J
-Bˆ˜\ˆ\œˆH™]ÛÜšÓX[˜YÙ\‹šÜİ
+    if performance_low_time >= 1.5:
+        performance_scale = maxf(min_scale, performance_scale - 0.05)
+        get_viewport().scaling_3d_scale = performance_scale
+        performance_low_time = 0.0
+    elif performance_high_time >= 2.0:
+        performance_scale = minf(max_scale, performance_scale + 0.05)
+        get_viewport().scaling_3d_scale = performance_scale
+        performance_high_time = 0.0
 
-BˆYˆ\œˆOHÒÎ‚ˆÜÚİ×ÛY[J
-Bˆ™]\›‚ˆÜİ\İÛÜ›
-˜[™J
-H	HŒMÍ’ÜİÛÜ›‹œİ\š]˜[ŠB‚™[˜ÈÚ›Ú[ŠY™\ÜÎˆİš[™ÊHOˆ›ÚY‚ˆÚYWÛY[J
-Bˆ˜\ˆ›Ü›X[^™YHY™\ÜËœİš\ÙYÙ\Ê
-Bˆ˜\ˆ\ÈH›Ü›X[^™YœÜ]
-ˆŠBˆ˜\ˆÜİH\ÖÌBˆ˜\ˆÜH[
-\ÖÌWJHYˆ\ËœÚ^™J
-HˆH[™\ÖÌWKš\×İ˜[YÚ[
+    performance_sample_time = 0.0
+    performance_frame_sum = 0.0
+    performance_frame_count = 0
 
-H[ÙH™]ÛÜšÓX[˜YÙ\‹‘QUSÔÔ•ˆ˜\ˆ\œˆH™]ÛÜšÓX[˜YÙ\‹š›Ú[ŠÜİÜ
-BˆYˆ\œˆOHÒÎ‚ˆÜÚİ×ÛY[J
-Bˆ™]\›‚ˆYˆ›İ™]ÛÜšÓX[˜YÙ\‹˜ÛÛ›™XİYš\×ØÛÛ›™XİY
-Üİ\Ü™[[İWØY\—ØÛÛ›™Xİ
-N‚ˆ™]ÛÜšÓX[˜YÙ\‹˜ÛÛ›™XİY˜ÛÛ›™Xİ
-Üİ\Ü™[[İWØY\—ØÛÛ›™XİÓÓ“‘PÕÓÓ‘WÔÒÕ
-Bˆ™]ÛÜšÓX[˜YÙ\‹˜ÛÛ›™Xİ[Û—Ù\œ›Ü‹˜ÛÛ›™Xİ
-ÛÛ—Ü™[[İWØÛÛ›™Xİ[Û—Ù\œ›Ü‹ÓÓ“‘PÕÓÓ‘WÔÒÕ
-BˆYˆ›İ™]ÛÜšÓX[˜YÙ\‹ÛÜ›Üİ]WÜ™XÙZ]™Yš\×ØÛÛ›™XİY
-ÛÛ—Ü™[[İWİÛÜ›Üİ]JN‚ˆ™]ÛÜšÓX[˜YÙ\‹ÛÜ›Üİ]WÜ™XÙZ]™Y˜ÛÛ›™Xİ
-ÛÛ—Ü™[[İWİÛÜ›Üİ]KÓÓ“‘PÕÓÓ‘WÔÒÕ
-B‚™[˜ÈÜİ\Ü™[[İWØY\—ØÛÛ›™Xİ
+func _build_remote_players_root() -> void:
+    remote_players_root = Node3D.new()
+    remote_players_root.name = "RemotePlayers"
+    add_child(remote_players_root)
 
-HOˆ›ÚY‚ˆÈHÙ\™\ˆÙ[™È]]Üš]]]™HÛÜ›Y]Y]H[[YYX][HY\ˆ™\]Y\İÚ›Ú[ˆİXØÙYYË‚ˆYˆY[H[™Y[Kš\×ÛY]Ù
-œÙ]ØÛÛ›™Xİ[Û—Üİ]\ÈŠN‚ˆY[KœÙ]ØÛÛ›™Xİ[Û—Üİ]\Êºw^~)ŞuÊhÔ ºw^~)Şt&(5£X¨Ös.×ŸŠwä£Z5‰î×ŸŠw‰‰Íhß'5£T€ÖbZ5‹hßE")
+func _wire_network_presence() -> void:
+    if not NetworkManager.player_state_changed.is_connected(_on_remote_player_states):
+        NetworkManager.player_state_changed.connect(_on_remote_player_states)
+    if not NetworkManager.player_presence_changed.is_connected(_on_remote_presence):
+        NetworkManager.player_presence_changed.connect(_on_remote_presence)
+    if not NetworkManager.inventory_snapshot_received.is_connected(_on_inventory_snapshot):
+        NetworkManager.inventory_snapshot_received.connect(_on_inventory_snapshot)
+
+func _on_remote_presence(players: Dictionary) -> void:
+    for id in remote_player_nodes.keys():
+        if not players.has(id) and int(id) != multiplayer.get_unique_id():
+            var node = remote_player_nodes[id]
+            if is_instance_valid(node):
+                node.queue_free()
+            remote_player_nodes.erase(id)
+
+func _on_remote_player_states(players: Dictionary) -> void:
+    for key in players:
+        var id := int(key)
+        if id == multiplayer.get_unique_id():
+            continue
+        var row: Dictionary = players[key]
+        var node = remote_player_nodes.get(id)
+        if node == null or not is_instance_valid(node):
+            node = load("res://scripts/network/remote_player_avatar.gd").new()
+            remote_players_root.add_child(node)
+            node.setup(id, str(row.get("name", "Player")), str(row.get("character", "ranger")), clampi(int(row.get("avatar_id", 0)), 0, 29))
+            remote_player_nodes[id] = node
+        node.apply_state(row.get("position", Vector3.ZERO), float(row.get("yaw", 0.0)))
+
+func _build_auth() -> void:
+    auth = load("res://scripts/auth/auth_client.gd").new()
+    add_child(auth)
+    auth.configure(str(Settings.get_value("auth_server_url", "http://127.0.0.1:8090")))
+    auth.success.connect(_on_auth_success)
+    auth.failure.connect(_on_auth_failure)
+    auth.session_invalid.connect(_on_saved_session_invalid)
+    var saved_session := AppState.load_saved_session()
+    var saved_token := str(saved_session.get("token", ""))
+    if not saved_token.is_empty():
+        AppState.character_id = str(saved_session.get("character", AppState.character_id))
+        AppState.avatar_id = clampi(int(saved_session.get("avatar_id", AppState.avatar_id)), 0, AppState.MAX_AVATARS - 1)
+        auth.restore_session(saved_token)
+
+func _build_fps_overlay() -> void:
+    var layer := CanvasLayer.new()
+    layer.layer = 100
+    add_child(layer)
+
+    boot_overlay = Control.new()
+    boot_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    boot_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    layer.add_child(boot_overlay)
+
+    var boot_bg := ColorRect.new()
+    boot_bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    boot_bg.color = Color("#0b111c")
+    boot_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    boot_overlay.add_child(boot_bg)
+
+    var boot_box := VBoxContainer.new()
+    boot_box.set_anchors_preset(Control.PRESET_CENTER)
+    boot_box.position = Vector2(-180, -55)
+    boot_box.size = Vector2(360, 110)
+    boot_box.alignment = BoxContainer.ALIGNMENT_CENTER
+    boot_box.add_theme_constant_override("separation", 6)
+    boot_overlay.add_child(boot_box)
+    var title := Label.new()
+    title.text = "AETHRA"
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size", 34)
+    title.add_theme_color_override("font_color", Color("#78ddff"))
+    boot_box.add_child(title)
+    var subtitle := Label.new()
+    subtitle.text = "WILDBOUND"
+    subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    subtitle.add_theme_font_size_override("font_size", 15)
+    subtitle.add_theme_color_override("font_color", Color("#eaf6ff"))
+    boot_box.add_child(subtitle)
+    var loading := Label.new()
+    loading.text = "Ø¬Ø§Ø±ÙŠ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø¹Ø§Ù„Ù…..."
+    loading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    loading.add_theme_font_size_override("font_size", 11)
+    loading.add_theme_color_override("font_color", Color("#91a9bf"))
+    boot_box.add_child(loading)
+
+    fps_overlay = Label.new()
+    fps_overlay.name = "BootFPS"
+    fps_overlay.text = "FPS: 0 / %d" % Engine.max_fps
+    fps_overlay.position = Vector2(16, 10)
+    fps_overlay.size = Vector2(180, 30)
+    fps_overlay.text_direction = Control.TEXT_DIRECTION_LTR
+    fps_overlay.layout_direction = Control.LAYOUT_DIRECTION_LTR
+    fps_overlay.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+    fps_overlay.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    fps_overlay.add_theme_font_size_override("font_size", 14)
+    fps_overlay.add_theme_color_override("font_color", Color("#eaf6ff"))
+    fps_overlay.add_theme_color_override("font_shadow_color", Color(0,0,0,0.85))
+    fps_overlay.add_theme_constant_override("shadow_offset_x", 2)
+    fps_overlay.add_theme_constant_override("shadow_offset_y", 2)
+    layer.add_child(fps_overlay)
+
+func _build_menu() -> void:
+    menu = load("res://scripts/ui/main_menu.gd").new()
+    add_child(menu)
+    menu.build(self)
+    if boot_overlay and is_instance_valid(boot_overlay):
+        boot_overlay.queue_free()
+        boot_overlay = null
+    menu.play_singleplayer.connect(_start_singleplayer)
+    menu.host_multiplayer.connect(_host)
+    menu.join_multiplayer.connect(_join)
+    menu.open_settings.connect(_open_settings)
+
+func _on_auth_success(profile: Dictionary) -> void:
+    var token := str(profile.get("token", ""))
+    AppState.set_session(str(profile.get("username", "Guest")), token)
+    AppState.character_id = str(profile.get("character", AppState.character_id))
+    AppState.avatar_id = clampi(int(profile.get("avatar_id", AppState.avatar_id)), 0, AppState.MAX_AVATARS - 1)
+    AppState.save_profile(AppState.get_display_name(), AppState.avatar_id)
+    if not token.is_empty():
+        AppState.save_session()
+    if menu and menu.has_method("refresh_profile"):
+        menu.refresh_profile()
+
+func _on_auth_failure(message: String) -> void:
+    if menu and menu.has_method("notify_auth_failure"):
+        menu.notify_auth_failure(message)
+
+func _on_saved_session_invalid() -> void:
+    AppState.set_session("Guest", "")
+    AppState.clear_saved_session()
+
+func _start_singleplayer() -> void:
+    var config := AppState.pending_world_config.duplicate(true)
+    if config.is_empty():
+        config = {"name":"Aurora Valley", "seed":randi() % 2147480000, "mode":"survival"}
+    _hide_menu()
+    _start_world(int(config.get("seed", 7777)), str(config.get("name", "World")), str(config.get("mode", "survival")))
+
+func _host() -> void:
+    _hide_menu()
+    var err := NetworkManager.host()
+    if err != OK:
+        _show_menu()
+        return
+    _start_world(randi() % 2147480000, "Host World", "survival")
+
+func _join(address: String) -> void:
+    _hide_menu()
+    var normalized := address.strip_edges()
+    var parts := normalized.split(":")
+    var host := parts[0]
+    var port := int(parts[1]) if parts.size() > 1 and parts[1].is_valid_int() else NetworkManager.DEFAULT_PORT
+    var err := NetworkManager.join(host, port)
+    if err != OK:
+        _show_menu()
+        return
+    if not NetworkManager.connected.is_connected(_start_remote_after_connect):
+        NetworkManager.connected.connect(_start_remote_after_connect, CONNECT_ONE_SHOT)
+    NetworkManager.connection_error.connect(_on_remote_connection_error, CONNECT_ONE_SHOT)
+    if not NetworkManager.world_state_received.is_connected(_on_remote_world_state):
+        NetworkManager.world_state_received.connect(_on_remote_world_state, CONNECT_ONE_SHOT)
+
+func _start_remote_after_connect() -> void:
+    # The server sends authoritative world metadata immediately after request_join succeeds.
+    if menu and menu.has_method("set_connection_status"):
+        menu.set_connection_status("Ù…ØªØµÙ„ â€” Ø¨Ø§Ù†ØªØ¸Ø§Ø± Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø¹Ø§Ù„Ù… Ù…Ù† Ø§Ù„Ø®Ø§Ø¯Ù…")
 
 func _on_remote_world_state(data: Dictionary) -> void:
     if not data.has("seed"):
         _show_menu()
         return
     if int(data.get("world_version", AppState.WORLD_VERSION)) != AppState.WORLD_VERSION or int(data.get("protocol_version", AppState.PROTOCOL_VERSION)) != AppState.PROTOCOL_VERSION:
-        _on_remote_connection_error("éİyø§y×55£\Ä‹§uçâç]Öt«§uçâçBòsZ5Òh×1"éİyø§yŞJºw^~)Şu&E5£xœÖ"â"¢&WGW&à¢7FFRçVæF–æu÷v÷&ÆEö6öæf–rÒ°¢&æÖR#¢7G"†FFævWB‚&æÖR"Â%&VÖ÷FRv÷&ÆB"’’À¢'6VVB#¢–çB†FFævWB‚'6VVB"Âsssr’’À¢&ÖöFR#¢7G"†FFævWB‚&ÖöFR"Â'7W'f—fÂ"’’À¢&F–ff–7VÇG’#¢7G"†FFævWB‚&F–ff–7VÇG’"Â&æ÷&ÖÂ"’’À¢'&—f7’#¢7G"†FFævWB‚'&—f7’"Â'&—fFR"’’À¢'7G'V7GW&W2#¢&ööÂ†FFævWB‚'7G'V7GW&W2"ÂG'VR’’À¢&7&VGW&W2#¢&ööÂ†FFævWB‚&7&VGW&W2"ÂG'VR’’À¢'vVF†W"#¢&ööÂ†FFævWB‚'vVF†W""ÂG'VR’’À¢'&VÖ÷FR#¢G'VRÀ¢'v÷&ÆEö–B#¢7G"†FFævWB‚'v÷&ÆEö–B"Â""’’À¢'6W'fW%öFVÇF#¢FFævWB‚&FVÇF"Â·Ò’À¢'v÷&ÆE÷F–ÖR#¢FFævWB‚'v÷&ÆE÷F–ÖR"Â·Ò’À¢'7vâ#¢FFævWB‚'7vâ"ÂfV7F÷#2ƒ‚ãRÂCRãÂ‚ãR’’À¢Ğ¢÷7F'E÷v÷&ÆB†–çB†FFævWB‚'6VVB"Âsssr’’Â7G"†FFævWB‚&æÖR"Â%&VÖ÷FRv÷&ÆB"’’Â7G"†FFævWB‚&ÖöFR"Â'7W'f—fÂ"’’ ¦gVæ2FFö†5÷F–ÖR†FF¢F–7F–öæ'’’Óâ&ööÃ ¢&WGW&âFFæ†2‚'v÷&ÆE÷F–ÖR"’æBFFævWB‚'v÷&ÆE÷F–ÖR"’—2F–7F–öæ'’æBæ÷BFFævWB‚'v÷&ÆE÷F–ÖR"’æ—5öV×G’‚ ¦gVæ2ööå÷&VÖ÷FUö6öææV7F–öåöW'&÷"…öÖW76vS¢7G&–ær’Óâfö–C ¢÷6†÷uöÖVçR‚ ¦gVæ2÷7F'E÷v÷&ÆB‡6VVE÷fÇVS¢–çBÂv÷&ÆEöæÖS¢7G&–ærÂÖöFS¢7G&–ær’Óâfö–C ¢–bv÷&ÆBÒçVÆÃ ¢v÷&ÆBçVWVUög&VR‚¢f"6öæf–wW&VE÷v÷&ÆEö–B£Ò7G"„7FFRçVæF–æu÷v÷&ÆEö6öæf–rævWB‚'v÷&ÆEö–B"Â""’¢f"v÷&ÆEö–B£Ò6öæf–wW&VE÷v÷&ÆEö–B–bæ÷B6öæf–wW&VE÷v÷&ÆEö–Bæ—5öV×G’‚’VÇ6R'v÷&ÆBÒVB"R6VVE÷fÇVP¢7FFRç6WE÷v÷&ÆB‡v÷&ÆEö–BÂv÷&ÆEöæÖRÂ6VVE÷fÇVRÂÖöFR¢v÷&ÆBÒÆöB‚'&W3¢ò÷67&—G2÷v÷&ÆB÷f÷†VÅ÷v÷&ÆBævB"’ææWr‚¢FEö6†–ÆB‡v÷&ÆB¢f"6öæf–r£Ò7FFRçVæF–æu÷v÷&ÆEö6öæf–ræGWÆ–6FR‡G'VR¢7FFRçv÷&ÆE÷6WGF–æw2Ò6öæf–ræGWÆ–6FR‡G'VR¢v÷&ÆBæ6öæf–wW&R†6öæf–r¢v÷&ÆBæ–æ—F–Æ—¦R‡6VVE÷fÇVR¢–bv÷&ÆBæ†5öÖWF†öB‚&—5÷&VG•öf÷%÷7vâ"’æBæ÷Bv÷&ÆBæ—5÷&VG•öf÷%÷7vâ‚“ ¢v—Bv÷&ÆBçv÷&ÆE÷&VG¢–bF–ÖU÷7—7FVÓ ¢F–ÖU÷7—7FVÒçvVF†W%öVæ&ÆVBÒ&ööÂ†6öæf–rævWB‚'vVF†W""ÂG'VR’¢f"&W7VÖUö–B£Ò7G"„7FFRçVæF–æu÷v÷&ÆEö6öæf–rævWB‚'&W7VÖUö–B"Â""’¢f"&VÖ÷FU÷v÷&ÆB£Ò&ööÂ„7FFRçVæF–æu÷v÷&ÆEö6öæf–rævWB‚'&VÖ÷FR"ÂfÇ6R’¢–b&VÖ÷FU÷v÷&ÆC ¢f"&VÖ÷FUöFVÇF¢F–7F–öæ'’Ò7FFRçVæF–æu÷v÷&ÆEö6öæf–rævWB‚'6W'fW%öFVÇF"Â·Ò¢–b&VÖ÷FUöFVÇF—2F–7F–öæ'“ ¢v÷&ÆBæÆöEöFVÇF‡&VÖ÷FUöFVÇF¢–bF–ÖU÷7—7FVÒæBFFö†5÷F–ÖR„7FFRçVæF–æu÷v÷&ÆEö6öæf–r“ ¢F–ÖU÷7—7FVÒæFW6W&–Æ—¦R„7FFRçVæF–æu÷v÷&ÆEö6öæf–rævWB‚'v÷&ÆE÷F–ÖR"Â·Ò’¢VÆ–bæ÷B&W7VÖUö–Bæ—5öV×G’‚“ ¢f"6fVB£Ò6fTD"æÆöE÷v÷&ÆB‡&W7VÖUö–B¢–bæ÷B6fVBæ—5öV×G’‚“ ¢v÷&ÆBæÆöEöFVÇF‡6fVBævWB‚&&Æö6·2"Â·Ò’¢f"6fVEöÖWF¢F–7F–öæ'’Ò6fVBævWB‚&ÖWFFF"Â·Ò¢f"6fVE÷6WGF–æw2Ò6fVEöÖWFævWB‚'6WGF–æw2"Â·Ò¢–b6fVE÷6WGF–æw2—2F–7F–öæ'“ ¢7FFRçv÷&ÆE÷6WGF–æw2Ò6fVE÷6WGF–æw2æGWÆ–6FR‡G'VR¢–bv÷&ÆBæ†5öÖWF†öB‚&6öæf–wW&R"“ ¢v÷&ÆBæ6öæf–wW&R‡6fVE÷6WGF–æw2¢–bF–ÖU÷7—7FVÓ ¢F–ÖU÷7—7FVÒçvVF†W%öVæ&ÆVBÒ&ööÂ‡6fVE÷6WGF–æw2ævWB‚'vVF†W""ÂG'VR’¢–bF–ÖU÷7—7FVÒæB6fVEöÖWFæ†2‚'F–ÖR"“ ¢F–ÖU÷7—7FVÒæFW6W&–Æ—¦R‡6fVEöÖWF²'F–ÖR%Ò¢æWGv÷&´ÖævW"æ&–æE÷v÷&ÆB‡v÷&ÆB¢f"7vã¢fV7F÷#2Òv÷&ÆBç7vå÷÷6—F–öà¢Æ–W"ÒÆöB‚'&W3¢ò÷67&—G2÷Æ–W"÷Æ–W%öfF"ævB"’ææWr‚¢FEö6†–ÆB‡Æ–W"¢f"WF†÷&—FF—fU÷7vã¢f&–çBÒ6öæf–rævWB‚'7vâ"Â7vâ¢Æ–W"ç÷6—F–öâÒWF†÷&—FF—fU÷7vâ–bWF†÷&—FF—fU÷7vâ—2fV7F÷#2VÇ6R7và¢Æ–W"æFE÷Fõöw&÷W‚'Æ–W'2"¢Æ–W"ç6WGW‡v÷&ÆBÂG'VRÂ×VÇF—Æ–W"ævWE÷Væ—VUö–B‚’¢–bæ÷B&VÖ÷FU÷v÷&ÆBæBæ÷B&W7VÖUö–Bæ—5öV×G’‚“ ¢f"6fVE÷Æ–W#¢F–7F–öæ'’Ò6fTD"æÆöE÷v÷&ÆB‡&W7VÖUö–B’ævWB‚'Æ–W""Â·Ò¢–b6fVE÷Æ–W"—2F–7F–öæ'“ ¢Æ–W"ç÷6—F–öâÒ6fVE÷Æ–W"ævWB‚'÷6—F–öâ"Â7vâ¢Æ–W"ç7W'f—fÂæ†VÇF‚ÒfÆöB‡6fVE÷Æ–W"ævWB‚&†VÇF‚"ÂÆ–W"ç7W'f—fÂæ†VÇF‚’¢Æ–W"ç7W'f—fÂæ‡VævW"ÒfÆöB‡6fVE÷Æ–W"ævWB‚&‡VævW""ÂÆ–W"ç7W'f—fÂæ‡VævW"’¢Æ–W"ç7W'f—fÂç‡Ò–çB‡6fVE÷Æ–W"ævWB‚'‡"ÂÆ–W"ç7W'f—fÂç‡’¢f"–çeöFF¢'&’Ò6fVE÷Æ–W"ævWB‚&–çfVçF÷'’"ÂµÒ¢–b–çeöFF—2'&“ ¢Æ–W"æ–çfVçF÷'’æFW6W&–Æ—¦R†–çeöFF¢–bæ÷B&VÖ÷FU÷v÷&ÆBæB&W7VÖUö–Bæ—5öV×G’‚“ ¢Æ–W"æ–çfVçF÷'’æFEö—FVÒ„&Æö6µ&Vv—7G'’å4ô”ÂÂcB¢Æ–W"æ–çfVçF÷'’æFEö—FVÒ„&Æö6µ&Vv—7G'’å5DôäRÂ3"¢Æ–W"æ–çfVçF÷'’æFEö—FVÒ„&Æö6µ&Vv—7G'’äÄôrÂb¢Æ–W"æ–çfVçF÷'’æFEö—FVÒ„—FVÕ&Vv—7G'’åtôôEõ”4²Â¢f"7F'F–æuö–çfVçF÷'“¢F–7F–öæ'’Ò6öæf–rævWB‚'7F'F–æuö–çfVçF÷'’"Â·Ò¢–b7F'F–æuö–çfVçF÷'’—2F–7F–öæ'“ ¢f÷"—FVÕö–B–â7F'F–æuö–çfVçF÷'“ ¢Æ–W"æ–çfVçF÷'’æFEö—FVÒ†–çB†—FVÕö–B’Â–çB‡7F'F–æuö–çfVçF÷'•¶—FVÕö–EÒ’¢V6öæö×’æ6öç7VÖU÷7F6…ö–çFõö–çfVçF÷'’‡Æ–W"æ–çfVçF÷'’¢–bæ÷B&VÖ÷FU÷v÷&ÆC ¢7&VGW&W2ÒÆöB‚'&W3¢ò÷67&—G2öVçF—F–W2÷7våöÖævW"ævB"’ææWr‚¢FEö6†–ÆB†7&VGW&W2¢7&VGW&W2ç6WGW‡v÷&ÆBÂ&ööÂ†6öæf–rævWB‚&7&VGW&W2"ÂG'VR’’¢ö'V–ÆEö‡VB‚¢ö'V–ÆE÷vVF†W%ö6öçG&öÆÆW"‚¢ö'V–ÆEö6öç6öÆR‚¢–bæ÷B&VÖ÷FU÷v÷&ÆC ¢6fTD"ç6fU÷v÷&ÆB„7FFRæ7W'&VçE÷v÷&ÆEö–BÂ²&æÖR#¢v÷&ÆEöæÖRÂ'6VVB#¢6VVE÷fÇVRÂ&ÖöFR#¢ÖöFRÂ'F–ÖR#¢F–ÖU÷7—7FVÒç6W&–Æ—¦R‚’–bF–ÖU÷7—7FVÒVÇ6R·ÒÂ'6WGF–æw2#¢6öæf–ræGWÆ–6FR‡G'VR—ÒÂv÷&ÆBç6fUöFVÇF‚’Â÷Æ–W%÷6fR‚’¢7FFRçVæF–æu÷v÷&ÆEö6öæf–ræ6ÆV"‚¢–çWBæÖ÷W6UöÖöFRÒ–çWBäÔõU4UôÔôDUô4EU$T@ ¦gVæ2ö'V–ÆEö‡VB‚’Óâfö–C ¢‡VBÒÆöB‚'&W3¢ò÷67&—G2÷V’ö‡VBævB"’ææWr‚¢FEö6†–ÆB†‡VB¢‡VBæ'V–ÆB‚¢–bæ÷BæWGv÷&´ÖævW"çÆ–W%÷&W6Væ6Uö6†ævVBæ—5ö6öææV7FVB†‡VBç6WE÷Æ–W'2“ ¢æWGv÷&´ÖævW"çÆ–W%÷&W6Væ6Uö6†ævVBæ6öææV7B†‡VBç6WE÷Æ–W'2¢‡VBç6WEö–çfVçF÷'’‡Æ–W"æ–çfVçF÷'’¢–bæ÷BÆ–W"ç7W'f—fÂæ†VÇF…ö6†ævVBæ—5ö6öææV7FVB…ööå÷Æ–W%ö†VÇF‚“ ¢Æ–W"ç7W'f—fÂæ†VÇF…ö6†ævVBæ6öææV7B…ööå÷Æ–W%ö†VÇF‚¢–bæ÷BÆ–W"ç7W'f—fÂæF–VBæ—5ö6öææV7FVB…ööå÷Æ–W%öF–VB“ ¢Æ–W"ç7W'f—fÂæF–VBæ6öææV7B…ööå÷Æ–W%öF–VB¢ö'V–ÆEö–çfVçF÷'•÷V’‚¢÷WFFUö‡VB‚ ¦gVæ2ö'V–ÆEö–çfVçF÷'•÷V’‚’Óâfö–C ¢f"W†—7F–æs£ÖvWE÷G&VR‚’ævWEöf—'7EöæöFUö–åöw&÷W‚&WF‡&ö–çfVçF÷'•÷V’"¢–bW†—7F–ærÖçVÆÃ¢W†—7F–ærçVWVUög&VR‚¢f"V“ÖÆöB‚'&W3¢ò÷67&—G2÷V’ö–çfVçF÷'•öÖVçRævB"’ææWr‚¢V’æFE÷Fõöw&÷W‚&WF‡&ö–çfVçF÷'•÷V’"“²FEö6†–ÆB‡V’“²V’æ'V–ÆB‡6VÆbÇÆ–W"æ–çfVçF÷'’ÇÆ–W"æ7&gF–ær“²V’çf—6–&ÆSÖfÇ6P ¦gVæ2ööå÷Æ–W%öF–VB‚’Óâfö–C ¢–bÆ–W#ÓÖçVÆÂ÷"Æ–W"æFVF…öÆö6³¢&WGW&à¢Æ–W"æFVF…öÆö6³×G'VS²–çWBæÖ÷W6UöÖöFSÔ–çWBäÔõU4UôÔôDUõd•4”$ÄP¢v—BvWE÷G&VR‚’æ7&VFU÷F–ÖW"ƒ"ã’çF–ÖV÷W@¢–bÆ–W"ÖçVÆÂæB—5ö–ç7Fæ6U÷fÆ–B‡Æ–W"’æBv÷&ÆBÖçVÆÃ¢Æ–W"ç&W7våöB‡v÷&ÆBç7vå÷÷6—F–öâ ¦gVæ2ööåö–çfVçF÷'•÷6æ6†÷B‡6æ6†÷C¢'&’’Óâfö–C ¢–bÆ–W"ÓÒçVÆÂ÷"6æ6†÷Bæ—5öV×G’‚“ ¢&WGW&à¢Æ–W"æ–çfVçF÷'’æFW6W&–Æ—¦R‡6æ6†÷B ¦gVæ2ööå÷Æ–W%ö†VÇF‚…ö†VÇF‚ÂöÖ…ö†VÇF‚’Óâfö–C ¢÷WFFUö‡VB‚ ¦gVæ2ö'V–ÆE÷vVF†W%ö6öçG&öÆÆW"‚’Óâfö–C ¢–bvVF†W%ö6öçG&öÆÆW"ÖçVÆÂæB—5ö–ç7Fæ6U÷fÆ–B‡vVF†W%ö6öçG&öÆÆW"“¢vVF†W%ö6öçG&öÆÆW"çVWVUög&VR‚¢–bÆ–W#ÓÖçVÆÂ÷"F–ÖU÷7—7FVÓÓÖçVÆÃ¢&WGW&à¢vVF†W%ö6öçG&öÆÆW#ÖÆöB‚'&W3¢ò÷67&—G2÷v÷&ÆB÷vVF†W%ö6öçG&öÆÆW"ævB"’ææWr‚¢FEö6†–ÆB‡vVF†W%ö6öçG&öÆÆW"¢vVF†W%ö6öçG&öÆÆW"ç6WGW‡Æ–W"ÇF–ÖU÷7—7FVÒ ¦gVæ2ö'V–ÆEö6öç6öÆR‚’Óâfö–C ¢&WGW&à ¦gVæ2FövvÆUöFWfVÆ÷W%ö6öç6öÆR‚’Óâfö–C ¢&WGW&à ¦gVæ2÷WFFUö‡VB‚’Óâfö–C ¢–b‡VBÓÒçVÆÂ÷"Æ–W"ÓÒçVÆÃ ¢&WGW&à¢‡VBç6WE÷Æ–W%÷7FG2‡Æ–W"ç7W'f—fÂæ†VÇF‚ÂÆ–W"ç7W'f—fÂæ‡VævW"ÂÆ–W"ç7W'f—fÂç7FÖ–æÂVæv–æRævWEög&ÖW5÷W%÷6V6öæB‚’ ¦gVæ2ö÷Vå÷6WGF–æw2…÷&WGW&å÷vS¢7G&–ærÒ&†öÖR"’Óâfö–C ¢–b6WGF–æw5öÖVçRÒçVÆÂæB—5ö–ç7Fæ6U÷fÆ–B‡6WGF–æw5öÖVçR“ ¢&WGW&à¢–bÖVçS ¢ÖVçRæ†–FR‚¢6WGF–æw5öÖVçRÒÆöB‚'&W3¢ò÷67&—G2÷V’÷6WGF–æw5öÖVçRævB"’ææWr‚¢FEö6†–ÆB‡6WGF–æw5öÖVçR¢6WGF–æw5öÖVçRæ'V–ÆB‡6VÆb¢6WGF–æw5öÖVçRæ6Æ÷6VBæ6öææV7B†gVæ2‚“ ¢6WGF–æw5öÖVçRçVWVUög&VR‚¢6WGF–æw5öÖVçRÒçVÆÀ¢–bÖVçS ¢ÖVçRç6†÷r‚¢ ¦gVæ2ö†–FUöÖVçR‚’Óâfö–C ¢–bÖVçS ¢ÖVçRæ†–FR‚¢ÖVçU÷f—6–&ÆRÒfÇ6P ¦gVæ2÷6†÷uöÖVçR‚’Óâfö–C ¢ÖVçU÷f—6–&ÆRÒG'VP¢–bÖVçS ¢ÖVçRç6†÷r‚ ¦gVæ2÷Væ†æFÆVEö–çWB†WfVçC¢–çWDWfVçB’Óâfö–C ¢–bWfVçB—2–çWDWfVçD¶W’æBWfVçBç&W76VC ¢–bWfVçBç‡—6–6Åö¶W–6öFRÓÒ´U•ôcƒ ¢&WGW&à¢VÆ–bWfVçBç‡—6–6Åö¶W–6öFRÓÒ´U•ôU44S ¢–bÆ–W"ÒçVÆÃ ¢–çWBæÖ÷W6UöÖöFRÒ–çWBäÔõU4UôÔôDUõd•4”$ÄP¢VÆ–bWfVçBç‡—6–6Åö¶W–6öFRÓÒ´U•ôc ¢f"ÖöFR£ÒF—7Æ•6W'fW"çv–æF÷uövWEöÖöFR‚¢F—7Æ•6W'fW"çv–æF÷u÷6WEöÖöFR„F—7Æ•6W'fW"åt”äDõuôÔôDUõt”äDõtTB–bÖöFRÓÒF—7Æ•6W'fW"åt”äDõuôÔôDUôeTÄÅ45$TTâVÇ6RF—7Æ•6W'fW"åt”äDõuôÔôDUôeTÄÅ45$TTâ ¦gVæ2÷&ö6W72†FVÇF¢fÆöB’Óâfö–C ¢–bg5ö÷fW&Æ“ ¢g5ö÷fW&Æ’çFW‡BÒ$e3¢VBòVB"R´Væv–æRævWEög&ÖW5÷W%÷6V6öæB‚’ÂVæv–æRæÖ…ög5Ğ¢öFF—fU÷&W6öÇWF–öâ†FVÇF¢–bv÷&ÆBÒçVÆÂæBÆ–W"ÒçVÆÂæBv÷&ÆBæ†5öÖWF†öB‚'6WE÷7G&VÕö6VçFW""“ ¢v÷&ÆBç6WE÷7G&VÕö6VçFW"‡Æ–W"ævÆö&Å÷÷6—F–öâ¢æWGv÷&´ÖævW"çV&Æ—6…öÆö6Å÷Æ–W%÷7FFR‡Æ–W"ævÆö&Å÷÷6—F–öâÂÆ–W"ç&÷FF–öâç’Â7FFRæ6†&7FW%ö–B¢WF÷6fU÷F–ÖW"ÓÒFVÇF¢–bWF÷6fU÷F–ÖW"ÃÒãæBæ÷B7FFRæ7W'&VçE÷v÷&ÆEö–Bæ—5öV×G’‚’æBæ÷B&ööÂ„7FFRçVæF–æu÷v÷&ÆEö6öæf–rævWB‚'&VÖ÷FR"ÂfÇ6R’“ ¢WF÷6fU÷F–ÖW"Ò3ã ¢6fTD"ç6fU÷v÷&ÆB€¢7FFRæ7W'&VçE÷v÷&ÆEö–BÀ¢²&æÖR#¢7FFRæ7W'&VçE÷v÷&ÆEöæÖRÂ'6VVB#¢7FFRçv÷&ÆE÷6VVBÂ&ÖöFR#¢7FFRævÖUöÖöFRÂ'F–ÖR#¢F–ÖU÷7—7FVÒç6W&–Æ—¦R‚’–bF–ÖU÷7—7FVÒVÇ6R·ÒÂ'6WGF–æw2#¢7FFRçv÷&ÆE÷6WGF–æw2æGWÆ–6FR‡G'VR—ÒÀ¢v÷&ÆBç6fUöFVÇF‚’À¢÷Æ–W%÷6fR‚¢ ¦gVæ2&WVW7Eö6Æ÷6R‚’Óâfö–C ¢–bv÷&ÆBÒçVÆÂæBÆ–W"ÒçVÆÂæBæ÷B7FFRæ7W'&VçE÷v÷&ÆEö–Bæ—5öV×G’‚“ ¢6fTD"ç6fU÷v÷&ÆB„7FFRæ7W'&VçE÷v÷&ÆEö–BÂ²&æÖR#¢7FFRæ7W'&VçE÷v÷&ÆEöæÖRÂ'6VVB#¢7FFRçv÷&ÆE÷6VVBÂ&ÖöFR#¢7FFRævÖUöÖöFRÂ'F–ÖR#¢F–ÖU÷7—7FVÒç6W&–Æ—¦R‚’–bF–ÖU÷7—7FVÒVÇ6R·ÒÂ'6WGF–æw2#¢7FFRçv÷&ÆE÷6WGF–æw2æGWÆ–6FR‡G'VR—ÒÂv÷&ÆBç6fUöFVÇF‚’Â÷Æ–W%÷6fR‚’¢÷6fU÷v–æF÷u÷7FFR‚¢vWE÷G&VR‚’çV—B‚ ¦gVæ2öæ÷F–f–6F–öâ‡v†C¢–çB’Óâfö–C ¢–bv†BÓÒäõD”d”4D”ôåõtÕô4Äõ4Uõ$UTU5C ¢&WVW7Eö6Æ÷6R‚ ¦gVæ2÷Æ–W%÷6fR‚’ÓâF–7F–öæ'“ ¢–bÆ–W"ÓÒçVÆÃ ¢&WGW&â·Ğ¢&WGW&â²'÷6—F–öâ#¢Æ–W"ç÷6—F–öâÂ&†VÇF‚#¢6Æ×b‡Æ–W"ç7W'f—fÂæ†VÇF‚ÃãÇÆ–W"ç7W'f—fÂæÖ…ö†VÇF‚’Â&‡VævW"#¢6Æ×b‡Æ–W"ç7W'f—fÂæ‡VævW"ÃãÃ#ã’Â'‡#¢Ö†’ƒÇÆ–W"ç7W'f—fÂç‡’Â&–çfVçF÷'’#¢Æ–W"æ–çfVçF÷'’ç6W&–Æ—¦R‚—Ğ
+        _on_remote_connection_error("Ø¥ØµØ¯Ø§Ø± Ø§Ù„Ø¹Ù…ÙŠÙ„/Ø§Ù„Ø³ÙŠØ±ÙØ± ØºÙŠØ± Ù…ØªÙˆØ§ÙÙ‚.")
+        return
+    AppState.pending_world_config = {
+        "name": str(data.get("name", "Remote World")),
+        "seed": int(data.get("seed", 7777)),
+        "mode": str(data.get("mode", "survival")),
+        "difficulty": str(data.get("difficulty", "normal")),
+        "privacy": str(data.get("privacy", "private")),
+        "structures": bool(data.get("structures", true)),
+        "creatures": bool(data.get("creatures", true)),
+        "weather": bool(data.get("weather", true)),
+        "remote": true,
+        "world_id": str(data.get("world_id", "")),
+        "server_delta": data.get("delta", {}),
+        "world_time": data.get("world_time", {}),
+        "spawn": data.get("spawn", Vector3(8.5, 45.0, 8.5)),
+    }
+    _start_world(int(data.get("seed", 7777)), str(data.get("name", "Remote World")), str(data.get("mode", "survival")))
+
+func data_has_time(data: Dictionary) -> bool:
+    return data.has("world_time") and data.get("world_time") is Dictionary and not data.get("world_time").is_empty()
+
+func _on_remote_connection_error(_message: String) -> void:
+    _show_menu()
+
+func _start_world(seed_value: int, world_name: String, mode: String) -> void:
+    if world != null:
+        world.queue_free()
+    var configured_world_id := str(AppState.pending_world_config.get("world_id", ""))
+    var world_id := configured_world_id if not configured_world_id.is_empty() else "world-%d" % seed_value
+    AppState.set_world(world_id, world_name, seed_value, mode)
+    world = load("res://scripts/world/voxel_world.gd").new()
+    add_child(world)
+    var config := AppState.pending_world_config.duplicate(true)
+    AppState.world_settings = config.duplicate(true)
+    world.configure(config)
+    world.initialize(seed_value)
+    if world.has_method("is_ready_for_spawn") and not world.is_ready_for_spawn():
+        await world.world_ready
+    if time_system:
+        time_system.weather_enabled = bool(config.get("weather", true))
+    var resume_id := str(AppState.pending_world_config.get("resume_id", ""))
+    var remote_world := bool(AppState.pending_world_config.get("remote", false))
+    if remote_world:
+        var remote_delta: Dictionary = AppState.pending_world_config.get("server_delta", {})
+        if remote_delta is Dictionary:
+            world.load_delta(remote_delta)
+        if time_system and data_has_time(AppState.pending_world_config):
+            time_system.deserialize(AppState.pending_world_config.get("world_time", {}))
+    elif not resume_id.is_empty():
+        var saved := SaveDB.load_world(resume_id)
+        if not saved.is_empty():
+            world.load_delta(saved.get("blocks", {}))
+            var saved_meta: Dictionary = saved.get("metadata", {})
+            var saved_settings = saved_meta.get("settings", {})
+            if saved_settings is Dictionary:
+                AppState.world_settings = saved_settings.duplicate(true)
+                if world.has_method("configure"):
+                    world.configure(saved_settings)
+                if time_system:
+                    time_system.weather_enabled = bool(saved_settings.get("weather", true))
+            if time_system and saved_meta.has("time"):
+                time_system.deserialize(saved_meta["time"])
+    NetworkManager.bind_world(world)
+    var spawn: Vector3 = world.spawn_position
+    player = load("res://scripts/player/player_avatar.gd").new()
+    add_child(player)
+    var authoritative_spawn: Variant = config.get("spawn", spawn)
+    player.position = authoritative_spawn if authoritative_spawn is Vector3 else spawn
+    player.add_to_group("players")
+    player.setup(world, true, multiplayer.get_unique_id())
+    if not remote_world and not resume_id.is_empty():
+        var saved_player: Dictionary = SaveDB.load_world(resume_id).get("player", {})
+        if saved_player is Dictionary:
+            player.position = saved_player.get("position", spawn)
+            player.survival.health = float(saved_player.get("health", player.survival.health))
+            player.survival.hunger = float(saved_player.get("hunger", player.survival.hunger))
+            player.survival.xp = int(saved_player.get("xp", player.survival.xp))
+            var inv_data: Array = saved_player.get("inventory", [])
+            if inv_data is Array:
+                player.inventory.deserialize(inv_data)
+    if not remote_world and resume_id.is_empty():
+        player.inventory.add_item(BlockRegistry.SOIL, 64)
+        player.inventory.add_item(BlockRegistry.STONE, 32)
+        player.inventory.add_item(BlockRegistry.LOG, 16)
+        player.inventory.add_item(ItemRegistry.WOOD_PICK, 1)
+        var starting_inventory: Dictionary = config.get("starting_inventory", {})
+        if starting_inventory is Dictionary:
+            for item_id in starting_inventory:
+                player.inventory.add_item(int(item_id), int(starting_inventory[item_id]))
+        Economy.consume_stash_into_inventory(player.inventory)
+    if not remote_world:
+        creatures = load("res://scripts/entities/spawn_manager.gd").new()
+        add_child(creatures)
+        creatures.setup(world, bool(config.get("creatures", true)))
+    _build_hud()
+    _build_weather_controller()
+    _build_console()
+    if not remote_world:
+        SaveDB.save_world(AppState.current_world_id, {"name": world_name, "seed": seed_value, "mode": mode, "time": time_system.serialize() if time_system else {}, "settings": config.duplicate(true)}, world.save_delta(), _player_save())
+    AppState.pending_world_config.clear()
+    Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+func _build_hud() -> void:
+    hud = load("res://scripts/ui/hud.gd").new()
+    add_child(hud)
+    hud.build()
+    if not NetworkManager.player_presence_changed.is_connected(hud.set_players):
+        NetworkManager.player_presence_changed.connect(hud.set_players)
+    hud.set_inventory(player.inventory)
+    if not player.survival.health_changed.is_connected(_on_player_health):
+        player.survival.health_changed.connect(_on_player_health)
+    if not player.survival.died.is_connected(_on_player_died):
+        player.survival.died.connect(_on_player_died)
+    _build_inventory_ui()
+    _update_hud()
+
+func _build_inventory_ui() -> void:
+    var existing:=get_tree().get_first_node_in_group("aethra_inventory_ui")
+    if existing!=null: existing.queue_free()
+    var ui=load("res://scripts/ui/inventory_menu.gd").new()
+    ui.add_to_group("aethra_inventory_ui"); add_child(ui); ui.build(self,player.inventory,player.crafting); ui.visible=false
+
+func _on_player_died() -> void:
+    if player==null or player.death_lock: return
+    player.death_lock=true; Input.mouse_mode=Input.MOUSE_MODE_VISIBLE
+    await get_tree().create_timer(2.0).timeout
+    if player!=null and is_instance_valid(player) and world!=null: player.respawn_at(world.spawn_position)
+
+func _on_inventory_snapshot(snapshot: Array) -> void:
+    if player == null or snapshot.is_empty():
+        return
+    player.inventory.deserialize(snapshot)
+
+func _on_player_health(_health, _max_health) -> void:
+    _update_hud()
+
+func _build_weather_controller() -> void:
+    if weather_controller!=null and is_instance_valid(weather_controller): weather_controller.queue_free()
+    if player==null or time_system==null: return
+    weather_controller=load("res://scripts/world/weather_controller.gd").new()
+    add_child(weather_controller)
+    weather_controller.setup(player,time_system)
+
+func _build_console() -> void:
+    return
+
+func toggle_developer_console() -> void:
+    return
+
+func _update_hud() -> void:
+    if hud == null or player == null:
+        return
+    hud.set_player_stats(player.survival.health, player.survival.hunger, player.survival.stamina, Engine.get_frames_per_second())
+
+func _open_settings(_return_page: String = "home") -> void:
+    if settings_menu != null and is_instance_valid(settings_menu):
+        return
+    if menu:
+        menu.hide()
+    settings_menu = load("res://scripts/ui/settings_menu.gd").new()
+    add_child(settings_menu)
+    settings_menu.build(self)
+    settings_menu.closed.connect(func():
+        settings_menu.queue_free()
+        settings_menu = null
+        if menu:
+            menu.show()
+    )
+
+func _hide_menu() -> void:
+    if menu:
+        menu.hide()
+    menu_visible = false
+
+func _show_menu() -> void:
+    menu_visible = true
+    if menu:
+        menu.show()
+
+func _unhandled_input(event: InputEvent) -> void:
+    if event is InputEventKey and event.pressed:
+        if event.physical_keycode == KEY_F8:
+            return
+        elif event.physical_keycode == KEY_ESCAPE:
+            if player != null:
+                Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+        elif event.physical_keycode == KEY_F11:
+            var mode := DisplayServer.window_get_mode()
+            DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if mode == DisplayServer.WINDOW_MODE_FULLSCREEN else DisplayServer.WINDOW_MODE_FULLSCREEN)
+
+func _process(delta: float) -> void:
+    if fps_overlay:
+        fps_overlay.text = "FPS: %d / %d" % [Engine.get_frames_per_second(), Engine.max_fps]
+    _adaptive_resolution(delta)
+    if world != null and player != null and world.has_method("set_stream_center"):
+        world.set_stream_center(player.global_position)
+        NetworkManager.publish_local_player_state(player.global_position, player.rotation.y, AppState.character_id)
+        autosave_timer -= delta
+        if autosave_timer <= 0.0 and not AppState.current_world_id.is_empty() and not bool(AppState.pending_world_config.get("remote", false)):
+            autosave_timer = 30.0
+            SaveDB.save_world(
+                AppState.current_world_id,
+                {"name": AppState.current_world_name, "seed": AppState.world_seed, "mode": AppState.game_mode, "time": time_system.serialize() if time_system else {}, "settings": AppState.world_settings.duplicate(true)},
+                world.save_delta(),
+                _player_save()
+            )
+
+func request_close() -> void:
+    if world != null and player != null and not AppState.current_world_id.is_empty():
+        SaveDB.save_world(AppState.current_world_id, {"name": AppState.current_world_name, "seed": AppState.world_seed, "mode": AppState.game_mode, "time": time_system.serialize() if time_system else {}, "settings": AppState.world_settings.duplicate(true)}, world.save_delta(), _player_save())
+    _save_window_state()
+    get_tree().quit()
+
+func _notification(what: int) -> void:
+    if what == NOTIFICATION_WM_CLOSE_REQUEST:
+        request_close()
+
+func _player_save() -> Dictionary:
+    if player == null:
+        return {}
+    return {"position": player.position, "health": clampf(player.survival.health,0.0,player.survival.max_health), "hunger": clampf(player.survival.hunger,0.0,20.0), "xp": maxi(0,player.survival.xp), "inventory": player.inventory.serialize()}
