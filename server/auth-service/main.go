@@ -386,7 +386,18 @@ func handleVerify(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "session revoked or expired", 401)
 		return
 	}
-	writeJSON(w, 200, map[string]any{"ok": true, "user_id": fields[0], "username": fields[1], "character": fields[2]})
+	avatarID := 0
+	stmtAvatarSQL := fmt.Sprintf("SELECT avatar_id FROM users WHERE id='%s' LIMIT 1;", sqlSafe(fields[0]))
+	cAvatar := C.CString(stmtAvatarSQL)
+	var avatarStmt *C.sqlite3_stmt
+	if C.sqlite3_prepare_v2(db, cAvatar, -1, &avatarStmt, nil) == C.SQLITE_OK {
+		if C.sqlite3_step(avatarStmt) == C.SQLITE_ROW {
+			avatarID = int(C.sqlite3_column_int(avatarStmt, 0))
+		}
+		C.sqlite3_finalize(avatarStmt)
+	}
+	C.free(unsafe.Pointer(cAvatar))
+	writeJSON(w, 200, map[string]any{"ok": true, "user_id": fields[0], "username": fields[1], "character": fields[2], "avatar_id": avatarID})
 }
 
 func handleLogout(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
