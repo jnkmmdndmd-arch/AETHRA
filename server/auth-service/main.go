@@ -123,12 +123,12 @@ func pbkdf2SHA256(password string, salt []byte, iterations int) []byte {
 }
 
 func signToken(uid, username string, ttl time.Duration) string {
-	return signTokenWithCharacter(uid, username, "ranger", ttl)
+	return signTokenWithCharacter(uid, username, "ranger", 0, ttl)
 }
 
-func signTokenWithCharacter(uid, username, character string, ttl time.Duration) string {
+func signTokenWithCharacter(uid, username, character string, avatarID int, ttl time.Duration) string {
 	exp := time.Now().Add(ttl).Unix()
-	body := fmt.Sprintf("%s|%s|%s|%d", uid, username, character, exp)
+	body := fmt.Sprintf("%s|%s|%s|%d|%d", uid, username, character, avatarID, exp)
 	mac := hmac.New(sha256.New, cfg.Secret)
 	mac.Write([]byte(body))
 	sig := hex.EncodeToString(mac.Sum(nil))
@@ -289,12 +289,12 @@ func handleRegister(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 	hash := pbkdf2SHA256(req.Password, salt, 150000)
 	packed := append(salt, hash...)
 	now := time.Now().Unix()
-	q := fmt.Sprintf("INSERT INTO users(id,username,password_hash,character_id,avatar_id,created_at,updated_at) VALUES('%s','%s',X'%s','%s',%d,%d,%d);", sqlSafe(uid), sqlSafe(req.Username), hex.EncodeToString(packed), sqlSafe(req.Character), req.AvatarID, now, now)
+	q := fmt.Sprintf("INSERT INTO users(id,username,password_hash,character_id,avatar_id,created_at,updated_at) VALUES('%s','%s',X'%s','%s',%d,%d);", sqlSafe(uid), sqlSafe(req.Username), hex.EncodeToString(packed), sqlSafe(req.Character), now, now)
 	if err := sqlExec(db, q); err != nil {
 		http.Error(w, "account already exists or database error", 409)
 		return
 	}
-	token := signTokenWithCharacter(uid, req.Username, req.Character, 24*time.Hour)
+	token := signTokenWithCharacter(uid, req.Username, req.Character, req.AvatarID, 24*time.Hour)
 	if err := recordSession(db, uid, token, time.Now().Add(24*time.Hour).Unix()); err != nil {
 		http.Error(w, "session creation failed", 500)
 		return
@@ -340,7 +340,7 @@ func handleLogin(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid credentials", 401)
 		return
 	}
-	token := signTokenWithCharacter(uid, req.Username, char, 24*time.Hour)
+	token := signTokenWithCharacter(uid, req.Username, char, avatarID, 24*time.Hour)
 	if err := recordSession(db, uid, token, time.Now().Add(24*time.Hour).Unix()); err != nil {
 		http.Error(w, "session creation failed", 500)
 		return
@@ -373,12 +373,12 @@ func handleVerify(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fields := strings.Split(string(body), "|")
-	if len(fields) != 4 {
+	if len(fields) != 5 {
 		http.Error(w, "invalid token", 401)
 		return
 	}
 	var exp int64
-	if _, err := fmt.Sscan(fields[3], &exp); err != nil || time.Now().Unix() > exp {
+	if _, err := fmt.Sscan(fields[4], &exp); err != nil || time.Now().Unix() > exp {
 		http.Error(w, "expired token", 401)
 		return
 	}
@@ -386,7 +386,7 @@ func handleVerify(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "session revoked or expired", 401)
 		return
 	}
-	writeJSON(w, 200, map[string]any{"ok": true, "user_id": fields[0], "username": fields[1], "character": fields[2]})
+	writeJSON(w, 200, map[string]any{"ok": true, "user_id": fields[0], "username": fields[1], "character": fields[2], "avatar_id": atoiSafe(fields[3])})
 }
 
 func handleLogout(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
@@ -412,6 +412,7 @@ func handleLogout(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, map[string]bool{"ok": true})
 }
 
+func atoiSafe(v string) int { var n int; _, _ = fmt.Sscan(v, &n); if n < 0 || n > 29 { return 0 }; return n }
 func sqlSafe(v string) string { return strings.ReplaceAll(v, "'", "''") }
 func getenv(k, d string) string {
 	if v := os.Getenv(k); v != "" {
