@@ -204,7 +204,6 @@ func _build_sidebar(parent: PanelContainer) -> void:
         ["worlds", "world", "العوالم"],
         ["store", "store", "المتجر"],
         ["settings", "settings", "الإعدادات"],
-        ["developer", "developer", "أدوات المطور"],
     ]
     for item in items:
         var b := _nav_button(item[1], item[2])
@@ -354,7 +353,6 @@ func _show_page(page: String) -> void:
         "servers": _page_servers()
         "worlds": _page_worlds()
         "store": _page_store()
-        "developer": _page_developer()
         "profile": _page_profile()
     _update_nav_state()
 
@@ -465,17 +463,20 @@ func _build_auth_gate() -> void:
     box.add_theme_constant_override("separation", 10)
     margin.add_child(box)
     _label(box, "تسجيل الدخول إلى AETHRA", 27, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
-    _label(box, "الحساب يحسن تجربة اللعب الجماعي، ويمكنك متابعة اللعب محليًا دون حساب.", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "حساب حقيقي محفوظ على هذا الجهاز، ومع توفر خدمة الحساب البعيدة تُستخدم تلقائيًا.", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
     auth_server = LineEdit.new()
     auth_server.text = str(Settings.get_value("auth_server_url", "http://127.0.0.1:8090"))
-    auth_server.placeholder_text = "عنوان خدمة المصادقة"
-    box.add_child(auth_server)
+    auth_server.visible = false
     auth_user = LineEdit.new()
     auth_user.placeholder_text = "اسم المستخدم"
+    auth_user.alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    auth_user.custom_minimum_size = Vector2(0, 44)
     box.add_child(auth_user)
     auth_password = LineEdit.new()
     auth_password.placeholder_text = "كلمة المرور"
     auth_password.secret = true
+    auth_password.alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    auth_password.custom_minimum_size = Vector2(0, 44)
     box.add_child(auth_password)
     var character_select := OptionButton.new()
     character_select.name = "CharacterSelect"
@@ -836,11 +837,13 @@ func _page_profile() -> void:
 
     var save := _primary_button("حفظ الملف الشخصي", Vector2(220, 46))
     save.pressed.connect(func():
-        AppState.save_profile(name_field.text, AppState.avatar_id)
         if AppState.is_authenticated:
-            var auth_node = get_parent().get("auth") if get_parent() != null else null
+            var root = get_parent()
+            var auth_node = root.get("auth") if root != null else null
             if auth_node != null:
-                auth_node.update_profile(AppState.auth_token, AppState.avatar_id)
+                auth_node.update_profile(AppState.auth_token, name_field.text, AppState.avatar_id)
+        else:
+            AppState.save_profile(name_field.text, AppState.avatar_id)
         _show_page("profile")
     )
     root.add_child(save)
