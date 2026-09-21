@@ -257,6 +257,19 @@ func main() {
 	}
 }
 
+func validUsername(value string) bool {
+	if len(value) < 3 || len(value) > 24 {
+		return false
+	}
+	for _, ch := range value {
+		if (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '_' {
+			continue
+		}
+		return false
+	}
+	return true
+}
+
 func handleRegister(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "method not allowed", 405)
@@ -269,7 +282,7 @@ func handleRegister(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	req.Username = strings.TrimSpace(req.Username)
-	if len(req.Username) < 3 || len(req.Username) > 24 || len(req.Password) < 8 || len(req.Password) > 128 {
+	if !validUsername(req.Username) || len(req.Password) < 8 || len(req.Password) > 128 {
 		http.Error(w, "account policy failed", 400)
 		return
 	}
@@ -341,13 +354,14 @@ func handleLogin(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid credentials", 401)
 		return
 	}
-	token := signTokenWithCharacter(uid, req.Username, char, avatarID, 24*time.Hour)
+	normalizedUsername := strings.TrimSpace(req.Username)
+	token := signTokenWithCharacter(uid, normalizedUsername, char, avatarID, 24*time.Hour)
 	if err := recordSession(db, uid, token, time.Now().Add(24*time.Hour).Unix()); err != nil {
 		http.Error(w, "session creation failed", 500)
 		return
 	}
 	recordAudit(db, uid, "login", r.RemoteAddr, nil)
-	writeJSON(w, 200, authResp{UserID: uid, Username: req.Username, Character: char, AvatarID: avatarID, Token: token})
+	writeJSON(w, 200, authResp{UserID: uid, Username: normalizedUsername, Character: char, AvatarID: avatarID, Token: token})
 }
 
 func handleVerify(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
@@ -447,7 +461,7 @@ func handleProfile(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 	if username == "" {
 		username = fields[1]
 	}
-	if len(username) < 3 || len(username) > 24 {
+	if !validUsername(username) {
 		http.Error(w, "invalid username", 400)
 		return
 	}
