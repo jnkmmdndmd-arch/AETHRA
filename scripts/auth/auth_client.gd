@@ -20,8 +20,8 @@ func configure(url: String) -> void:
 func login(username: String, password: String) -> void:
     _post("/v1/auth/login", {"username": username, "password": password}, "login")
 
-func register(username: String, password: String, character_id: String) -> void:
-    _post("/v1/auth/register", {"username": username, "password": password, "character": character_id}, "register")
+func register(username: String, password: String, character_id: String, avatar_id: int = 0) -> void:
+    _post("/v1/auth/register", {"username": username, "password": password, "character": character_id, "avatar_id": avatar_id}, "register")
 
 func restore_session(token: String) -> void:
     if base_url.is_empty() or token.is_empty():
