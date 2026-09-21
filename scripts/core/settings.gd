@@ -30,7 +30,6 @@ const DEFAULT_CONTROLS := {
     "mine": "MOUSE1",
     "place": "MOUSE2",
     "attack": "F",
-    "attack": "F",
     "inventory": "E",
     "pause": "ESC",
 }
