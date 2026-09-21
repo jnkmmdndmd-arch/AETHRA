@@ -16,6 +16,25 @@ const LEAVES_ID := 7
 const WATER_ID := 15
 const BEDROCK_ID := 17
 const SNOW_ID := 28
+const SANDSTONE_ID := 29
+const CACTUS_ID := 32
+const DRY_GRASS_ID := 33
+const ACACIA_LOG_ID := 34
+const ACACIA_LEAVES_ID := 35
+const PALM_LOG_ID := 36
+const PALM_LEAVES_ID := 37
+const YELLOW_FLOWER_ID := 38
+const BLUE_FLOWER_ID := 39
+const MUSHROOM_ID := 40
+const VINE_ID := 41
+const ICE_ID := 42
+const COAL_ORE_ID := 52
+const GOLD_ORE_ID := 53
+const EMERALD_ORE_ID := 54
+const DIAMOND_ORE_ID := 55
+const OBSIDIAN_ID := 44
+const BASALT_ID := 45
+const CRYSTAL_BLOCK_ID := 59
 
 var seed_value: int
 var continental: FastNoiseLite
@@ -23,6 +42,7 @@ var detail: FastNoiseLite
 var caves: FastNoiseLite
 var ore: FastNoiseLite
 var structures_enabled := true
+var forced_biome := ""
 
 func _init(world_seed: int) -> void:
     seed_value = world_seed
@@ -42,8 +62,9 @@ func _init(world_seed: int) -> void:
     ore.seed = seed_value ^ 0x7788AA11
     ore.frequency = 0.07
 
-func configure(enable_structures: bool = true) -> void:
+func configure(enable_structures: bool = true, biome_override: String = "") -> void:
     structures_enabled = enable_structures
+    forced_biome = biome_override.to_lower()
 
 func terrain_height(x: int, z: int) -> int:
     var macro: float = continental.get_noise_2d(x, z)
@@ -52,6 +73,8 @@ func terrain_height(x: int, z: int) -> int:
     return clampi(h, 4, WORLD_HEIGHT - 8)
 
 func biome_at(x: int, z: int) -> String:
+    if forced_biome in ["arid", "frost", "grove", "meadow"]:
+        return forced_biome
     var temp: float = continental.get_noise_2d(x + 10000, z + 10000)
     var moisture: float = continental.get_noise_2d(x - 16000, z - 16000)
     if temp > 0.45 and moisture < -0.1:
@@ -89,7 +112,7 @@ func block_at(x: int, y: int, z: int) -> int:
             return SAND_ID
         return SOIL_ID
     if y >= surface - 3:
-        return SAND_ID if biome == "arid" else SOIL_ID
+        return SANDSTONE_ID if biome == "arid" and y < surface - 1 else SAND_ID if biome == "arid" else SOIL_ID
     return _subsurface_resource(x, y, z)
 
 func generate_chunk(cx: int, cz: int) -> PackedByteArray:
@@ -116,12 +139,8 @@ func generate_chunk(cx: int, cz: int) -> PackedByteArray:
                 elif y > surface:
                     if y <= SEA_LEVEL:
                         id = WATER_ID
-                    elif has_tree and y <= tree_top and wx % 2 == 0 and wz % 2 == 0:
-                        id = LOG_ID
-                    elif has_tree and y >= tree_top - 2 and y <= tree_top + 1:
-                        id = LEAVES_ID
                     else:
-                        id = AIR_ID
+                        id = _tree_block(wx, y, wz, surface) if structures_enabled else AIR_ID
                 elif y < surface - 3 and y > 4 and _is_cave(wx, y, wz):
                     id = AIR_ID
                 elif y == surface:
@@ -148,21 +167,63 @@ func _is_cave(x: int, y: int, z: int) -> bool:
 
 func _subsurface_resource(x: int, y: int, z: int) -> int:
     var n: float = ore.get_noise_3d(x, y, z)
-    if y < 40 and y > 8 and n > 0.71:
+    if y < 48 and y > 8 and n > 0.68:
+        return COAL_ORE_ID
+    if y < 40 and y > 8 and n > 0.72:
         return COPPER_ORE_ID
-    if y < 30 and y > 5 and n > 0.79:
+    if y < 34 and y > 6 and n > 0.78:
         return IRON_ORE_ID
-    if y < 18 and n > 0.88:
-        return CRYSTAL_ORE_ID
-    return STONE_ID
+    if y < 28 and y > 6 and n > 0.84:
+        return GOLD_ORE_ID
+    if y < 24 and y > 5 and n > 0.88:
+        return EMERALD_ORE_ID
+    if y < 18 and n > 0.91:
+        return DIAMOND_ORE_ID
+    if y < 14 and n > 0.88:
+        return CRYSTAL_BLOCK_ID
+    if y < 10 and n > 0.92:
+        return OBSIDIAN_ID
+    return BASALT_ID if y < 12 and n > 0.55 else STONE_ID
 
 func _tree_block(x: int, y: int, z: int, surface: int) -> int:
     var tree_key := posmod(hash(Vector3i(x, surface, z)), 97)
-    if tree_key > 4:
+    var biome := biome_at(x, z)
+
+    if biome == "arid":
+        if tree_key <= 1:
+            var cactus_height := 3 + posmod(abs(x * 7 + z * 11), 2)
+            if y > surface and y <= surface + cactus_height:
+                return CACTUS_ID
+        if tree_key >= 2 and tree_key <= 3:
+            var palm_top := surface + 5
+            if y > surface and y <= palm_top and x % 2 == 0 and z % 2 == 0:
+                return PALM_LOG_ID
+            if y >= palm_top - 2 and y <= palm_top + 1:
+                return PALM_LEAVES_ID
+        if y == surface + 1 and tree_key == 4:
+            return DRY_GRASS_ID
         return AIR_ID
+
+    if tree_key > 4:
+        if biome == "meadow" and y == surface + 1:
+            var plant_key := posmod(hash(Vector3i(x, surface + 101, z)), 19)
+            if plant_key == 0:
+                return YELLOW_FLOWER_ID
+            if plant_key == 1:
+                return BLUE_FLOWER_ID
+        if biome == "grove" and y == surface + 1:
+            var grove_key := posmod(hash(Vector3i(x, surface + 203, z)), 23)
+            if grove_key == 0:
+                return MUSHROOM_ID
+            if grove_key == 1:
+                return VINE_ID
+        if biome == "frost" and y == surface + 1 and tree_key == 5:
+            return ICE_ID
+        return AIR_ID
+
     var top := surface + 4 + posmod(x * 13 + z * 7, 3)
     if y > surface and y <= top and x % 2 == 0 and z % 2 == 0:
-        return LOG_ID
+        return ACACIA_LOG_ID if biome == "meadow" and tree_key <= 2 else LOG_ID
     if y >= top - 2 and y <= top + 1:
-        return LEAVES_ID
+        return ACACIA_LEAVES_ID if biome == "meadow" and tree_key <= 2 else LEAVES_ID
     return AIR_ID
