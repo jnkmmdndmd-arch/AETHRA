@@ -103,6 +103,7 @@ func _apply_graphics_profile() -> void:
             base_scale = 0.75
 
     performance_scale = base_scale
+    Engine.max_fps = int({"low": 60, "medium": 90, "high": 120, "ultra": 144}.get(quality, 60))
     performance_sample_time = 0.0
     performance_frame_sum = 0.0
     performance_frame_count = 0
@@ -307,6 +308,8 @@ func _start_world(seed_value: int, world_name: String, mode: String) -> void:
     world = load("res://scripts/world/voxel_world.gd").new()
     add_child(world)
     world.initialize(seed_value)
+    if world.has_method("is_ready_for_spawn") and not world.is_ready_for_spawn():
+        await world.world_ready
     var config := AppState.pending_world_config.duplicate(true)
     AppState.world_settings = config.duplicate(true)
     if world.has_method("configure"):
