@@ -221,15 +221,14 @@ func _build_sidebar(parent: PanelContainer) -> void:
     user_row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     user_row.layout_direction = Control.LAYOUT_DIRECTION_RTL
     user.add_child(user_row)
-    var avatar = load("res://scripts/ui/vector_icon.gd").new()
-    avatar.icon_name = "person"
-    avatar.icon_color = ACCENT_BRIGHT
-    avatar.custom_minimum_size = Vector2(30, 30)
+    var avatar = load("res://scripts/ui/avatar_renderer.gd").new()
+    avatar.avatar_index = AppState.avatar_id
+    avatar.custom_minimum_size = Vector2(38, 38)
     user_row.add_child(avatar)
     var user_info := VBoxContainer.new()
     user_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     user_row.add_child(user_info)
-    _label(user_info, AppState.player_name, 14, TEXT)
+    _label(user_info, AppState.get_display_name(), 14, TEXT)
     _label(user_info, "مسجل دخول" if AppState.is_authenticated else "وضع محلي", 10, GREEN if AppState.is_authenticated else MUTED)
 
     var logout := _nav_button("logout", "تسجيل الخروج")
@@ -295,7 +294,7 @@ func _build_social(parent: PanelContainer) -> void:
     var profile_text := VBoxContainer.new()
     profile_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     profile_row.add_child(profile_text)
-    _label(profile_text, AppState.player_name, 14, TEXT)
+    _label(profile_text, AppState.get_display_name(), 14, TEXT)
     _label(profile_text, "متصل" if AppState.is_authenticated else "وضع محلي", 10, GREEN if AppState.is_authenticated else MUTED)
 
     var heading := HBoxContainer.new()
@@ -519,7 +518,7 @@ func _submit_auth() -> void:
     auth_status.add_theme_color_override("font_color", YELLOW)
     var character := str(characters[character_index].id)
     if auth_register_mode:
-        auth_node.register(auth_user.text.strip_edges(), auth_password.text, character)
+        auth_node.register(auth_user.text.strip_edges(), auth_password.text, character, AppState.avatar_id)
     else:
         auth_node.login(auth_user.text.strip_edges(), auth_password.text)
 
@@ -755,19 +754,82 @@ func _page_store() -> void:
     _label(box, "لا توجد مشتريات وهمية أو أسعار غير مرتبطة بخدمة حقيقية. عند إضافة خدمة التجارة سيتم ربط هذه الصفحة بالبيانات الفعلية.", 12, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
 
 func _page_profile() -> void:
-    _section_title(content, "الملف الشخصي", "بيانات الجلسة الحالية")
+    _section_title(content, "الملف الشخصي", "بيانات الحساب والصورة المحفوظة")
     var panel := _panel(PANEL, 22, Color(0.22, 0.7, 1.0, 0.2))
     content.add_child(panel)
-    var box := VBoxContainer.new()
-    box.alignment = BoxContainer.ALIGNMENT_CENTER
-    box.add_theme_constant_override("separation", 8)
-    panel.add_child(box)
-    _label(box, AppState.player_name, 28, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
-    _label(box, "الشخصية: %s" % _character_label(AppState.character_id), 12, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
-    _label(box, "الحساب: %s" % ("موثّق" if AppState.is_authenticated else "محلي / ضيف"), 11, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
-    _label(box, "العالم: %s" % (AppState.current_world_name if not AppState.current_world_name.is_empty() else "غير محدد"), 11, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
-    _label(box, "هوية اللاعب لا تظهر في الواجهة إلا عند توفر جلسة مصادقة فعلية.", 9, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    var root := VBoxContainer.new()
+    root.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    root.add_theme_constant_override("separation", 12)
+    panel.add_child(root)
 
+    var identity := HBoxContainer.new()
+    identity.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    identity.add_theme_constant_override("separation", 14)
+    root.add_child(identity)
+
+    var preview = load("res://scripts/ui/avatar_renderer.gd").new()
+    preview.avatar_index = AppState.avatar_id
+    preview.custom_minimum_size = Vector2(96, 96)
+    identity.add_child(preview)
+
+    var info := VBoxContainer.new()
+    info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    identity.add_child(info)
+    _label(info, AppState.get_display_name(), 24, TEXT)
+    _label(info, "الحساب: %s" % ("موثّق" if AppState.is_authenticated else "محلي"), 11, GREEN if AppState.is_authenticated else MUTED)
+    _label(info, "الشخصية: %s" % _character_label(AppState.character_id), 11, ACCENT_BRIGHT)
+
+    var name_field := LineEdit.new()
+    name_field.text = AppState.get_display_name()
+    name_field.placeholder_text = "اسم العرض"
+    name_field.editable = not AppState.is_authenticated
+    name_field.custom_minimum_size = Vector2(0, 40)
+    name_field.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    root.add_child(name_field)
+
+    _label(root, "اختر صورة كرتونية", 16, TEXT)
+    var grid := GridContainer.new()
+    grid.columns = 5
+    grid.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    grid.add_theme_constant_override("h_separation", 10)
+    grid.add_theme_constant_override("v_separation", 10)
+    grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    root.add_child(grid)
+
+    var avatar_buttons: Array[Button] = []
+    for index in 30:
+        var button := Button.new()
+        button.toggle_mode = true
+        button.button_pressed = index == AppState.avatar_id
+        button.custom_minimum_size = Vector2(96, 108)
+        var avatar = load("res://scripts/ui/avatar_renderer.gd").new()
+        avatar.avatar_index = index
+        avatar.custom_minimum_size = Vector2(72, 72)
+        button.add_child(avatar)
+        var text := Label.new()
+        text.text = "الصورة %02d" % [index + 1]
+        text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        text.layout_direction = Control.LAYOUT_DIRECTION_RTL
+        text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        button.add_child(text)
+        button.pressed.connect(func(selected_index := index):
+            AppState.avatar_id = selected_index
+            for peer in avatar_buttons:
+                peer.button_pressed = false
+            button.button_pressed = true
+            preview.avatar_index = selected_index
+            preview.queue_redraw()
+        )
+        grid.add_child(button)
+        avatar_buttons.append(button)
+
+    var save := _primary_button("حفظ الملف الشخصي", Vector2(220, 46))
+    save.pressed.connect(func():
+        AppState.save_profile(name_field.text, AppState.avatar_id)
+        _show_page("profile")
+    )
+    root.add_child(save)
+    
 func _page_developer() -> void:
     _section_title(content, "أدوات المطور", "مقاييس تشغيل فعلية فقط")
     var grid := GridContainer.new()
