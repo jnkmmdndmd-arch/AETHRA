@@ -96,6 +96,7 @@ func _build_shell() -> void:
     add_child(root)
 
     var columns := HBoxContainer.new()
+    columns.layout_direction = Control.LAYOUT_DIRECTION_LTR
     columns.add_theme_constant_override("separation", 14)
     root.add_child(columns)
 
@@ -239,6 +240,7 @@ func _build_sidebar(parent: PanelContainer) -> void:
 func _build_header(parent: PanelContainer) -> void:
     var row := HBoxContainer.new()
     row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    row.layout_direction = Control.LAYOUT_DIRECTION_LTR
     row.add_theme_constant_override("separation", 10)
     parent.add_child(row)
     search_line = LineEdit.new()
@@ -247,6 +249,7 @@ func _build_header(parent: PanelContainer) -> void:
     search_line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     search_line.custom_minimum_size = Vector2(0, 42)
     search_line.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    search_line.alignment = HORIZONTAL_ALIGNMENT_RIGHT
     row.add_child(search_line)
     search_line.text_changed.connect(_search)
 
