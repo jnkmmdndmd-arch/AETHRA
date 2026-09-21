@@ -53,3 +53,12 @@ The project is verified for editor import, headless source validation, and clean
 - Authentication requests use independent HTTPRequest instances, and saved sessions are revalidated against the auth service on startup.
 - Historical Windows artifact hashes remain historical and are not associated with the current commit.
 - Stale delivery/verification report files and the unused `assets/icon.svg` vector asset were removed from the repository; required Godot metadata, source, server, tests, assets, and engineering documentation remain.
+
+
+## 2026-09-21 low-end performance pass
+- Reduced the initial world area from 25 chunks to 9 and changed streaming from a square radius to a circular radius.
+- Mesh rebuilds are budgeted across frames; collision generation is separated and limited to nearby chunks.
+- Cached block solidity/colors during chunk meshing to remove repeated registry lookups.
+- Optimized terrain generation to calculate surface/biome once per column instead of once per block.
+- Added real 3D resolution scaling and adaptive runtime scaling for low/medium profiles while keeping the 2D UI at native window resolution.
+- Lowered low-end defaults and creature counts to reduce CPU/physics load.

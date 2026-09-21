@@ -13,6 +13,14 @@ var menu_visible := true
 var autosave_timer := 30.0
 var remote_players_root: Node3D
 var remote_player_nodes: Dictionary = {}
+var world_environment: Environment
+var sun_light: DirectionalLight3D
+var performance_scale := 1.0
+var performance_sample_time := 0.0
+var performance_frame_sum := 0.0
+var performance_frame_count := 0
+var performance_low_time := 0.0
+var performance_high_time := 0.0
 
 func _ready() -> void:
     randomize()
@@ -20,6 +28,9 @@ func _ready() -> void:
     get_window().min_size = Vector2i(1120, 680)
     _restore_window_state()
     _build_lighting()
+    _apply_graphics_profile()
+    if not Settings.settings_changed.is_connected(_apply_graphics_profile):
+        Settings.settings_changed.connect(_apply_graphics_profile)
     _build_auth()
     _build_menu()
     _build_remote_players_root()
@@ -52,7 +63,8 @@ func _save_window_state() -> void:
 
 func _build_lighting() -> void:
     var env := WorldEnvironment.new()
-    var environment := Environment.new()
+    world_environment = Environment.new()
+    var environment: Environment = world_environment
     environment.background_mode = Environment.BG_SKY
     var sky := Sky.new()
     var sky_material := PhysicalSkyMaterial.new()
@@ -67,15 +79,84 @@ func _build_lighting() -> void:
     environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
     env.environment = environment
     add_child(env)
-    var sun := DirectionalLight3D.new()
-    sun.rotation_degrees = Vector3(-55,-35,0)
-    sun.light_energy = 1.15
-    sun.shadow_enabled = true
-    add_child(sun)
+    sun_light = DirectionalLight3D.new()
+    sun_light.rotation_degrees = Vector3(-55,-35,0)
+    sun_light.light_energy = 1.15
+    sun_light.shadow_enabled = false
+    add_child(sun_light)
     time_system = load("res://scripts/world/world_time.gd").new()
     time_system.name = "WorldTime"
     add_child(time_system)
-    time_system.setup(sun, environment)
+    time_system.setup(sun_light, environment)
+
+func _apply_graphics_profile() -> void:
+    if world_environment == null or sun_light == null:
+        return
+    var quality := str(Settings.get_value("graphics_quality", "low"))
+    var base_scale := 0.75
+    match quality:
+        "medium":
+            base_scale = 0.85
+        "high", "ultra":
+            base_scale = 1.0
+        _:
+            base_scale = 0.75
+
+    performance_scale = base_scale
+    performance_sample_time = 0.0
+    performance_frame_sum = 0.0
+    performance_frame_count = 0
+    performance_low_time = 0.0
+    performance_high_time = 0.0
+
+    var viewport := get_viewport()
+    viewport.scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR
+    viewport.scaling_3d_scale = performance_scale
+    sun_light.shadow_enabled = quality in ["high", "ultra"]
+    world_environment.background_mode = Environment.BG_COLOR if quality == "low" else Environment.BG_SKY
+    world_environment.background_color = Color("#17314b")
+    world_environment.tonemap_mode = Environment.TONE_MAPPER_LINEAR
+    world_environment.fog_enabled = quality != "low"
+
+func _adaptive_resolution(delta: float) -> void:
+    if world == null:
+        return
+    var quality := str(Settings.get_value("graphics_quality", "low"))
+    if quality not in ["low", "medium"]:
+        return
+
+    performance_sample_time += delta
+    performance_frame_sum += 1.0 / maxf(delta, 0.001)
+    performance_frame_count += 1
+    if performance_sample_time < 0.75 or performance_frame_count < 8:
+        return
+
+    var average_fps := performance_frame_sum / performance_frame_count
+    var min_scale := 0.60 if quality == "low" else 0.70
+    var max_scale := 0.85 if quality == "low" else 0.95
+
+    if average_fps < 48.0:
+        performance_low_time += performance_sample_time
+        performance_high_time = 0.0
+    elif average_fps > 60.0:
+        performance_high_time += performance_sample_time
+        performance_low_time = 0.0
+    else:
+        performance_low_time = maxf(0.0, performance_low_time - 0.25)
+        performance_high_time = maxf(0.0, performance_high_time - 0.25)
+
+    if performance_low_time >= 1.5:
+        performance_scale = maxf(min_scale, performance_scale - 0.05)
+        get_viewport().scaling_3d_scale = performance_scale
+        performance_low_time = 0.0
+    elif performance_high_time >= 2.0:
+        performance_scale = minf(max_scale, performance_scale + 0.05)
+        get_viewport().scaling_3d_scale = performance_scale
+        performance_high_time = 0.0
+
+    performance_sample_time = 0.0
+    performance_frame_sum = 0.0
+    performance_frame_count = 0
 
 func _build_remote_players_root() -> void:
     remote_players_root = Node3D.new()
@@ -361,6 +442,7 @@ func _unhandled_input(event: InputEvent) -> void:
             DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if mode == DisplayServer.WINDOW_MODE_FULLSCREEN else DisplayServer.WINDOW_MODE_FULLSCREEN)
 
 func _process(delta: float) -> void:
+    _adaptive_resolution(delta)
     if world != null and player != null and world.has_method("set_stream_center"):
         world.set_stream_center(player.global_position)
         NetworkManager.publish_local_player_state(player.global_position, player.rotation.y, AppState.character_id)

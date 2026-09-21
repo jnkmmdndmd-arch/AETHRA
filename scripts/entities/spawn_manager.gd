@@ -3,15 +3,22 @@ extends Node3D
 var world
 var enabled := true
 var spawn_timer := 0.0
-var max_creatures := 24
+var max_creatures := 8
 var kinds := ["goat", "deer", "boar", "fox", "rabbit", "wolf", "brute", "spider", "slime", "wraith", "drake", "beetle", "moth", "firefly"]
 
 func setup(voxel_world, enable_creatures: bool = true) -> void:
     world = voxel_world
     enabled = enable_creatures
+    var quality := str(Settings.get_value("graphics_quality", "low"))
+    max_creatures = int({
+        "low": 6,
+        "medium": 10,
+        "high": 16,
+        "ultra": 20,
+    }.get(quality, 6))
     if not enabled:
         return
-    for i in 8:
+    for i in mini(4, max_creatures):
         spawn_creature(kinds[i % kinds.size()])
 
 func _process(delta: float) -> void:

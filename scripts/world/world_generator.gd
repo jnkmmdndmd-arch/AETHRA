@@ -4,38 +4,32 @@ const CHUNK_SIZE := 16
 const WORLD_HEIGHT := 96
 const SEA_LEVEL := 34
 const VERSION := 1
+const AIR_ID := 0
+const SOIL_ID := 1
+const STONE_ID := 2
+const SAND_ID := 3
+const COPPER_ORE_ID := 11
+const IRON_ORE_ID := 12
+const CRYSTAL_ORE_ID := 13
+const LOG_ID := 6
+const LEAVES_ID := 7
+const WATER_ID := 15
+const BEDROCK_ID := 17
+const SNOW_ID := 28
 
 var seed_value: int
-var continental := FastNoiseLite.new()
-var detail := FastNoiseLite.new()
-var caves := FastNoiseLite.new()
-var ore := FastNoiseLite.new()
+var continental: FastNoiseLite
+var detail: FastNoiseLite
+var caves: FastNoiseLite
+var ore: FastNoiseLite
 var structures_enabled := true
-
-func _fallback_block_ids() -> Dictionary:
-    return {
-        "AIR": 0,
-        "BEDROCK": 17,
-        "WATER": 15,
-        "SAND": 3,
-        "SNOW": 28,
-        "SOIL": 1,
-        "COPPER_ORE": 11,
-        "IRON_ORE": 12,
-        "CRYSTAL_ORE": 13,
-        "STONE": 2,
-        "LOG": 6,
-        "LEAVES": 7
-    }
-
-func _block_id(name: String) -> int:
-    var fallback := _fallback_block_ids()
-    if fallback.has(name):
-        return int(fallback.get(name, 0))
-    return 0
 
 func _init(world_seed: int) -> void:
     seed_value = world_seed
+    continental = FastNoiseLite.new()
+    detail = FastNoiseLite.new()
+    caves = FastNoiseLite.new()
+    ore = FastNoiseLite.new()
     continental.seed = seed_value
     continental.frequency = 0.0025
     continental.fractal_octaves = 5
@@ -52,14 +46,14 @@ func configure(enable_structures: bool = true) -> void:
     structures_enabled = enable_structures
 
 func terrain_height(x: int, z: int) -> int:
-    var macro := continental.get_noise_2d(x, z)
-    var detail_v := detail.get_noise_2d(x, z)
-    var h := SEA_LEVEL + int(macro * 22.0 + detail_v * 7.0)
+    var macro: float = continental.get_noise_2d(x, z)
+    var detail_v: float = detail.get_noise_2d(x, z)
+    var h: int = SEA_LEVEL + int(macro * 22.0 + detail_v * 7.0)
     return clampi(h, 4, WORLD_HEIGHT - 8)
 
 func biome_at(x: int, z: int) -> String:
-    var temp := continental.get_noise_2d(x + 10000, z + 10000)
-    var moisture := continental.get_noise_2d(x - 16000, z - 16000)
+    var temp: float = continental.get_noise_2d(x + 10000, z + 10000)
+    var moisture: float = continental.get_noise_2d(x - 16000, z - 16000)
     if temp > 0.45 and moisture < -0.1:
         return "arid"
     if temp < -0.45:
@@ -69,78 +63,106 @@ func biome_at(x: int, z: int) -> String:
     return "meadow"
 
 func block_at(x: int, y: int, z: int) -> int:
-    var bedrock_id := _block_id("BEDROCK")
-    var air_id := _block_id("AIR")
-    var water_id := _block_id("WATER")
-    var sand_id := _block_id("SAND")
-    var snow_id := _block_id("SNOW")
-    var soil_id := _block_id("SOIL")
     if y < 0:
-        return bedrock_id
+        return BEDROCK_ID
     if y >= WORLD_HEIGHT:
-        return air_id
+        return AIR_ID
     if y == 0:
-        return bedrock_id
-    var surface := terrain_height(x, z)
-    if _is_cave(x, y, z) and y > 4 and y < surface - 3:
-        return air_id
+        return BEDROCK_ID
+
+    var surface: int = terrain_height(x, z)
+    if y < surface - 3 and y > 4 and _is_cave(x, y, z):
+        return AIR_ID
+
     if y > surface:
         if y <= SEA_LEVEL:
-            return water_id
-        return _tree_block(x, y, z, surface) if structures_enabled else air_id
-    var biome := biome_at(x, z)
+            return WATER_ID
+        return _tree_block(x, y, z, surface) if structures_enabled else AIR_ID
+
+    var biome: String = biome_at(x, z)
     if y == surface:
         if surface <= SEA_LEVEL + 1:
-            return sand_id
+            return SAND_ID
         if biome == "frost":
-            return snow_id
+            return SNOW_ID
         if biome == "arid":
-            return sand_id
-        return soil_id
+            return SAND_ID
+        return SOIL_ID
     if y >= surface - 3:
-        return sand_id if biome == "arid" else soil_id
+        return SAND_ID if biome == "arid" else SOIL_ID
     return _subsurface_resource(x, y, z)
 
 func generate_chunk(cx: int, cz: int) -> PackedByteArray:
     var data := PackedByteArray()
     data.resize(CHUNK_SIZE * CHUNK_SIZE * WORLD_HEIGHT)
     var i := 0
+    var base_x := cx * CHUNK_SIZE
+    var base_z := cz * CHUNK_SIZE
+
     for lx in CHUNK_SIZE:
+        var wx := base_x + lx
         for lz in CHUNK_SIZE:
+            var wz := base_z + lz
+            var surface: int = terrain_height(wx, wz)
+            var biome: String = biome_at(wx, wz)
+            var tree_key := posmod(hash(Vector3i(wx, surface, wz)), 97)
+            var has_tree := structures_enabled and tree_key <= 4
+            var tree_top := surface + 4 + posmod(wx * 13 + wz * 7, 3)
+
             for y in WORLD_HEIGHT:
-                data[i] = block_at(cx * CHUNK_SIZE + lx, y, cz * CHUNK_SIZE + lz)
+                var id: int
+                if y == 0:
+                    id = BEDROCK_ID
+                elif y > surface:
+                    if y <= SEA_LEVEL:
+                        id = WATER_ID
+                    elif has_tree and y <= tree_top and wx % 2 == 0 and wz % 2 == 0:
+                        id = LOG_ID
+                    elif has_tree and y >= tree_top - 2 and y <= tree_top + 1:
+                        id = LEAVES_ID
+                    else:
+                        id = AIR_ID
+                elif y < surface - 3 and y > 4 and _is_cave(wx, y, wz):
+                    id = AIR_ID
+                elif y == surface:
+                    if surface <= SEA_LEVEL + 1:
+                        id = SAND_ID
+                    elif biome == "frost":
+                        id = SNOW_ID
+                    elif biome == "arid":
+                        id = SAND_ID
+                    else:
+                        id = SOIL_ID
+                elif y >= surface - 3:
+                    id = SAND_ID if biome == "arid" else SOIL_ID
+                else:
+                    id = _subsurface_resource(wx, y, wz)
+                data[i] = id
                 i += 1
     return data
 
 func _is_cave(x: int, y: int, z: int) -> bool:
-    var n := caves.get_noise_3d(x, y * 1.08, z)
+    var n: float = caves.get_noise_3d(x, y * 1.08, z)
     var vertical := absf(float(y - 42) / 40.0)
     return n > 0.58 and vertical < 0.9
 
 func _subsurface_resource(x: int, y: int, z: int) -> int:
-    var copper := _block_id("COPPER_ORE")
-    var iron := _block_id("IRON_ORE")
-    var crystal := _block_id("CRYSTAL_ORE")
-    var stone := _block_id("STONE")
-    var n := ore.get_noise_3d(x, y, z)
+    var n: float = ore.get_noise_3d(x, y, z)
     if y < 40 and y > 8 and n > 0.71:
-        return copper
+        return COPPER_ORE_ID
     if y < 30 and y > 5 and n > 0.79:
-        return iron
+        return IRON_ORE_ID
     if y < 18 and n > 0.88:
-        return crystal
-    return stone
+        return CRYSTAL_ORE_ID
+    return STONE_ID
 
 func _tree_block(x: int, y: int, z: int, surface: int) -> int:
-    var air_id := _block_id("AIR")
-    var log_id := _block_id("LOG")
-    var leaves_id := _block_id("LEAVES")
-    var trunk_key := posmod(hash(Vector3i(x, surface, z)), 97)
-    if trunk_key != 0 and trunk_key > 4:
-        return air_id
+    var tree_key := posmod(hash(Vector3i(x, surface, z)), 97)
+    if tree_key > 4:
+        return AIR_ID
     var top := surface + 4 + posmod(x * 13 + z * 7, 3)
     if y > surface and y <= top and x % 2 == 0 and z % 2 == 0:
-        return log_id
+        return LOG_ID
     if y >= top - 2 and y <= top + 1:
-        return leaves_id
-    return air_id
+        return LEAVES_ID
+    return AIR_ID

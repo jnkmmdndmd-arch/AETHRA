@@ -4,15 +4,15 @@ signal settings_changed
 
 const PATH := "user://aethra_settings.json"
 const DEFAULTS := {
-    "graphics_quality": "medium",
+    "graphics_quality": "low",
     "fov": 75.0,
     "mouse_sensitivity": 0.15,
     "invert_y": false,
     "master_volume": 0.8,
     "music_volume": 0.5,
     "sfx_volume": 0.85,
-    "render_distance": 7,
-    "simulation_distance": 5,
+    "render_distance": 4,
+    "simulation_distance": 3,
     "first_person": true,
     "window_width": 1366,
     "window_height": 768,
