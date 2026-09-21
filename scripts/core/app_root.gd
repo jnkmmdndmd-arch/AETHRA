@@ -499,8 +499,9 @@ func _show_menu() -> void:
         menu.show()
 
 func _unhandled_input(event: InputEvent) -> void:
-    if event is InputEventKey and event.pressed and event.physical_keycode == KEY_F8:
-        return
+    if event is InputEventKey and event.pressed:
+        if event.physical_keycode == KEY_F8:
+            return
         elif event.physical_keycode == KEY_ESCAPE:
             if player != null:
                 Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
