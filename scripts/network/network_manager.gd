@@ -88,7 +88,7 @@ func request_join(profile: Dictionary) -> void:
     var character := str(token_identity.get("character", profile.get("character", "ranger")))
     if character not in ["ranger", "engineer", "shadow", "grove"]:
         character = "ranger"
-    profile = {"name": player_name, "character": character, "avatar_id": clampi(int(token_identity.get("avatar_id", profile.get("avatar_id", 0))), 0, 29)}
+    profile = {"name": player_name, "character": character}
     remote_players[id] = profile.duplicate(true)
     remote_players[id]["position"] = bound_world.spawn_position if bound_world != null else Vector3(8.5, 45.0, 8.5)
     remote_players[id]["yaw"] = 0.0
@@ -131,7 +131,6 @@ func publish_local_player_state(position: Vector3, yaw: float, character: String
         remote_players[1] = {
             "name": AppState.player_name,
             "character": AppState.character_id,
-            "avatar_id": AppState.avatar_id,
             "position": position,
             "yaw": yaw
         }
@@ -167,7 +166,6 @@ func _broadcast_player_states() -> void:
             snapshot[id] = {
                 "name": row.get("name", "Player"),
                 "character": row.get("character", "ranger"),
-                "avatar_id": clampi(int(row.get("avatar_id", 0)), 0, 29),
                 "position": row.get("position", Vector3.ZERO),
                 "yaw": float(row.get("yaw", 0.0))
             }
@@ -267,9 +265,9 @@ func _verify_token(token: String) -> bool:
     if not hash_equals(mac, parts[1]):
         return false
     var fields := body.split("|")
-    if fields.size() != 4 or not str(fields[3]).is_valid_int():
+    if fields.size() != 5 or not str(fields[4]).is_valid_int():
         return false
-    return Time.get_unix_time_from_system() <= float(fields[3])
+    return Time.get_unix_time_from_system() <= float(fields[4])
 
 func hash_equals(a: String, b: String) -> bool:
     if a.length() != b.length():
@@ -339,11 +337,11 @@ func _decode_token(token: String) -> Dictionary:
         encoded += "="
     var body := Marshalls.base64_to_utf8(encoded)
     var fields := body.split("|")
-    if fields.size() != 4:
+    if fields.size() != 5:
         return {}
-    if not str(fields[3]).is_valid_int():
+    if not str(fields[4]).is_valid_int():
         return {}
-    return {"user_id": fields[0], "username": fields[1], "character": fields[2], "expires_at": int(fields[3])}
+    return {"user_id": fields[0], "username": fields[1], "character": fields[2], "avatar_id": clampi(int(fields[3]), 0, 29), "expires_at": int(fields[4])}
 
 func _on_connected() -> void:
     connection_state = "connected"
@@ -365,7 +363,7 @@ func _on_disconnected() -> void:
 
 func _on_peer_connected(id: int) -> void:
     if multiplayer.is_server():
-        remote_players.erase(id)
+        remote_players[id] = {"name": "Player-%d" % id, "character": "ranger", "position": Vector3.ZERO, "yaw": 0.0}
         _broadcast_presence()
 
 func _on_peer_disconnected(id: int) -> void:
