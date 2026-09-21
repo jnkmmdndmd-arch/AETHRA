@@ -205,6 +205,7 @@ func _build_auth() -> void:
     var saved_token := str(saved_session.get("token", ""))
     if not saved_token.is_empty():
         AppState.character_id = str(saved_session.get("character", AppState.character_id))
+        AppState.avatar_id = clampi(int(saved_session.get("avatar_id", AppState.avatar_id)), 0, AppState.MAX_AVATARS - 1)
         auth.restore_session(saved_token)
 
 func _build_menu() -> void:
