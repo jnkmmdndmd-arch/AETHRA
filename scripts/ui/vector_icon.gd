@@ -40,12 +40,6 @@ func _draw() -> void:
             draw_line(Vector2(side * 0.78, side * 0.44), Vector2(side * 0.78, side * 0.88), c, w, true)
             draw_line(Vector2(side * 0.22, side * 0.88), Vector2(side * 0.78, side * 0.88), c, w, true)
             draw_rect(Rect2(side * 0.43, side * 0.64, side * 0.14, side * 0.24), c, false, w)
-        "play":
-            draw_colored_polygon(PackedVector2Array([
-                Vector2(side * 0.34, side * 0.18),
-                Vector2(side * 0.78, side * 0.50),
-                Vector2(side * 0.34, side * 0.82)
-            ]), c)
         "servers":
             for y in [0.24, 0.50, 0.76]:
                 draw_rect(Rect2(side * 0.16, side * y - side * 0.08, side * 0.68, side * 0.16), c, false, w)
