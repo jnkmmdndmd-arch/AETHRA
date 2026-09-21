@@ -109,9 +109,9 @@ func build_mesh(build_collision: bool = false) -> void:
 
     var solid_flags: PackedByteArray = []
     var block_colors: Array[Color] = []
-    solid_flags.resize(BlockRegistry.SNOW + 1)
-    block_colors.resize(BlockRegistry.SNOW + 1)
-    for block_id in BlockRegistry.SNOW + 1:
+    solid_flags.resize(BlockRegistry.LAST_BLOCK + 1)
+    block_colors.resize(BlockRegistry.LAST_BLOCK + 1)
+    for block_id in BlockRegistry.LAST_BLOCK + 1:
         var info: Dictionary = BlockRegistry.get_block(block_id)
         solid_flags[block_id] = 1 if bool(info.get("solid", false)) else 0
         block_colors[block_id] = info.get("color", Color.WHITE)
