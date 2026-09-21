@@ -32,6 +32,16 @@ func restore_session(token: String) -> void:
     var headers := PackedStringArray(["Accept: application/json", "Authorization: Bearer " + token])
     _request("/v1/auth/verify", HTTPClient.METHOD_GET, headers, "", "restore", token)
 
+func update_profile(token: String, avatar_id: int) -> void:
+    if base_url.is_empty() or token.is_empty():
+        failure.emit("Authentication server is not configured.")
+        return
+    if not _is_allowed_transport():
+        failure.emit("Remote authentication must use HTTPS.")
+        return
+    var headers := PackedStringArray(["Content-Type: application/json", "Accept: application/json", "Authorization: Bearer " + token])
+    _request("/v1/profile", HTTPClient.METHOD_POST, headers, JSON.stringify({"avatar_id": clampi(avatar_id, 0, 29)}), "profile", token)
+
 func logout(token: String) -> void:
     if base_url.is_empty() or token.is_empty():
         return
@@ -86,6 +96,18 @@ func _on_request_completed(request: HTTPRequest, operation: String, session_toke
         failure.emit(message)
         return
 
+    if operation == "profile":
+        if response_code >= 200 and response_code < 300 and payload is Dictionary:
+            var updated: Dictionary = payload.duplicate(true)
+            updated["token"] = str(payload.get("token", session_token))
+            success.emit(updated)
+            return
+        if response_code == 401 or response_code == 403:
+            session_invalid.emit()
+            return
+        failure.emit(message)
+        return
+
     if operation == "restore":
         if response_code >= 200 and response_code < 300 and payload is Dictionary:
             var restored: Dictionary = payload.duplicate(true)
@@ -93,7 +115,6 @@ func _on_request_completed(request: HTTPRequest, operation: String, session_toke
             if str(restored.get("username", "")).is_empty():
                 failure.emit("Saved session is invalid.")
                 return
-            restored["avatar_id"] = clampi(int(restored.get("avatar_id", 0)), 0, 29)
             success.emit(restored)
             return
         if response_code == 401 or response_code == 403:
