@@ -26,7 +26,7 @@ func build(parent: Node) -> void:
     add_child(bg)
 
     settings_panel = PanelContainer.new()
-    settings_panel.set_anchors_preset(Control.PRESET_CENTER)
+    settings_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
     settings_panel.add_theme_stylebox_override("panel", _panel_style())
     add_child(settings_panel)
     _apply_panel_layout()
