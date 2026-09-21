@@ -202,7 +202,7 @@ func build_mesh(build_collision: bool = false, requested_lod: int = 0) -> void:
             for y in height:
                 var id:=int(voxels[index_of(Vector3i(x,y,z))])
                 if id==BlockRegistry.AIR or _is_opaque_solid(id): continue
-                var block_color:Color=block_colors[id] if id<block_colors.size() else Color.WHITE; var base:=Vector3(x,y,z); var is_fluid:=id in [BlockRegistry.WATER,BlockRegistry.LAVA]
+                var block_color: Color = block_colors[id] if id < block_colors.size() else Color.WHITE; var base: Vector3 = Vector3(x,y,z); var is_fluid: bool = id in [BlockRegistry.WATER,BlockRegistry.LAVA]
                 for face_index in 6:
                     var neighbor:=get_voxel(Vector3i(x,y,z)+FACE_DIRS[face_index])
                     if is_fluid and (neighbor==id or (neighbor<solid_flags.size() and solid_flags[neighbor]==1)): continue
