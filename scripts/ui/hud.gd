@@ -101,7 +101,7 @@ func _refresh_hotbar() -> void:
         var name := str(item.get("name", "فارغ"))
         if item_id > BlockRegistry.AIR and item_id <= BlockRegistry.SNOW and (str(item.get("category", "none")) == "none"):
             name = str(BlockRegistry.get_block(item_id).get("name", name))
-        slot_labels[i].text = "%d\n%s x%d" % [i+1, name, count]
+        slot_labels[i].text = "%d\n%s x%d%s" % [i+1, name, count, " •" if inventory_ref.selected == i else ""]
 
 func set_player_stats(health: float, hunger: float, stamina: float, fps: float) -> void:
     stats.text = "AETHRA // بقاء\nالصحة %.1f  الجوع %.1f  التحمل %.1f\nالإطارات %.0f" % [health,hunger,stamina,fps]
@@ -112,6 +112,18 @@ func set_selected(index: int) -> void:
         var label: Label = slot_labels[i]
         label.add_theme_color_override("font_color", Color("#78ddff") if i == selected else Color("#eaf6ff"))
         label.add_theme_font_size_override("font_size", 13 if i == selected else 12)
+
+func _unhandled_input(event: InputEvent) -> void:
+    if inventory_ref == null:
+        return
+    if event is InputEventKey and event.pressed:
+        if event.physical_keycode >= KEY_1 and event.physical_keycode <= KEY_9:
+            inventory_ref.select_slot(event.physical_keycode - KEY_1)
+    elif event is InputEventMouseButton and event.pressed:
+        if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+            inventory_ref.scroll_slot(-1)
+        elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+            inventory_ref.scroll_slot(1)
 
 func set_players(data: Dictionary) -> void:
     var names: Array[String] = []
