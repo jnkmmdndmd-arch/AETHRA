@@ -564,6 +564,14 @@ func _page_create_world() -> void:
     mode.add_item("إبداعي")
     var mode_ids := ["survival", "creative"]
     form.add_child(mode)
+
+    var world_type := OptionButton.new()
+    world_type.add_item("عالم طبيعي")
+    world_type.add_item("عالم صحراوي")
+    world_type.add_item("عالم غابة")
+    world_type.add_item("عالم جليدي")
+    var world_type_ids := ["", "arid", "grove", "frost"]
+    form.add_child(world_type)
     var difficulty := OptionButton.new()
     difficulty.add_item("سلمي")
     difficulty.add_item("سهل")
@@ -607,6 +615,7 @@ func _page_create_world() -> void:
             "name": name_field.text.strip_edges() if not name_field.text.strip_edges().is_empty() else "Wildbound World",
             "seed": seed_value,
             "mode": mode_ids[mode.selected],
+            "world_type": world_type_ids[world_type.selected],
             "difficulty": difficulty_ids[difficulty.selected],
             "privacy": privacy_ids[privacy.selected],
             "structures": structures.button_pressed,
