@@ -837,6 +837,10 @@ func _page_profile() -> void:
     var save := _primary_button("حفظ الملف الشخصي", Vector2(220, 46))
     save.pressed.connect(func():
         AppState.save_profile(name_field.text, AppState.avatar_id)
+        if AppState.is_authenticated:
+            var auth_node = get_parent().get("auth") if get_parent() != null else null
+            if auth_node != null:
+                auth_node.update_profile(AppState.auth_token, AppState.avatar_id)
         _show_page("profile")
     )
     root.add_child(save)
