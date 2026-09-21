@@ -2,6 +2,7 @@ extends Node3D
 
 signal chunk_ready(coord)
 signal block_changed(world_position, new_id)
+signal world_ready
 
 const CHUNK_SIZE := 16
 const LOAD_PER_FRAME := 1
@@ -22,6 +23,7 @@ var last_stream_chunk := Vector2i(999999, 999999)
 var stream_tick := 0
 var world_settings: Dictionary = {}
 var spawn_ready := false
+var ready_emitted := false
 
 func initialize(seed_value: int) -> void:
     world_seed = seed_value
@@ -76,11 +78,20 @@ func _resolve_spawn_position() -> void:
             break
     spawn_position = Vector3(8.5, ground_y + 1.05, 8.5)
     spawn_ready = true
+    ready_emitted = false
 
 func configure(settings: Dictionary) -> void:
     world_settings = settings.duplicate(true)
     if generator != null and generator.has_method("configure"):
         generator.configure(bool(world_settings.get("structures", true)))
+
+func is_ready_for_spawn() -> bool:
+    return ready_emitted
+
+func get_biome_at(x: int, z: int) -> String:
+    if generator == null:
+        return "meadow"
+    return str(generator.call("biome_at", x, z))
 
 func set_stream_center(pos: Vector3) -> void:
     stream_center = pos
