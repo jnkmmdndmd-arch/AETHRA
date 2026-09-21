@@ -6,7 +6,7 @@ const ROW_HEIGHT := 42
 const LABEL_WIDTH := 190
 const CONTROL_WIDTH := 250
 
-var bindings := ["move_forward","move_back","move_left","move_right","sprint","jump","crouch","mine","place"]
+var bindings := ["move_forward","move_back","move_left","move_right","sprint","jump","crouch","mine","place","attack"]
 var game_root: Node
 var waiting_action := ""
 var binding_label: Label
@@ -275,7 +275,8 @@ func _build_controls() -> void:
         "jump": "القفز",
         "crouch": "الانحناء",
         "mine": "التكسير",
-        "place": "الوضع"
+        "place": "الوضع",
+        "attack": "الهجوم"
     }
     for action in bindings:
         var button := Button.new()
