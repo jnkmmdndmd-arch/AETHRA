@@ -22,6 +22,7 @@ var performance_frame_count := 0
 var performance_low_time := 0.0
 var performance_high_time := 0.0
 var fps_overlay: Label
+var boot_overlay: Control
 
 func _ready() -> void:
     randomize()
@@ -214,6 +215,44 @@ func _build_fps_overlay() -> void:
     var layer := CanvasLayer.new()
     layer.layer = 100
     add_child(layer)
+
+    boot_overlay = Control.new()
+    boot_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    boot_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    layer.add_child(boot_overlay)
+
+    var boot_bg := ColorRect.new()
+    boot_bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    boot_bg.color = Color("#0b111c")
+    boot_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    boot_overlay.add_child(boot_bg)
+
+    var boot_box := VBoxContainer.new()
+    boot_box.set_anchors_preset(Control.PRESET_CENTER)
+    boot_box.position = Vector2(-180, -55)
+    boot_box.size = Vector2(360, 110)
+    boot_box.alignment = BoxContainer.ALIGNMENT_CENTER
+    boot_box.add_theme_constant_override("separation", 6)
+    boot_overlay.add_child(boot_box)
+    var title := Label.new()
+    title.text = "AETHRA"
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size", 34)
+    title.add_theme_color_override("font_color", Color("#78ddff"))
+    boot_box.add_child(title)
+    var subtitle := Label.new()
+    subtitle.text = "WILDBOUND"
+    subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    subtitle.add_theme_font_size_override("font_size", 15)
+    subtitle.add_theme_color_override("font_color", Color("#eaf6ff"))
+    boot_box.add_child(subtitle)
+    var loading := Label.new()
+    loading.text = "جاري تحميل العالم..."
+    loading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    loading.add_theme_font_size_override("font_size", 11)
+    loading.add_theme_color_override("font_color", Color("#91a9bf"))
+    boot_box.add_child(loading)
+
     fps_overlay = Label.new()
     fps_overlay.name = "BootFPS"
     fps_overlay.text = "FPS: 0 / %d" % Engine.max_fps
@@ -234,6 +273,9 @@ func _build_menu() -> void:
     menu = load("res://scripts/ui/main_menu.gd").new()
     add_child(menu)
     menu.build(self)
+    if boot_overlay and is_instance_valid(boot_overlay):
+        boot_overlay.queue_free()
+        boot_overlay = null
     menu.play_singleplayer.connect(_start_singleplayer)
     menu.host_multiplayer.connect(_host)
     menu.join_multiplayer.connect(_join)
