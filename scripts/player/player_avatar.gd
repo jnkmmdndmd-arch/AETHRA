@@ -23,6 +23,9 @@ var peer_id := 1
 var attack_cooldown := 0.0
 var footstep_timer := 0.0
 var mining_generation := 0
+var body_mesh: MeshInstance3D
+var body_collision: CollisionShape3D
+var is_crouched := false
 
 func setup(voxel_world, local_player: bool = true, id: int = 1) -> void:
     world = voxel_world
@@ -36,21 +39,21 @@ func _build_body() -> void:
     var capsule := CapsuleMesh.new()
     capsule.height = 1.8
     capsule.radius = 0.34
-    var body := MeshInstance3D.new()
-    body.mesh = capsule
+    body_mesh = MeshInstance3D.new()
+    body_mesh.mesh = capsule
     var mat := StandardMaterial3D.new()
     mat.albedo_color = _character_color(AppState.character_id if is_local else "ranger")
     mat.roughness = 0.75
-    body.material_override = mat
-    body.position.y = 0.9
-    add_child(body)
-    var collision := CollisionShape3D.new()
+    body_mesh.material_override = mat
+    body_mesh.position.y = 0.9
+    add_child(body_mesh)
+    body_collision = CollisionShape3D.new()
     var shape := CapsuleShape3D.new()
     shape.height = 1.8
     shape.radius = 0.34
-    collision.shape = shape
-    collision.position.y = 0.9
-    add_child(collision)
+    body_collision.shape = shape
+    body_collision.position.y = 0.9
+    add_child(body_collision)
     head = Node3D.new()
     head.position.y = 1.55
     add_child(head)
@@ -142,6 +145,23 @@ func _update_movement(delta: float) -> void:
     if Input.is_action_just_pressed("crouch"):
         scale.y = 0.8 if is_equal_approx(scale.y, 1.0) else 1.0
     move_and_slide()
+
+func _set_crouched(value: bool) -> void:
+    is_crouched = value
+    var standing_height := 1.8
+    var crouched_height := 1.35
+    var height := crouched_height if is_crouched else standing_height
+    var center_y := height * 0.5
+    if body_collision and body_collision.shape is CapsuleShape3D:
+        var collision_capsule: CapsuleShape3D = body_collision.shape
+        collision_capsule.height = height
+        body_collision.position.y = center_y
+    if body_mesh and body_mesh.mesh is CapsuleMesh:
+        var mesh_capsule: CapsuleMesh = body_mesh.mesh
+        mesh_capsule.height = height
+        body_mesh.position.y = center_y
+    if head:
+        head.position.y = 1.18 if is_crouched else 1.55
 
 func _start_mining() -> void:
     if mining_active:
