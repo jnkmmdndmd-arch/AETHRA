@@ -4,7 +4,7 @@ var world
 var enabled := true
 var spawn_timer := 0.0
 var max_creatures := 8
-var kinds := ["goat", "deer", "boar", "fox", "rabbit", "wolf", "brute", "spider", "slime", "wraith", "drake", "beetle", "moth", "firefly"]
+var kinds := ["goat","deer","boar","fox","rabbit","wolf","horse","chicken","camel","vulture","fennec","lizard","snake","scorpion","bee","butterfly","dragonfly","firefly","beetle","moth","spider","slime","wraith","brute","drake","sand_wyrm","stone_golem","marsh_lurker","bat","crystal_mite"]
 
 func setup(voxel_world, enable_creatures: bool = true) -> void:
     world = voxel_world
@@ -46,6 +46,21 @@ func spawn_creature(kind: String) -> void:
     if world == null or not enabled:
         return
     var p := _ground_position(randf_range(-20, 20), randf_range(-20, 20))
+    kind = _kind_for_biome(p, kind)
     var c = load("res://scripts/entities/creature.gd").new()
     add_child(c)
+    c.add_to_group("creatures")
     c.setup(kind, p)
+
+func _kind_for_biome(position: Vector3, fallback: String) -> String:
+    if world == null or not world.has_method("get_biome_at"):
+        return fallback
+    var biome := str(world.get_biome_at(floori(position.x), floori(position.z)))
+    var tables := {
+        "arid": ["camel","vulture","fennec","lizard","snake","scorpion","beetle","firefly","sand_wyrm","brute"],
+        "frost": ["wolf","rabbit","bat","wraith","drake","crystal_mite"],
+        "grove": ["deer","boar","fox","rabbit","bee","butterfly","moth","spider","marsh_lurker"],
+        "meadow": ["goat","deer","boar","fox","rabbit","horse","chicken","butterfly","dragonfly","bee","wolf","spider","slime"]
+    }
+    var options: Array = tables.get(biome, kinds)
+    return str(options[randi_range(0, options.size() - 1)]) if not options.is_empty() else fallback
