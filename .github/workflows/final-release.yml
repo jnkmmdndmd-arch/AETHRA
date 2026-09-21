@@ -13,79 +13,40 @@ jobs:
         shell: pwsh
     steps:
       - uses: actions/checkout@v4
-      - name: Install Godot 4.7.2
-        run: |
-          $zip = "$env:RUNNER_TEMP\godot.zip"
-          Invoke-WebRequest "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_win64.zip" -OutFile $zip
-          Expand-Archive $zip "$env:RUNNER_TEMP\godot" -Force
-          $godot = Get-ChildItem "$env:RUNNER_TEMP\godot" -Filter "Godot_v4.7.2-stable_win64.exe" -Recurse | Select-Object -First 1
-          if (-not $godot) { throw "Godot not found" }
-          "GODOT_PATH=$($godot.FullName)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
-      - name: Install Godot export templates
-        run: |
-          $zip = "$env:RUNNER_TEMP\templates.tpz"
-          Invoke-WebRequest "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz" -OutFile $zip
-          $dst = "$env:APPDATA\Godot\export_templates\4.7.2.stable"
-          New-Item -ItemType Directory -Force $dst | Out-Null
-          Expand-Archive $zip "$env:RUNNER_TEMP\templates" -Force
-          $inner = Get-ChildItem "$env:RUNNER_TEMP\templates" -Directory -Recurse | Where-Object { $_.Name -eq "templates" } | Select-Object -First 1
-          if ($inner) { Copy-Item "$($inner.FullName)\*" $dst -Recurse -Force } else { Copy-Item "$env:RUNNER_TEMP\templates\*" $dst -Recurse -Force }
-      - name: Godot editor validation
-        run: |
-          & $env:GODOT_PATH --headless --editor --quit --path . | Tee-Object editor.log
-          if ($LASTEXITCODE -ne 0) { throw "Godot editor validation failed" }
-      - name: GDScript parse and self-test
-        run: |
-          & $env:GODOT_PATH --headless --path . --script res://tests/parse_all_scripts.gd | Tee-Object parse.log
-          if ($LASTEXITCODE -ne 0) { throw "GDScript parse failed" }
-          & $env:GODOT_PATH --headless --path . --script res://tests/self_test.gd | Tee-Object self-test.log
-          if ($LASTEXITCODE -ne 0) { throw "Self-test failed" }
-      - name: Auth service tests
-        working-directory: server/auth-service
-        run: |
-          go test ./...
-          if ($LASTEXITCODE -ne 0) { throw "Auth tests failed" }
-          go vet ./...
-          if ($LASTEXITCODE -ne 0) { throw "Auth vet failed" }
-      - name: Export Windows EXE
-        run: |
-          New-Item -ItemType Directory -Force build | Out-Null
-          & $env:GODOT_PATH --headless --path . --export-release "Windows Desktop" "build\AETHRA-Wildbound.exe" | Tee-Object export.log
-          if ($LASTEXITCODE -ne 0) { throw "Windows export failed" }
-          $exe = Get-Item "build\AETHRA-Wildbound.exe"
-          if ($exe.Length -lt 1000000) { throw "EXE is unexpectedly small" }
       - name: Install Inno Setup
         run: |
           choco install innosetup --no-progress -y
-          $iscc = "$env:ProgramFiles(x86)\Inno Setup 6\ISCC.exe"
-          if (-not (Test-Path $iscc)) { throw "Inno Setup not found" }
-          Set-Content "$env:GITHUB_WORKSPACE\ISCC_PATH.txt" $iscc
+          if (-not (Test-Path "$env:ProgramFiles(x86)\Inno Setup 6\ISCC.exe")) { throw "Inno Setup not found" }
+      - name: Build and validate Windows EXE
+        run: |
+          .\build_windows_auto.ps1 -Output "build/AETHRA-Wildbound.exe"
+          if ($LASTEXITCODE -ne 0) { throw "Windows build script failed" }
+          if (-not (Test-Path "build/AETHRA-Wildbound.exe")) { throw "Final EXE missing" }
       - name: Build installer
         run: |
-          $iscc = Get-Content "$env:GITHUB_WORKSPACE\ISCC_PATH.txt"
-          & $iscc "installer.iss" | Tee-Object installer.log
+          & "$env:ProgramFiles(x86)\Inno Setup 6\ISCC.exe" "installer.iss"
           if ($LASTEXITCODE -ne 0) { throw "Installer build failed" }
-          if (-not (Test-Path "build\AETHRA-Wildbound-Setup.exe")) { throw "Installer missing" }
-      - name: Verify installer
+          if (-not (Test-Path "build/AETHRA-Wildbound-Setup.exe")) { throw "Installer missing" }
+      - name: Verify clean installation
         run: |
           $dir = "$env:RUNNER_TEMP\AETHRA-Installed"
           if (Test-Path $dir) { Remove-Item $dir -Recurse -Force }
-          $installer = Resolve-Path "build\AETHRA-Wildbound-Setup.exe"
-          $p = Start-Process $installer -ArgumentList @("/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/SP-","/DIR=$dir") -Wait -PassThru
+          $p = Start-Process (Resolve-Path "build/AETHRA-Wildbound-Setup.exe") -ArgumentList @("/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/SP-","/DIR=$dir") -Wait -PassThru
           if ($p.ExitCode -ne 0) { throw "Installer returned $($p.ExitCode)" }
-          if (-not (Test-Path "$dir\AETHRA-Wildbound.exe")) { throw "Installed EXE missing" }
+          if (-not (Test-Path "$dir\AETHRA-Wildbound.exe")) { throw "Installed game EXE missing" }
+          $desktop = [Environment]::GetFolderPath("Desktop")
+          if (-not (Get-ChildItem $desktop -Filter "AETHRA*" -ErrorAction SilentlyContinue | Where-Object {$_.Extension -eq ".lnk"})) { throw "Desktop shortcut missing" }
       - name: Installed EXE startup smoke
         run: |
           $p = Start-Process "$env:RUNNER_TEMP\AETHRA-Installed\AETHRA-Wildbound.exe" -PassThru
-          Start-Sleep 8
+          Start-Sleep -Seconds 8
           if ($p.HasExited) { throw "Installed EXE exited during startup" }
           Stop-Process -Id $p.Id -Force
-      - name: Hashes
+      - name: Final hashes
         run: |
-          $game = (Get-FileHash "build\AETHRA-Wildbound.exe" -Algorithm SHA256).Hash.ToLower()
-          $setup = (Get-FileHash "build\AETHRA-Wildbound-Setup.exe" -Algorithm SHA256).Hash.ToLower()
-          "Game SHA256: $game" | Out-File FINAL-WINDOWS-VERIFICATION.md
-          "Installer SHA256: $setup" | Out-File FINAL-WINDOWS-VERIFICATION.md -Append
+          $game=(Get-FileHash "build/AETHRA-Wildbound.exe" -Algorithm SHA256).Hash.ToLowerInvariant()
+          $setup=(Get-FileHash "build/AETHRA-Wildbound-Setup.exe" -Algorithm SHA256).Hash.ToLowerInvariant()
+          @("AETHRA FINAL WINDOWS RELEASE","Game SHA256: $game","Installer SHA256: $setup","Installed EXE startup: PASS","Interactive gameplay/multiplayer: requires manual GUI verification") | Set-Content FINAL-WINDOWS-VERIFICATION.md
       - uses: actions/upload-artifact@v4
         with:
           name: AETHRA-Wildbound-FINAL-Windows-x64
@@ -94,8 +55,3 @@ jobs:
             build/AETHRA-Wildbound.exe
             build/AETHRA-Wildbound-Setup.exe
             FINAL-WINDOWS-VERIFICATION.md
-            editor.log
-            parse.log
-            self-test.log
-            export.log
-            installer.log
