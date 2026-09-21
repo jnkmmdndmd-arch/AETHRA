@@ -99,7 +99,7 @@ func _refresh_hotbar() -> void:
         var count := int(slot.get("count", 0))
         var item := ItemRegistry.get_item(item_id)
         var name := str(item.get("name", "فارغ"))
-        if item_id > BlockRegistry.AIR and item_id <= BlockRegistry.SNOW and (str(item.get("category", "none")) == "none"):
+        if item_id > BlockRegistry.AIR and item_id <= BlockRegistry.LAST_BLOCK and (str(item.get("category", "none")) == "none"):
             name = str(BlockRegistry.get_block(item_id).get("name", name))
         slot_labels[i].text = "%d\n%s x%d%s" % [i+1, name, count, " •" if inventory_ref.selected == i else ""]
 
