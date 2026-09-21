@@ -60,7 +60,14 @@ func load_world(world_id: String) -> Dictionary:
         return {}
     var data = JSON.parse_string(file.get_as_text())
     file.close()
-    return data if data is Dictionary else {}
+    if not (data is Dictionary):
+        return {}
+    var version := int(data.get("format_version", 0))
+    if version < 1 or version > FORMAT_VERSION:
+        return {}
+    if not (data.get("metadata", {}) is Dictionary) or not (data.get("blocks", {}) is Dictionary) or not (data.get("player", {}) is Dictionary):
+        return {}
+    return data
 
 func list_worlds() -> Array[Dictionary]:
     var result: Array[Dictionary] = []
