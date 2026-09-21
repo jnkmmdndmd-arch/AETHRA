@@ -11,13 +11,13 @@ const DEFAULTS := {
     "master_volume": 0.8,
     "music_volume": 0.5,
     "sfx_volume": 0.85,
-    "render_distance": 4,
+    "render_distance": 3,
     "simulation_distance": 3,
     "first_person": true,
     "window_width": 1366,
     "window_height": 768,
     "window_mode": 0,
-    "auth_server_url": "http://127.0.0.1:8090",
+    "auth_server_url": "",
 }
 const DEFAULT_CONTROLS := {
     "move_forward": "W",
