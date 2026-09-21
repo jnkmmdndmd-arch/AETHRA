@@ -51,9 +51,11 @@ func _process(_delta: float) -> void:
     var build_budget := 1
     match str(Settings.get_value("graphics_quality", "low")):
         "medium":
+            build_budget = 1
+        "high":
             build_budget = 2
-        "high", "ultra":
-            build_budget = 3
+        "ultra":
+            build_budget = 2
         _:
             build_budget = 1
 
@@ -104,16 +106,16 @@ func set_stream_center(pos: Vector3) -> void:
     stream_center = pos
 
 func _effective_render_distance() -> int:
-    var configured := clampi(int(Settings.get_value("render_distance", 4)), 3, 12)
+    var configured := clampi(int(Settings.get_value("render_distance", 3)), 3, 10)
     match str(Settings.get_value("graphics_quality", "low")):
         "low":
-            return mini(configured, 4)
+            return mini(configured, 3)
         "medium":
-            return mini(configured, 5)
+            return mini(configured, 4)
         "high":
-            return mini(configured, 7)
+            return mini(configured, 6)
         _:
-            return configured
+            return mini(configured, 8)
 
 func _stream_chunks() -> void:
     var center := world_to_chunk(stream_center)
