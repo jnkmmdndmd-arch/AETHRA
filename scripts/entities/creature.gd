@@ -10,11 +10,16 @@ var speed := 2.2
 var attack_cooldown := 0.0
 var detection_range := 18.0
 var attack_range := 1.8
+var life_time := 0.0
+const MAX_LIFE_TIME := 900.0
+const HOSTILES := ["brute","spider","wraith","drake","wolf","sand_wyrm","stone_golem","marsh_lurker","scorpion","slime","bat","crystal_mite"]
+const LOOT_TABLE := {"rabbit":[200,2],"chicken":[200,1],"boar":[200,2],"deer":[6,1],"wolf":[145,1],"brute":[12,1],"spider":[22,1],"drake":[13,1],"scorpion":[52,1],"crystal_mite":[59,1]}
 
 func setup(kind: String, origin: Vector3) -> void:
-    creature_type = kind
-    global_position = origin
-    _build_visual()
+    creature_type=kind; global_position=origin
+    health=18.0 if kind in HOSTILES else 10.0
+    detection_range=22.0 if kind in HOSTILES else 0.0
+    _build_visual(); add_to_group("creatures")
 
 func _build_visual() -> void:
     var body := MeshInstance3D.new()
@@ -84,6 +89,12 @@ func _color_for_type() -> Color:
         _: return Color("#cbb58a")
 
 func _physics_process(delta: float) -> void:
+    life_time += delta
+    if life_time > MAX_LIFE_TIME:
+        queue_free(); return
+    var nearest_player:=_nearest_player_distance()
+    if nearest_player > 64.0 and nearest_player > 0.0:
+        queue_free(); return
     think_timer -= delta
     attack_cooldown = maxf(0.0, attack_cooldown - delta)
     if think_timer <= 0.0:
@@ -95,7 +106,7 @@ func _think() -> void:
     if target != null and (not is_instance_valid(target) or global_position.distance_to(target.global_position) > detection_range):
         target = null
     var players := get_tree().get_nodes_in_group("players")
-    if creature_type in ["brute", "spider", "wraith", "drake", "wolf", "sand_wyrm", "stone_golem", "marsh_lurker"]:
+    if creature_type in HOSTILES:
         var nearest: Node3D = null
         var nearest_distance := detection_range
         for candidate in players:
@@ -151,9 +162,34 @@ func _move(delta: float) -> void:
         global_position.y += sin(Time.get_ticks_msec() * 0.004 + global_position.x) * 0.002
     if not is_on_floor() and creature_type not in ["beetle", "moth", "firefly"]:
         velocity.y -= 24.0 * delta
+    if flat.length() > 0.1:
+        var probe := PhysicsRayQueryParameters3D.create(global_position + Vector3.UP * 0.6, global_position + Vector3.UP * 0.6 + flat.normalized() * 1.2)
+        probe.exclude=[self]; probe.collision_mask=1
+        if not get_world_3d().direct_space_state.intersect_ray(probe).is_empty():
+            velocity.x=-flat.z*speed*0.5; velocity.z=flat.x*speed*0.5
     move_and_slide()
 
+func _nearest_player_distance() -> float:
+    var best:=0.0
+    for node in get_tree().get_nodes_in_group("players"):
+        var p:=node as Node3D
+        if p==null or not is_instance_valid(p): continue
+        var d:=global_position.distance_to(p.global_position)
+        if best==0.0 or d<best: best=d
+    return best
+
 func apply_damage(amount: float) -> void:
-    health -= amount
-    if health <= 0.0:
-        queue_free()
+    if amount<=0.0: return
+    health=maxf(0.0,health-amount)
+    if health>0.0: return
+    _grant_loot(); queue_free()
+
+func _grant_loot() -> void:
+    var entry=LOOT_TABLE.get(creature_type,[])
+    if not (entry is Array) or entry.size()<2: return
+    var item_id:=int(entry[0]); var amount:=maxi(1,int(entry[1]))
+    for player_node in get_tree().get_nodes_in_group("players"):
+        var p:=player_node as Node3D
+        if p!=null and p.has_method("_use_selected_item") and global_position.distance_to(p.global_position)<=3.5:
+            if p.inventory.add_item(item_id,amount)==0: break
+    Economy.add_coins(1+int(randf()*4))

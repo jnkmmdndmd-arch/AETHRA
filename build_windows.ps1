@@ -46,3 +46,7 @@ if ($CopyToDesktop) {
 Write-Host "Standalone release ready: $resolvedOutput"
 Write-Host "SHA256: $sha"
 if ($CopyToDesktop) { Write-Host "Desktop copy: $([IO.Path]::Combine([Environment]::GetFolderPath("Desktop"), "AETHRA-Wildbound.exe"))" }
+
+if (Get-Command iscc -ErrorAction SilentlyContinue) {
+    & iscc installer.iss
+}

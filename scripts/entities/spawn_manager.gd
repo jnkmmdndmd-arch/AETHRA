@@ -33,8 +33,11 @@ func _process(delta: float) -> void:
 
 func _ground_position(x: float, z: float) -> Vector3:
     var y := 48
+    var max_y := 90
+    if world != null and world.has_method("get_world_height"):
+        max_y = int(world.get_world_height()) - 2
     if world != null and world.has_method("get_block"):
-        for scan_y in range(90, 0, -1):
+        for scan_y in range(max_y, 0, -1):
             var ground := int(world.get_block(Vector3i(floori(x), scan_y, floori(z))))
             var above := int(world.get_block(Vector3i(floori(x), scan_y + 1, floori(z))))
             if BlockRegistry.is_solid(ground) and above == BlockRegistry.AIR:

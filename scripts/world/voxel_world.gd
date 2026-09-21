@@ -8,6 +8,9 @@ const CHUNK_SIZE := 16
 const LOAD_PER_FRAME := 1
 const INITIAL_RADIUS := 1
 const COLLISION_RADIUS := 2
+const WORLD_RADIUS := 32768
+const DEFAULT_WORLD_HEIGHT := 500
+var world_height := DEFAULT_WORLD_HEIGHT
 
 var world_seed: int = 0
 var generator: RefCounted
@@ -27,9 +30,10 @@ var ready_emitted := false
 
 func initialize(seed_value: int) -> void:
     world_seed = seed_value
+    world_height = clampi(int(world_settings.get("world_height", DEFAULT_WORLD_HEIGHT)), 500, 1000)
     generator = load("res://scripts/world/world_generator.gd").new(world_seed)
     if generator.has_method("configure"):
-        generator.configure(true)
+        generator.configure(true, "", world_height)
     _resolve_spawn_position()
     for x in range(-INITIAL_RADIUS, INITIAL_RADIUS + 1):
         for z in range(-INITIAL_RADIUS, INITIAL_RADIUS + 1):
@@ -66,7 +70,10 @@ func _process(_delta: float) -> void:
         if chunk == null or not is_instance_valid(chunk):
             continue
         var collision_needed := _collision_needed(coord)
-        chunk.call("build_mesh", collision_needed)
+        var lod := _lod_for_chunk(coord)
+        if chunk.has_method("set_lod"):
+            chunk.call("set_lod", lod)
+        chunk.call("build_mesh", collision_needed, lod)
         if collision_needed and not ready_emitted and coord == world_to_chunk(spawn_position):
             ready_emitted = true
             world_ready.emit()
@@ -88,11 +95,27 @@ func _resolve_spawn_position() -> void:
 
 func configure(settings: Dictionary) -> void:
     world_settings = settings.duplicate(true)
+    world_height = clampi(int(world_settings.get("world_height", world_height)), 500, 1000)
     if generator != null and generator.has_method("configure"):
         generator.configure(
             bool(world_settings.get("structures", true)),
-            str(world_settings.get("world_type", ""))
+            str(world_settings.get("world_type", "")),
+            world_height
         )
+        if chunks.is_empty():
+            _resolve_spawn_position()
+
+func get_world_height() -> int:
+    return world_height
+
+func is_world_position_valid(pos: Vector3i) -> bool:
+    return pos.y >= 0 and pos.y < world_height and abs(pos.x) <= WORLD_RADIUS and abs(pos.z) <= WORLD_RADIUS
+
+func _lod_for_chunk(coord: Vector2i) -> int:
+    var center := world_to_chunk(stream_center)
+    var dx := coord.x - center.x
+    var dz := coord.y - center.y
+    return 1 if dx * dx + dz * dz > 36 else 0
 
 func is_ready_for_spawn() -> bool:
     return ready_emitted
@@ -156,6 +179,9 @@ func _stream_chunks() -> void:
         var chunk: Node3D = chunks[coord] as Node3D
         if chunk == null or not is_instance_valid(chunk):
             continue
+        var lod := _lod_for_chunk(coord)
+        if chunk.has_method("set_lod") and int(chunk.get("lod_level")) != lod:
+            chunk.call("set_lod", lod)
         chunk.call("set_collision_enabled", _collision_needed(coord))
 
 func _collision_needed(coord: Vector2i) -> bool:
@@ -209,6 +235,8 @@ func _apply_chunk(coord: Vector2i, data: PackedByteArray) -> void:
     _apply_changed_to_chunk(chunk, coord)
     chunks[coord] = chunk
     chunk.call("set_collision_enabled", _collision_needed(coord))
+    if chunk.has_method("set_lod"):
+        chunk.call("set_lod", _lod_for_chunk(coord))
     _queue_build(coord)
     chunk_ready.emit(coord)
 
@@ -219,7 +247,7 @@ func world_to_local(pos: Vector3i) -> Vector3i:
     return Vector3i(posmod(pos.x, CHUNK_SIZE), pos.y, posmod(pos.z, CHUNK_SIZE))
 
 func get_block(pos: Vector3i) -> int:
-    if pos.y < 0 or pos.y >= 96:
+    if pos.y < 0 or pos.y >= world_height or abs(pos.x) > WORLD_RADIUS or abs(pos.z) > WORLD_RADIUS:
         return BlockRegistry.AIR
     if changed_blocks.has(pos):
         return int(changed_blocks[pos])
@@ -231,7 +259,7 @@ func get_block(pos: Vector3i) -> int:
     return int(chunk.call("get_voxel", world_to_local(pos)))
 
 func set_block(pos: Vector3i, id: int) -> bool:
-    if pos.y < 0 or pos.y >= 96:
+    if pos.y < 0 or pos.y >= world_height or abs(pos.x) > WORLD_RADIUS or abs(pos.z) > WORLD_RADIUS:
         return false
     var old := get_block(pos)
     if old == id:

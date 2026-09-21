@@ -44,13 +44,29 @@ func tick(delta: float, underwater: bool, sprinting: bool) -> void:
     stats_changed.emit()
 
 func apply_damage(amount: float) -> void:
-    if game_mode == "creative":
+    if game_mode == "creative" or amount <= 0.0:
         return
     var reduced := maxf(0.0, amount - armor * 0.05)
+    if reduced <= 0.0:
+        return
     health = maxf(0.0, health - reduced)
     health_changed.emit(health, max_health)
     if health <= 0.0:
         died.emit()
+
+func consume_food(item_id: int) -> bool:
+    if item_id != ItemRegistry.HEAL_FOOD or game_mode == "creative":
+        return false
+    hunger = minf(20.0, hunger + 6.0)
+    health = minf(max_health, health + 3.0)
+    health_changed.emit(health, max_health)
+    stats_changed.emit()
+    return true
+
+func reset_after_death() -> void:
+    health = max_health; hunger = 20.0; stamina = 20.0; air = 20.0
+    health_changed.emit(health, max_health)
+    stats_changed.emit()
 
 func heal(amount: float) -> void:
     health = minf(max_health, health + amount)

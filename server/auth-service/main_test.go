@@ -37,8 +37,8 @@ func TestTokenShape(t *testing.T) {
 }
 
 func TestUsernamePolicy(t *testing.T) {
-	for _, ok := range []struct{
-		name string
+	for _, ok := range []struct {
+		name  string
 		valid bool
 	}{
 		{"player_01", true},

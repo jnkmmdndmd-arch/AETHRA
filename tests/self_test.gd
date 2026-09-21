@@ -49,7 +49,7 @@ func _run() -> void:
     ))
 
     checks.append(_check("UI icon policy", func() -> bool:
-        var banned := ["â™Ÿ", "âŒ‚", "â–¶", "â–£", "â—‡", "â—†", "âš™", "â†ª", "â—", "â—‰", "â–¡", "Ã—"]
+        var banned := ["éÝyø§yß", "ºw^~)Þv", +§uçâçv", "éÝyø§yÓ", "ºw^~)Þw", +§uçâçF", "éÝyø§yÙ", "ºw^~)Þv", +§uçâçO", "éÝyø§yÙ", "ºw^~)Þu", "×"]
         for path in ["res://scripts/ui/main_menu.gd", "res://scripts/ui/hud.gd", "res://scripts/ui/settings_menu.gd"]:
             var text := FileAccess.get_file_as_string(path)
             for glyph in banned:
@@ -72,6 +72,23 @@ func _run() -> void:
         var crafting = load("res://scripts/gameplay/crafting.gd").new()
         var crafted: bool = crafting.craft(inventory, "wood_pick")
         return not crafted and inventory.count_item(BlockRegistry.LOG) == 2
+    ))
+    checks.append(_check("World height presets", func() -> bool:
+        for value in [500,800,1000]:
+            var g=load("res://scripts/world/world_generator.gd").new(99)
+            g.configure(true,"",value)
+            if g.world_height!=value or g.block_at(0,value,0)!=BlockRegistry.AIR:
+                return false
+        return true
+    ))
+    checks.append(_check("Inventory UI resource", func() -> bool:
+        return load("res://scripts/ui/inventory_menu.gd") != null and FileAccess.file_exists("res://scripts/ui/inventory_menu.gd")
+    ))
+    checks.append(_check("Economy validation", func() -> bool:
+        return Economy.can_spend(0) and not Economy.can_spend(Economy.coins+1)
+    ))
+    checks.append(_check("Expanded crafting recipes", func() -> bool:
+        return not recipe_registry.find_recipe("iron_sword").is_empty() and not recipe_registry.find_recipe("chest").is_empty()
     ))
     for result in checks:
         print("[TEST] %s: %s" % [result[0], "PASS" if result[1] else "FAIL"])
