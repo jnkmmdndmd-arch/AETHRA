@@ -12,7 +12,7 @@ $version = (& $Godot --version 2>$null | Out-String).Trim()
 if (-not $version.StartsWith("4.7.2")) { throw "Godot 4.7.2 is required. Detected: $version" }
 
 $templateRoot = Join-Path $env:APPDATA "Godot\export_templates\4.7.2.stable"
-$templateFile = Join-Path $templateRoot "windows_release.x86_64.exe"
+$templateFile = Join-Path $templateRoot "windows_release_x86_64.exe"
 if (-not (Test-Path $templateFile -PathType Leaf)) { throw "Godot 4.7.2 Windows export template is missing: $templateFile" }
 
 # Validate/import the project before exporting.
