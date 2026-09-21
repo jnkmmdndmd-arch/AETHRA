@@ -280,7 +280,7 @@ func hash_equals(a: String, b: String) -> bool:
 func _validate_block_change(peer_id: int, pos: Vector3i, new_id: int, held_item_id: int) -> bool:
     if pos.y < 0 or pos.y >= 96:
         return false
-    if new_id < BlockRegistry.AIR or new_id > BlockRegistry.SNOW:
+    if new_id < BlockRegistry.AIR or new_id > BlockRegistry.LAST_BLOCK:
         return false
     if bound_world == null or remote_players.get(peer_id, {}).is_empty():
         return false
@@ -313,7 +313,7 @@ func _validate_block_change(peer_id: int, pos: Vector3i, new_id: int, held_item_
     return not target.is_empty() and (new_id != BlockRegistry.AIR or float(target.get("hardness", 0.0)) >= 0.0)
 
 func _held_block_id(item_id: int) -> int:
-    if item_id > BlockRegistry.AIR and item_id <= BlockRegistry.SNOW:
+    if item_id > BlockRegistry.AIR and item_id <= BlockRegistry.LAST_BLOCK:
         if item_id in [BlockRegistry.WATER, BlockRegistry.LAVA, BlockRegistry.BEDROCK]:
             return BlockRegistry.AIR
         return item_id
