@@ -237,6 +237,7 @@ func main() {
 	mux.HandleFunc("/v1/auth/login", func(w http.ResponseWriter, r *http.Request) { handleLogin(db, w, r) })
 	mux.HandleFunc("/v1/auth/verify", func(w http.ResponseWriter, r *http.Request) { handleVerify(db, w, r) })
 	mux.HandleFunc("/v1/auth/logout", func(w http.ResponseWriter, r *http.Request) { handleLogout(db, w, r) })
+	mux.HandleFunc("/v1/profile", func(w http.ResponseWriter, r *http.Request) { handleProfile(db, w, r) })
 	handler := rateLimitMiddleware(loggingMiddleware(mux))
 	srv := &http.Server{Addr: cfg.Listen, Handler: handler, ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 30 * time.Second, MaxHeaderBytes: 16 << 10}
 	fmt.Println("AETHRA auth service listening on", cfg.Listen)
@@ -403,13 +404,56 @@ func handleLogout(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 	if parts := strings.Split(token, "."); len(parts) == 2 {
 		if body, err := base64.RawURLEncoding.DecodeString(parts[0]); err == nil {
 			fields := strings.Split(string(body), "|")
-			if len(fields) == 5 {
+			if len(fields) == 4 {
 				userID = fields[0]
 			}
 		}
 	}
 	recordAudit(db, userID, "logout", r.RemoteAddr, map[string]any{"revoked": true})
 	writeJSON(w, 200, map[string]bool{"ok": true})
+}
+
+func handleProfile(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", 405)
+		return
+	}
+	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+	parts := strings.Split(token, ".")
+	if len(parts) != 2 {
+		http.Error(w, "invalid token", 401)
+		return
+	}
+	body, err := base64.RawURLEncoding.DecodeString(parts[0])
+	if err != nil {
+		http.Error(w, "invalid token", 401)
+		return
+	}
+	fields := strings.Split(string(body), "|")
+	if len(fields) != 5 || !verifySession(db, fields[0], token) {
+		http.Error(w, "invalid session", 401)
+		return
+	}
+	var req struct { AvatarID int `json:"avatar_id"` }
+	r.Body = http.MaxBytesReader(w, r.Body, 4096)
+	if json.NewDecoder(r.Body).Decode(&req) != nil || req.AvatarID < 0 || req.AvatarID >= 30 {
+		http.Error(w, "invalid avatar", 400)
+		return
+	}
+	q := fmt.Sprintf("UPDATE users SET avatar_id=%d, updated_at=%d WHERE id='%s';", req.AvatarID, time.Now().Unix(), sqlSafe(fields[0]))
+	if err := sqlExec(db, q); err != nil {
+		http.Error(w, "profile update failed", 500)
+		return
+	}
+	character := fields[2]
+	username := fields[1]
+	newToken := signTokenWithCharacter(fields[0], username, character, req.AvatarID, 24*time.Hour)
+	if err := recordSession(db, fields[0], newToken, time.Now().Add(24*time.Hour).Unix()); err != nil {
+		http.Error(w, "session creation failed", 500)
+		return
+	}
+	_ = revokeSession(db, token)
+	writeJSON(w, 200, map[string]any{"username": username, "character": character, "avatar_id": req.AvatarID, "token": newToken})
 }
 
 func sqlSafe(v string) string { return strings.ReplaceAll(v, "'", "''") }
