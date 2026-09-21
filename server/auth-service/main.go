@@ -434,19 +434,29 @@ func handleProfile(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid session", 401)
 		return
 	}
-	var req struct { AvatarID int `json:"avatar_id"` }
+	var req struct {
+		Username string `json:"username"`
+		AvatarID int `json:"avatar_id"`
+	}
 	r.Body = http.MaxBytesReader(w, r.Body, 4096)
 	if json.NewDecoder(r.Body).Decode(&req) != nil || req.AvatarID < 0 || req.AvatarID >= 30 {
-		http.Error(w, "invalid avatar", 400)
+		http.Error(w, "invalid profile", 400)
 		return
 	}
-	q := fmt.Sprintf("UPDATE users SET avatar_id=%d, updated_at=%d WHERE id='%s';", req.AvatarID, time.Now().Unix(), sqlSafe(fields[0]))
+	username := strings.TrimSpace(req.Username)
+	if username == "" {
+		username = fields[1]
+	}
+	if len(username) < 3 || len(username) > 24 {
+		http.Error(w, "invalid username", 400)
+		return
+	}
+	q := fmt.Sprintf("UPDATE users SET username='%s', avatar_id=%d, updated_at=%d WHERE id='%s';", sqlSafe(username), req.AvatarID, time.Now().Unix(), sqlSafe(fields[0]))
 	if err := sqlExec(db, q); err != nil {
-		http.Error(w, "profile update failed", 500)
+		http.Error(w, "username already exists or profile update failed", 409)
 		return
 	}
 	character := fields[2]
-	username := fields[1]
 	newToken := signTokenWithCharacter(fields[0], username, character, req.AvatarID, 24*time.Hour)
 	if err := recordSession(db, fields[0], newToken, time.Now().Add(24*time.Hour).Unix()); err != nil {
 		http.Error(w, "session creation failed", 500)
