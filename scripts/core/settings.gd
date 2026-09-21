@@ -17,7 +17,7 @@ const DEFAULTS := {
     "window_width": 1366,
     "window_height": 768,
     "window_mode": 0,
-    "auth_server_url": "",
+    "auth_server_url": "http://127.0.0.1:8090",
 }
 const DEFAULT_CONTROLS := {
     "move_forward": "W",
