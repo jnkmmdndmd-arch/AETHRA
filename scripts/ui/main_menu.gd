@@ -161,7 +161,8 @@ func _layout_auth_overlay() -> void:
         minf(520.0, viewport_size.y - 64.0)
     )
     auth_overlay.size = Vector2(maxf(panel_size.x, 460.0), maxf(panel_size.y, 420.0))
-    auth_overlay.position = -auth_overlay.size * 0.5
+    auth_overlay.size = Vector2(minf(560.0, maxf(500.0, viewport_size.x - 80.0)), minf(460.0, maxf(400.0, viewport_size.y - 80.0)))
+    auth_overlay.position = (viewport_size - auth_overlay.size) * 0.5
 
 func _build_sidebar(parent: PanelContainer) -> void:
     var scroll := ScrollContainer.new()
@@ -298,9 +299,6 @@ func _build_social(parent: PanelContainer) -> void:
     _label(profile_text, "متصل" if AppState.is_authenticated else "وضع محلي", 10, GREEN if AppState.is_authenticated else MUTED)
 
     var heading := HBoxContainer.new()
-    heading.layout_direction = Control.LAYOUT_DIRECTION_RTL
-    heading.add_theme_constant_override("separation", 8)
-    box.add_child(heading)
     heading.layout_direction = Control.LAYOUT_DIRECTION_RTL
     heading.add_theme_constant_override("separation", 8)
     box.add_child(heading)
@@ -452,7 +450,7 @@ func _build_auth_gate() -> void:
     if AppState.is_authenticated:
         return
     auth_overlay = _panel(Color(0.01, 0.02, 0.045, 0.96), 26, Color(0.25, 0.75, 1.0, 0.48))
-    auth_overlay.set_anchors_preset(Control.PRESET_CENTER)
+    auth_overlay.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
     add_child(auth_overlay)
     _layout_auth_overlay()
     var margin := MarginContainer.new()
