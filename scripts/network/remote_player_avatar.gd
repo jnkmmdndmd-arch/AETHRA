@@ -3,13 +3,15 @@ extends Node3D
 var player_id := 0
 var player_name := "Player"
 var character_id := "ranger"
+var avatar_id := 0
 var target_position := Vector3.ZERO
 var target_yaw := 0.0
 
-func setup(id: int, display_name: String, character: String) -> void:
+func setup(id: int, display_name: String, character: String, selected_avatar: int = 0) -> void:
     player_id = id
     player_name = display_name
     character_id = character
+    avatar_id = clampi(selected_avatar, 0, 29)
     target_position = global_position
     _build_visual()
 
