@@ -29,6 +29,7 @@ const DEFAULT_CONTROLS := {
     "crouch": "CTRL",
     "mine": "MOUSE1",
     "place": "MOUSE2",
+    "attack": "F",
     "inventory": "E",
     "pause": "ESC",
 }
@@ -83,7 +84,7 @@ func set_control(action: String, binding: String) -> void:
     settings_changed.emit()
 
 func apply_input_map() -> void:
-    var actions := ["move_forward","move_back","move_left","move_right","sprint","jump","crouch","inventory","pause","mine","place"]
+    var actions := ["move_forward","move_back","move_left","move_right","sprint","jump","crouch","inventory","pause","mine","place","attack"]
     for action in actions:
         if not InputMap.has_action(action):
             InputMap.add_action(action)
