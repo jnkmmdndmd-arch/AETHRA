@@ -11,7 +11,7 @@ func craft(inventory, recipe_id: String) -> bool:
     var output: Dictionary = recipe.output
     if not inventory.can_add_items(output):
         return false
-    var before := inventory.serialize()
+    var before: Dictionary = inventory.serialize()
     for key in recipe.inputs:
         if not inventory.remove_item(int(key), int(recipe.inputs[key])):
             inventory.deserialize(before)
