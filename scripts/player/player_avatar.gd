@@ -20,6 +20,7 @@ var mining_duration := 0.0
 var mining_active := false
 var is_local := true
 var peer_id := 1
+var attack_cooldown := 0.0
 var footstep_timer := 0.0
 
 func setup(voxel_world, local_player: bool = true, id: int = 1) -> void:
@@ -70,6 +71,7 @@ func _physics_process(delta: float) -> void:
     _update_camera()
     _update_movement(delta)
     survival.tick(delta, _is_underwater(), Input.is_action_pressed("sprint"))
+    attack_cooldown = maxf(0.0, attack_cooldown - delta)
 
 func apply_damage(amount: float) -> void:
     survival.apply_damage(amount)
@@ -108,6 +110,8 @@ func _unhandled_input(event: InputEvent) -> void:
             camera.position = Vector3(0, 0, 3.8) if third_person else Vector3.ZERO
     elif event.is_action_pressed("pause"):
         Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+    elif event.is_action_pressed("attack"):
+        _attack()
     elif event.is_action_pressed("mine"):
         _start_mining()
     elif event.is_action_released("mine"):
@@ -230,7 +234,7 @@ func _place_block() -> void:
         block_placed.emit()
 
 func _held_block_id(item_id: int) -> int:
-    if item_id >= 1 and item_id <= BlockRegistry.SNOW:
+    if item_id >= 1 and item_id <= BlockRegistry.LAST_BLOCK:
         return item_id
     match item_id:
         8: return BlockRegistry.PLANK
@@ -286,3 +290,29 @@ func _refresh_hotbar_ui() -> void:
     var hud_node := get_tree().get_first_node_in_group("aethra_hud")
     if hud_node != null and hud_node.has_method("set_selected"):
         hud_node.set_selected(inventory.selected)
+
+func _attack() -> void:
+    if attack_cooldown > 0.0:
+        return
+    attack_cooldown = 0.45
+    var best: Node3D = null
+    var best_distance := 3.2
+    var forward := -camera.global_transform.basis.z
+    for node in get_tree().get_nodes_in_group("creatures"):
+        var target := node as Node3D
+        if target == null:
+            continue
+        var offset := target.global_position - global_position
+        var distance := offset.length()
+        if distance > 0.1 and distance <= 3.2 and distance < best_distance and forward.dot(offset.normalized()) > 0.35:
+            best = target
+            best_distance = distance
+    if best != null and best.has_method("apply_damage"):
+        var held: Dictionary = inventory.slots[inventory.selected]
+        var item_id := int(held.get("item", ItemRegistry.HAND))
+        var weapon: Dictionary = ItemRegistry.get_item(item_id)
+        var damage := float(weapon.get("power", 1))
+        if str(weapon.get("category", "")) != "weapon":
+            damage = 1.0
+        best.apply_damage(damage + 2.0)
+        AudioManager.play("dig", -7.0)
