@@ -29,6 +29,38 @@ const PISTON := 25
 const OBSERVER := 26
 const HOPPER := 27
 const SNOW := 28
+const SANDSTONE := 29
+const RED_SAND := 30
+const RED_SANDSTONE := 31
+const CACTUS := 32
+const DRY_GRASS := 33
+const ACACIA_LOG := 34
+const ACACIA_LEAVES := 35
+const PALM_LOG := 36
+const PALM_LEAVES := 37
+const YELLOW_FLOWER := 38
+const BLUE_FLOWER := 39
+const MUSHROOM := 40
+const VINE := 41
+const ICE := 42
+const PACKED_ICE := 43
+const OBSIDIAN := 44
+const BASALT := 45
+const SLATE := 46
+const ROSE := 47
+const BERRY_BUSH := 48
+const WATER_LILY := 49
+const TALL_GRASS := 50
+const SNOW_BLOCK := 51
+const COAL_ORE := 52
+const GOLD_ORE := 53
+const EMERALD_ORE := 54
+const DIAMOND_ORE := 55
+const GLOWSTONE := 56
+const SANDSTONE_BRICK := 57
+const MOSS := 58
+const CRYSTAL_BLOCK := 59
+const LAST_BLOCK := 59
 
 var blocks: Dictionary = {}
 
@@ -68,6 +100,37 @@ func _register_defaults() -> void:
     register(OBSERVER, "Observer", "mechanism", Color("#525c63"), 3.0, 6.0, 0, false, 0.75, "pickaxe")
     register(HOPPER, "Hopper", "mechanism", Color("#444b52"), 3.0, 6.0, 0, false, 0.75, "pickaxe")
     register(SNOW, "Snow", "natural", Color("#e8f3ff"), 0.2, 0.2, 0, true, 1.0, "shovel")
+    register(SANDSTONE, "Sandstone", "natural", Color("#caa96b"), 1.0, 0.8, 0, false, 0.9, "pickaxe")
+    register(RED_SAND, "Red Sand", "natural", Color("#bb704d"), 0.5, 0.4, 0, false, 0.9, "shovel")
+    register(RED_SANDSTONE, "Red Sandstone", "natural", Color("#9b563e"), 1.0, 0.8, 0, false, 0.9, "pickaxe")
+    register(CACTUS, "Cactus", "plant", Color("#4b9b57"), 0.4, 0.3, 0, false, 0.7, "")
+    register(DRY_GRASS, "Dry Grass", "plant", Color("#b8a55a"), 0.1, 0.1, 0, true, 0.8, "")
+    register(ACACIA_LOG, "Acacia Timber", "building", Color("#9a6947"), 2.0, 2.0, 0, false, 0.8, "axe")
+    register(ACACIA_LEAVES, "Acacia Foliage", "natural", Color("#58794a"), 0.2, 0.2, 0, true, 0.8, "shears")
+    register(PALM_LOG, "Palm Timber", "building", Color("#7d5a3a"), 2.0, 2.0, 0, false, 0.8, "axe")
+    register(PALM_LEAVES, "Palm Foliage", "natural", Color("#3f8a55"), 0.2, 0.2, 0, true, 0.8, "shears")
+    register(YELLOW_FLOWER, "Sunflower Bloom", "plant", Color("#e4c34d"), 0.1, 0.1, 0, true, 0.8, "")
+    register(BLUE_FLOWER, "Azure Bloom", "plant", Color("#5c8fd8"), 0.1, 0.1, 0, true, 0.8, "")
+    register(MUSHROOM, "Mushroom", "plant", Color("#b76a58"), 0.2, 0.2, 0, true, 0.8, "")
+    register(VINE, "Vine", "plant", Color("#4d8b56"), 0.1, 0.1, 0, true, 0.8, "")
+    register(ICE, "Ice", "natural", Color("#8fd7ef", 0.8), 0.5, 0.5, 0, true, 0.95, "pickaxe")
+    register(PACKED_ICE, "Packed Ice", "natural", Color("#76b6d2"), 1.0, 0.8, 0, false, 0.95, "pickaxe")
+    register(OBSIDIAN, "Obsidian", "natural", Color("#2f2744"), 7.0, 1200.0, 0, false, 0.75, "pickaxe")
+    register(BASALT, "Basalt", "natural", Color("#4b4f55"), 2.5, 6.0, 0, false, 0.8, "pickaxe")
+    register(SLATE, "Slate", "natural", Color("#59626d"), 2.0, 5.0, 0, false, 0.8, "pickaxe")
+    register(ROSE, "Rose", "plant", Color("#c9687d"), 0.1, 0.1, 0, true, 0.8, "")
+    register(BERRY_BUSH, "Berry Bush", "plant", Color("#4f8e52"), 0.3, 0.3, 0, true, 0.75, "")
+    register(WATER_LILY, "Water Lily", "plant", Color("#66a87b"), 0.1, 0.1, 0, true, 1.0, "")
+    register(TALL_GRASS, "Tall Grass", "plant", Color("#6ca850"), 0.1, 0.1, 0, true, 0.8, "")
+    register(SNOW_BLOCK, "Packed Snow", "natural", Color("#dcecf7"), 0.3, 0.3, 0, false, 0.95, "shovel")
+    register(COAL_ORE, "Coal Ore", "resource", Color("#3f454c"), 2.0, 4.0, 0, false, 0.8, "pickaxe")
+    register(GOLD_ORE, "Gold Ore", "resource", Color("#d8b44b"), 3.0, 6.0, 0, false, 0.8, "pickaxe")
+    register(EMERALD_ORE, "Emerald Ore", "resource", Color("#4bbd77"), 3.0, 6.0, 0, false, 0.8, "pickaxe")
+    register(DIAMOND_ORE, "Diamond Ore", "resource", Color("#63d2e3"), 4.0, 8.0, 0, false, 0.75, "pickaxe")
+    register(GLOWSTONE, "Glowstone", "functional", Color("#f2c35b"), 0.3, 0.3, 15, false, 0.9, "")
+    register(SANDSTONE_BRICK, "Sandstone Brick", "building", Color("#aa8954"), 1.5, 4.0, 0, false, 0.9, "pickaxe")
+    register(MOSS, "Moss", "natural", Color("#5f8d65"), 0.2, 0.2, 0, true, 0.85, "")
+    register(CRYSTAL_BLOCK, "Aether Crystal Block", "resource", Color("#8c73dc"), 5.0, 12.0, 8, false, 0.7, "pickaxe")
 
 func register(id: int, display_name: String, category: String, color: Color, hardness: float, resistance: float, light_level: int, transparent: bool, friction: float, tool: String) -> void:
     blocks[id] = {
@@ -75,7 +138,7 @@ func register(id: int, display_name: String, category: String, color: Color, har
         "hardness": hardness, "resistance": resistance, "light": light_level,
         "transparent": transparent, "friction": friction, "tool": tool,
         "solid": not transparent and id not in [WATER, LAVA],
-        "flammable": id in [LOG, LEAVES, PLANK],
+        "flammable": id in [LOG, LEAVES, PLANK, ACACIA_LOG, ACACIA_LEAVES, PALM_LOG, PALM_LEAVES, DRY_GRASS],
     }
 
 func get_block(id: int) -> Dictionary:
