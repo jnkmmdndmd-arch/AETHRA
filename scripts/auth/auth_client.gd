@@ -93,6 +93,7 @@ func _on_request_completed(request: HTTPRequest, operation: String, session_toke
             if str(restored.get("username", "")).is_empty():
                 failure.emit("Saved session is invalid.")
                 return
+            restored["avatar_id"] = clampi(int(restored.get("avatar_id", 0)), 0, 29)
             success.emit(restored)
             return
         if response_code == 401 or response_code == 403:
