@@ -42,10 +42,10 @@ func _build_visual() -> void:
 
 func _size_for_type() -> Vector3:
     match creature_type:
-        "rabbit", "firefly": return Vector3(0.7, 0.5, 1.0)
+        "rabbit", "firefly", "fennec", "lizard", "snake", "bat", "crystal_mite": return Vector3(0.7, 0.5, 1.0)
         "spider": return Vector3(1.5, 0.45, 1.5)
-        "beetle", "moth": return Vector3(0.9, 0.35, 1.2)
-        "brute", "drake": return Vector3(1.5, 1.1, 2.1)
+        "beetle", "moth", "scorpion", "bee", "butterfly", "dragonfly": return Vector3(0.9, 0.35, 1.2)
+        "brute", "drake", "sand_wyrm", "stone_golem", "marsh_lurker": return Vector3(1.5, 1.1, 2.1)
         _: return Vector3(1.2, 0.8, 1.8)
 
 func _color_for_type() -> Color:
@@ -63,6 +63,22 @@ func _color_for_type() -> Color:
         "beetle": return Color("#365c57")
         "moth": return Color("#c4a4d9")
         "firefly": return Color("#a6d85b")
+        "camel": return Color("#c79f72")
+        "vulture": return Color("#5f5a56")
+        "fennec": return Color("#d98c55")
+        "lizard": return Color("#698e55")
+        "snake": return Color("#4f6d45")
+        "scorpion": return Color("#6d4f3c")
+        "bee": return Color("#d8b63f")
+        "butterfly": return Color("#7fa3d8")
+        "dragonfly": return Color("#5a98a9")
+        "horse": return Color("#75563f")
+        "chicken": return Color("#d8d2c5")
+        "bat": return Color("#4a4259")
+        "sand_wyrm": return Color("#9c6a4a")
+        "stone_golem": return Color("#7a7b78")
+        "marsh_lurker": return Color("#466d5a")
+        "crystal_mite": return Color("#8e83d1")
         _: return Color("#cbb58a")
 
 func _physics_process(delta: float) -> void:
@@ -75,7 +91,7 @@ func _physics_process(delta: float) -> void:
 
 func _think() -> void:
     var players := get_tree().get_nodes_in_group("players")
-    if creature_type in ["brute", "spider", "wraith", "drake", "wolf"] and not players.is_empty():
+    if creature_type in ["brute", "spider", "wraith", "drake", "wolf", "sand_wyrm", "stone_golem", "marsh_lurker"] and not players.is_empty():
         target = players[0]
         state = "attack"
         return
@@ -91,7 +107,7 @@ func _move(delta: float) -> void:
         move_target = target.global_position
         if global_position.distance_to(move_target) < 1.8 and attack_cooldown <= 0.0:
             if target.has_method("apply_damage"):
-                target.apply_damage(3.0 if creature_type in ["brute", "drake"] else 2.0 if creature_type in ["spider", "wraith", "wolf"] else 1.0)
+                target.apply_damage(4.0 if creature_type in ["brute", "drake", "sand_wyrm", "stone_golem"] else 2.0 if creature_type in ["spider", "wraith", "wolf", "marsh_lurker"] else 1.0)
             attack_cooldown = 1.4
     var flat := Vector3(move_target.x - global_position.x, 0, move_target.z - global_position.z)
     if flat.length() > 0.5:
