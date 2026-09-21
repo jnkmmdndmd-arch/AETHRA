@@ -190,7 +190,7 @@ func _on_remote_player_states(players: Dictionary) -> void:
         if node == null or not is_instance_valid(node):
             node = load("res://scripts/network/remote_player_avatar.gd").new()
             remote_players_root.add_child(node)
-            node.setup(id, str(row.get("name", "Player")), str(row.get("character", "ranger")))
+            node.setup(id, str(row.get("name", "Player")), str(row.get("character", "ranger")), clampi(int(row.get("avatar_id", 0)), 0, 29))
             remote_player_nodes[id] = node
         node.apply_state(row.get("position", Vector3.ZERO), float(row.get("yaw", 0.0)))
 
