@@ -18,7 +18,7 @@ The user-provided 58-section commercial specification is the source of requireme
 | 12 Crafting | Implemented foundation | `crafting.gd`, registry |
 | 13 Survival | Implemented foundation | `survival.gd` |
 | 14 Day/night | Implemented foundation | `scripts/world/world_time.gd` + persisted world time |
-| 15 Weather | Partial | Weather state + fog response; no particle precipitation yet |
+| 15 Weather | Partial | Day/night plus clear/rain/fog state; precipitation particles not implemented |
 | 16 Creatures | Implemented foundation | `creature.gd`, spawn manager |
 | 17 Combat | Partial | creature attack/damage foundation |
 | 18 Items | Implemented foundation | item registry |
@@ -28,14 +28,14 @@ The user-provided 58-section commercial specification is the source of requireme
 | 22 Dedicated server | Implemented foundation | `server/main_server.gd` |
 | 23 Server discovery | Partial | Saved favorites/direct server connection; no global discovery service |
 | 24 Private servers | Partial | direct address / server architecture |
-| 25 Accounts | Partial | client contract + auth-service schema |
+| 25 Accounts | Partial | Persistent same-device local accounts + remote auth client/service contract; multi-device service deployment remains external |
 | 26 Permissions | Partial | architecture; policy rules pending |
-| 27 Admin panel | Partial | developer console foundation |
+| 27 Admin panel | Blocked | Developer console source remains for development history but runtime access and F8 entry are disabled in the client release path |
 | 28 Persistence | Implemented foundation | atomic world snapshots |
 | 29 Database | Partial | schema provided for auth layer |
 | 30 Save system | Implemented foundation | `save_db.gd` |
 | 31 Chat | Implemented foundation | network RPC |
-| 32 Anti-cheat | Partial | Server-side range/state validation foundation; full movement/inventory/packet anti-cheat remains |
+| 32 Anti-cheat | Partial | Server-side block/range/token validation foundation; full movement reconciliation and authoritative combat/inventory hardening remain |
 | 33 Security | Partial | boundaries/docs |
 | 34 Graphics | Partial | original procedural 3D style |
 | 35 UI/UX | Implemented foundation | menu/settings/HUD |
@@ -66,3 +66,7 @@ The user-provided 58-section commercial specification is the source of requireme
 ## Rule
 
 No feature is labeled complete merely because a button or menu exists. The status must be backed by source code and test/runtime evidence.
+
+
+## 2026-09-21 audit update
+The current release branch contains the requested UI/auth/performance repairs plus security hardening. The project has 118 repository files and 31 GDScript source files. This matrix intentionally does not promote incomplete Minecraft-scale content, public account deployment, precipitation particles, or full authoritative multiplayer combat into completed status.
