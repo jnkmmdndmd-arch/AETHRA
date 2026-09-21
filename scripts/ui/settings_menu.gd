@@ -382,7 +382,8 @@ func _action_label(action: String) -> String:
         "jump": "القفز",
         "crouch": "الانحناء",
         "mine": "التكسير",
-        "place": "الوضع"
+        "place": "الوضع",
+        "attack": "الهجوم"
     }
     return str(labels.get(action, action))
 
