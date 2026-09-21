@@ -26,6 +26,20 @@ const HAMMER := 146
 const HOE := 147
 const COMPASS := 148
 const MAP := 149
+const WOOD_SWORD := 130
+const STONE_SWORD := 131
+const IRON_SWORD := 132
+const AETHER_SWORD := 133
+const BOW := 140
+const ARROW := 141
+const SHEARS := 142
+const BUCKET := 143
+const LANTERN := 144
+const ROPE := 145
+const HAMMER := 146
+const HOE := 147
+const COMPASS := 148
+const MAP := 149
 
 var items: Dictionary = {}
 
@@ -48,6 +62,20 @@ func _register_defaults() -> void:
     register(STONE_SHOVEL, "Stone Shovel", "tool", 1, 3, 220)
     register(IRON_SHOVEL, "Iron Shovel", "tool", 1, 4, 420)
     register(HEAL_FOOD, "Sun Fruit", "food", 16, 0, 0)
+    register(WOOD_SWORD, "Timber Sword", "weapon", 1, 3, 120)
+    register(STONE_SWORD, "Stone Sword", "weapon", 1, 4, 220)
+    register(IRON_SWORD, "Iron Sword", "weapon", 1, 5, 420)
+    register(AETHER_SWORD, "Aether Sword", "weapon", 1, 7, 720)
+    register(BOW, "Hunter Bow", "weapon", 1, 4, 240)
+    register(ARROW, "Arrow", "ammo", 64, 1, 0)
+    register(SHEARS, "Shears", "tool", 1, 2, 180)
+    register(BUCKET, "Water Vessel", "utility", 1, 0, 0)
+    register(LANTERN, "Lantern", "utility", 16, 0, 0)
+    register(ROPE, "Rope", "utility", 16, 0, 0)
+    register(HAMMER, "Stone Hammer", "tool", 1, 3, 180)
+    register(HOE, "Field Hoe", "tool", 1, 2, 160)
+    register(COMPASS, "Compass", "utility", 1, 0, 0)
+    register(MAP, "Explorer Map", "utility", 1, 0, 0)
     register(WOOD_SWORD, "Timber Sword", "weapon", 1, 3, 120)
     register(STONE_SWORD, "Stone Sword", "weapon", 1, 4, 220)
     register(IRON_SWORD, "Iron Sword", "weapon", 1, 5, 420)
