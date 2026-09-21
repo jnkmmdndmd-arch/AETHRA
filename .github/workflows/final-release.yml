@@ -16,7 +16,7 @@ jobs:
       - name: Install Inno Setup
         run: |
           choco install innosetup --no-progress -y
-          if (-not (Test-Path "$env:ProgramFiles(x86)\Inno Setup 6\ISCC.exe")) { throw "Inno Setup not found" }
+          if (-not (Test-Path "$env:ProgramFiles\Inno Setup 6\ISCC.exe")) { throw "Inno Setup not found" }
       - name: Build and validate Windows EXE
         run: |
           .\build_windows_auto.ps1 -Output "build/AETHRA-Wildbound.exe"
@@ -24,7 +24,7 @@ jobs:
           if (-not (Test-Path "build/AETHRA-Wildbound.exe")) { throw "Final EXE missing" }
       - name: Build installer
         run: |
-          & "$env:ProgramFiles(x86)\Inno Setup 6\ISCC.exe" "installer.iss"
+          & "$env:ProgramFiles\Inno Setup 6\ISCC.exe" "installer.iss"
           if ($LASTEXITCODE -ne 0) { throw "Installer build failed" }
           if (-not (Test-Path "build/AETHRA-Wildbound-Setup.exe")) { throw "Installer missing" }
       - name: Verify clean installation
