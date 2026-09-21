@@ -19,13 +19,13 @@ func _item_info(item_id: int) -> Dictionary:
 func _is_valid_item_id(item_id: int) -> bool:
     if item_id == ItemRegistry.EMPTY:
         return true
-    if item_id > BlockRegistry.AIR and item_id <= BlockRegistry.SNOW:
+    if item_id > BlockRegistry.AIR and item_id <= BlockRegistry.LAST_BLOCK:
         return item_id not in [BlockRegistry.WATER, BlockRegistry.LAVA, BlockRegistry.BEDROCK]
     var info := ItemRegistry.get_item(item_id)
     return int(info.get("id", ItemRegistry.EMPTY)) == item_id and str(info.get("category", "none")) != "none"
 
 func _stack_size_for(item_id: int) -> int:
-    if item_id > BlockRegistry.AIR and item_id <= BlockRegistry.SNOW and _is_valid_item_id(item_id):
+    if item_id > BlockRegistry.AIR and item_id <= BlockRegistry.LAST_BLOCK and _is_valid_item_id(item_id):
         return 64
     var info := ItemRegistry.get_item(item_id)
     if int(info.get("id", ItemRegistry.EMPTY)) == item_id and str(info.get("category", "none")) != "none":
@@ -143,6 +143,13 @@ func count_item(item_id: int) -> int:
         if int(slot.item) == item_id:
             total += int(slot.count)
     return total
+
+func select_slot(index: int) -> void:
+    selected = clampi(index, 0, 8)
+    changed.emit()
+
+func scroll_slot(direction: int) -> void:
+    select_slot(posmod(selected + direction, 9))
 
 func get_hotbar() -> Array[Dictionary]:
     return slots.slice(0, 9)
