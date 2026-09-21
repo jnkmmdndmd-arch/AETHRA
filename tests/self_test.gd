@@ -49,7 +49,7 @@ func _run() -> void:
     ))
 
     checks.append(_check("UI icon policy", func() -> bool:
-        var banned := ["éİyø§yß", "ºw^~)Şv", +§uçâçv", "éİyø§yÓ", "ºw^~)Şw", +§uçâçF", "éİyø§yÙ", "ºw^~)Şv", +§uçâçO", "éİyø§yÙ", "ºw^~)Şu", "×"]
+        var banned := ["â™Ÿ", "âŒ‚", "â–¶", "â–£", "â—‡", "â—†", "âš™", "â†ª", "â—", "â—‰", "â–¡", "Ã—"]
         for path in ["res://scripts/ui/main_menu.gd", "res://scripts/ui/hud.gd", "res://scripts/ui/settings_menu.gd"]:
             var text := FileAccess.get_file_as_string(path)
             for glyph in banned:
