@@ -83,7 +83,10 @@ func _resolve_spawn_position() -> void:
 func configure(settings: Dictionary) -> void:
     world_settings = settings.duplicate(true)
     if generator != null and generator.has_method("configure"):
-        generator.configure(bool(world_settings.get("structures", true)))
+        generator.configure(
+            bool(world_settings.get("structures", true)),
+            str(world_settings.get("world_type", ""))
+        )
 
 func is_ready_for_spawn() -> bool:
     return ready_emitted
