@@ -63,7 +63,11 @@ func _process(_delta: float) -> void:
         var chunk: Node3D = chunks.get(coord) as Node3D
         if chunk == null or not is_instance_valid(chunk):
             continue
-        chunk.call("build_mesh", _collision_needed(coord))
+        var collision_needed := _collision_needed(coord)
+        chunk.call("build_mesh", collision_needed)
+        if collision_needed and not ready_emitted and coord == world_to_chunk(spawn_position):
+            ready_emitted = true
+            world_ready.emit()
         build_budget -= 1
 
 func _resolve_spawn_position() -> void:
