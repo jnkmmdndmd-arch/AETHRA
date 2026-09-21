@@ -8,6 +8,8 @@ var think_timer := 0.0
 var move_target := Vector3.ZERO
 var speed := 2.2
 var attack_cooldown := 0.0
+var detection_range := 18.0
+var attack_range := 1.8
 
 func setup(kind: String, origin: Vector3) -> void:
     creature_type = kind
@@ -90,22 +92,49 @@ func _physics_process(delta: float) -> void:
     _move(delta)
 
 func _think() -> void:
+    if target != null and (not is_instance_valid(target) or global_position.distance_to(target.global_position) > detection_range):
+        target = null
     var players := get_tree().get_nodes_in_group("players")
-    if creature_type in ["brute", "spider", "wraith", "drake", "wolf", "sand_wyrm", "stone_golem", "marsh_lurker"] and not players.is_empty():
-        target = players[0]
-        state = "attack"
+    if creature_type in ["brute", "spider", "wraith", "drake", "wolf", "sand_wyrm", "stone_golem", "marsh_lurker"]:
+        var nearest: Node3D = null
+        var nearest_distance := detection_range
+        for candidate in players:
+            var player_node := candidate as Node3D
+            if player_node == null or not is_instance_valid(player_node):
+                continue
+            var distance := global_position.distance_to(player_node.global_position)
+            if distance < nearest_distance and _has_line_of_sight(player_node):
+                nearest = player_node
+                nearest_distance = distance
+        target = nearest
+        state = "attack" if target != null else "idle"
+        if target == null:
+            move_target = global_position
         return
-    if randf() < 0.35 or target == null:
+
+    if randf() < 0.35 or target == null or not is_instance_valid(target):
         target = null
         state = "explore"
         move_target = global_position + Vector3(randf_range(-8,8), 0, randf_range(-8,8))
     elif global_position.distance_to(target.global_position) < 10.0:
         state = "approach"
+    else:
+        state = "idle"
+
+func _has_line_of_sight(player_node: Node3D) -> bool:
+    var space_state := get_world_3d().direct_space_state
+    var from := global_position + Vector3.UP * 0.8
+    var to := player_node.global_position + Vector3.UP * 0.8
+    var query := PhysicsRayQueryParameters3D.create(from, to)
+    query.exclude = [self]
+    query.collision_mask = 1
+    var hit := space_state.intersect_ray(query)
+    return hit.is_empty() or hit.get("collider") == player_node
 
 func _move(delta: float) -> void:
     if state == "attack" and target:
         move_target = target.global_position
-        if global_position.distance_to(move_target) < 1.8 and attack_cooldown <= 0.0:
+        if global_position.distance_to(move_target) < attack_range and attack_cooldown <= 0.0 and _has_line_of_sight(target):
             if target.has_method("apply_damage"):
                 target.apply_damage(4.0 if creature_type in ["brute", "drake", "sand_wyrm", "stone_golem"] else 2.0 if creature_type in ["spider", "wraith", "wolf", "marsh_lurker"] else 1.0)
             attack_cooldown = 1.4
