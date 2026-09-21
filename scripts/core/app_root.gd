@@ -21,6 +21,7 @@ var performance_frame_sum := 0.0
 var performance_frame_count := 0
 var performance_low_time := 0.0
 var performance_high_time := 0.0
+var fps_overlay: Label
 
 func _ready() -> void:
     randomize()
@@ -29,6 +30,7 @@ func _ready() -> void:
     _restore_window_state()
     _build_lighting()
     _apply_graphics_profile()
+    _build_fps_overlay()
     if not Settings.settings_changed.is_connected(_apply_graphics_profile):
         Settings.settings_changed.connect(_apply_graphics_profile)
     _build_auth()
@@ -207,6 +209,26 @@ func _build_auth() -> void:
         AppState.character_id = str(saved_session.get("character", AppState.character_id))
         AppState.avatar_id = clampi(int(saved_session.get("avatar_id", AppState.avatar_id)), 0, AppState.MAX_AVATARS - 1)
         auth.restore_session(saved_token)
+
+func _build_fps_overlay() -> void:
+    var layer := CanvasLayer.new()
+    layer.layer = 100
+    add_child(layer)
+    fps_overlay = Label.new()
+    fps_overlay.name = "BootFPS"
+    fps_overlay.text = "FPS: 0 / %d" % Engine.max_fps
+    fps_overlay.position = Vector2(16, 10)
+    fps_overlay.size = Vector2(180, 30)
+    fps_overlay.text_direction = Control.TEXT_DIRECTION_LTR
+    fps_overlay.layout_direction = Control.LAYOUT_DIRECTION_LTR
+    fps_overlay.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+    fps_overlay.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    fps_overlay.add_theme_font_size_override("font_size", 14)
+    fps_overlay.add_theme_color_override("font_color", Color("#eaf6ff"))
+    fps_overlay.add_theme_color_override("font_shadow_color", Color(0,0,0,0.85))
+    fps_overlay.add_theme_constant_override("shadow_offset_x", 2)
+    fps_overlay.add_theme_constant_override("shadow_offset_y", 2)
+    layer.add_child(fps_overlay)
 
 func _build_menu() -> void:
     menu = load("res://scripts/ui/main_menu.gd").new()
@@ -448,6 +470,8 @@ func _unhandled_input(event: InputEvent) -> void:
             DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if mode == DisplayServer.WINDOW_MODE_FULLSCREEN else DisplayServer.WINDOW_MODE_FULLSCREEN)
 
 func _process(delta: float) -> void:
+    if fps_overlay:
+        fps_overlay.text = "FPS: %d / %d" % [Engine.get_frames_per_second(), Engine.max_fps]
     _adaptive_resolution(delta)
     if world != null and player != null and world.has_method("set_stream_center"):
         world.set_stream_center(player.global_position)
