@@ -83,6 +83,21 @@ func _update_camera() -> void:
 func _unhandled_input(event: InputEvent) -> void:
     if not is_local:
         return
+    if event is InputEventKey and event.pressed:
+        var slot := _hotbar_slot_from_key(event.physical_keycode)
+        if slot >= 0:
+            inventory.selected = slot
+            _refresh_hotbar_ui()
+            return
+    if event is InputEventMouseButton and event.pressed:
+        if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+            inventory.selected = posmod(inventory.selected - 1, 9)
+            _refresh_hotbar_ui()
+            return
+        if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+            inventory.selected = posmod(inventory.selected + 1, 9)
+            _refresh_hotbar_ui()
+            return
     if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
         rotate_y(-event.relative.x * float(Settings.get_value("mouse_sensitivity", 0.15)) * 0.01)
         pitch = clampf(pitch - event.relative.y * float(Settings.get_value("mouse_sensitivity", 0.15)) * 0.01, -1.5, 1.5)
@@ -124,7 +139,7 @@ func _update_movement(delta: float) -> void:
     move_and_slide()
 
 func _start_mining() -> void:
-    if world == null:
+    if world == null or AppState.game_mode == "adventure":
         return
     var result := _raycast_voxel()
     if result.is_empty():
@@ -181,7 +196,7 @@ func _finish_mining() -> void:
     mining_active = false
 
 func _place_block() -> void:
-    if world == null:
+    if world == null or AppState.game_mode == "adventure":
         return
     var result := _raycast_voxel()
     if result.is_empty():
@@ -253,3 +268,21 @@ func _would_intersect_player(block: Vector3i) -> bool:
 
 func _is_underwater() -> bool:
     return world != null and world.get_block(Vector3i(floori(global_position.x), floori(global_position.y + 1.3), floori(global_position.z))) == BlockRegistry.WATER
+
+func _hotbar_slot_from_key(keycode: Key) -> int:
+    match keycode:
+        KEY_1: return 0
+        KEY_2: return 1
+        KEY_3: return 2
+        KEY_4: return 3
+        KEY_5: return 4
+        KEY_6: return 5
+        KEY_7: return 6
+        KEY_8: return 7
+        KEY_9: return 8
+        _: return -1
+
+func _refresh_hotbar_ui() -> void:
+    var hud_node := get_tree().get_first_node_in_group("aethra_hud")
+    if hud_node != null and hud_node.has_method("set_selected"):
+        hud_node.set_selected(inventory.selected)

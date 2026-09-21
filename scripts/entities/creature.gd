@@ -17,7 +17,7 @@ func setup(kind: String, origin: Vector3) -> void:
 func _build_visual() -> void:
     var body := MeshInstance3D.new()
     var mesh := BoxMesh.new()
-    mesh.size = Vector3(1.2, 0.8, 1.8)
+    mesh.size = _size_for_type()
     body.mesh = mesh
     var mat := StandardMaterial3D.new()
     mat.albedo_color = _color_for_type()
@@ -40,10 +40,29 @@ func _build_visual() -> void:
     head.position = Vector3(0, 1.1, 0.9)
     add_child(head)
 
+func _size_for_type() -> Vector3:
+    match creature_type:
+        "rabbit", "firefly": return Vector3(0.7, 0.5, 1.0)
+        "spider": return Vector3(1.5, 0.45, 1.5)
+        "beetle", "moth": return Vector3(0.9, 0.35, 1.2)
+        "brute", "drake": return Vector3(1.5, 1.1, 2.1)
+        _: return Vector3(1.2, 0.8, 1.8)
+
 func _color_for_type() -> Color:
     match creature_type:
         "wolf": return Color("#778596")
         "brute": return Color("#7d4e51")
+        "deer": return Color("#9c704f")
+        "boar": return Color("#704f43")
+        "fox": return Color("#c66e3d")
+        "rabbit": return Color("#b8a79a")
+        "spider": return Color("#433a52")
+        "slime": return Color("#58bf7a")
+        "wraith": return Color("#6d8fff")
+        "drake": return Color("#9a4c64")
+        "beetle": return Color("#365c57")
+        "moth": return Color("#c4a4d9")
+        "firefly": return Color("#a6d85b")
         _: return Color("#cbb58a")
 
 func _physics_process(delta: float) -> void:
@@ -56,7 +75,7 @@ func _physics_process(delta: float) -> void:
 
 func _think() -> void:
     var players := get_tree().get_nodes_in_group("players")
-    if creature_type == "brute" and not players.is_empty():
+    if creature_type in ["brute", "spider", "wraith", "drake", "wolf"] and not players.is_empty():
         target = players[0]
         state = "attack"
         return
@@ -72,7 +91,7 @@ func _move(delta: float) -> void:
         move_target = target.global_position
         if global_position.distance_to(move_target) < 1.8 and attack_cooldown <= 0.0:
             if target.has_method("apply_damage"):
-                target.apply_damage(2.0 if creature_type == "brute" else 1.0)
+                target.apply_damage(3.0 if creature_type in ["brute", "drake"] else 2.0 if creature_type in ["spider", "wraith", "wolf"] else 1.0)
             attack_cooldown = 1.4
     var flat := Vector3(move_target.x - global_position.x, 0, move_target.z - global_position.z)
     if flat.length() > 0.5:
@@ -83,7 +102,9 @@ func _move(delta: float) -> void:
     else:
         velocity.x = move_toward(velocity.x, 0.0, 7.0 * delta)
         velocity.z = move_toward(velocity.z, 0.0, 7.0 * delta)
-    if not is_on_floor():
+    if creature_type in ["beetle", "moth", "firefly"] and target == null:
+        global_position.y += sin(Time.get_ticks_msec() * 0.004 + global_position.x) * 0.002
+    if not is_on_floor() and creature_type not in ["beetle", "moth", "firefly"]:
         velocity.y -= 24.0 * delta
     move_and_slide()
 

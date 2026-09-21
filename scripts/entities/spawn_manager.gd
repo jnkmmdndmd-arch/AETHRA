@@ -4,7 +4,7 @@ var world
 var enabled := true
 var spawn_timer := 0.0
 var max_creatures := 24
-var kinds := ["goat", "wolf", "brute"]
+var kinds := ["goat", "deer", "boar", "fox", "rabbit", "wolf", "brute", "spider", "slime", "wraith", "drake", "beetle", "moth", "firefly"]
 
 func setup(voxel_world, enable_creatures: bool = true) -> void:
     world = voxel_world

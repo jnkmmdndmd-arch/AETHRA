@@ -9,6 +9,7 @@ var inventory_ref
 var slot_labels: Array[Label] = []
 
 func build() -> void:
+    add_to_group("aethra_hud")
     stats = Label.new()
     stats.layout_direction = Control.LAYOUT_DIRECTION_RTL
     stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -104,6 +105,13 @@ func _refresh_hotbar() -> void:
 
 func set_player_stats(health: float, hunger: float, stamina: float, fps: float) -> void:
     stats.text = "AETHRA // بقاء\nالصحة %.1f  الجوع %.1f  التحمل %.1f\nالإطارات %.0f" % [health,hunger,stamina,fps]
+
+func set_selected(index: int) -> void:
+    selected = clampi(index, 0, max(0, slot_labels.size() - 1))
+    for i in slot_labels.size():
+        var label: Label = slot_labels[i]
+        label.add_theme_color_override("font_color", Color("#78ddff") if i == selected else Color("#eaf6ff"))
+        label.add_theme_font_size_override("font_size", 13 if i == selected else 12)
 
 func set_players(data: Dictionary) -> void:
     var names: Array[String] = []
