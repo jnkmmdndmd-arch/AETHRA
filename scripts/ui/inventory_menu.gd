@@ -16,8 +16,12 @@ func build(parent:Node, inventory_ref, crafting_ref)->void:
     var margin:=MarginContainer.new(); margin.add_theme_constant_override("margin_left",18); margin.add_theme_constant_override("margin_top",18); margin.add_theme_constant_override("margin_right",18); margin.add_theme_constant_override("margin_bottom",18); panel.add_child(margin)
     var root:=VBoxContainer.new(); root.add_theme_constant_override("separation",10); margin.add_child(root)
     var header:=HBoxContainer.new(); header.layout_direction=Control.LAYOUT_DIRECTION_RTL; root.add_child(header)
-    var title:=Label.new(); title.text=&'5£\¸Öäb.×ŸŠwâsZ7MhÞ9"; title.add_theme_font_size_override("font_size",24); title.size_flags_horizontal=Control.SIZE_EXPAND_FILL; header.add_child(title)
-    var close:=Button.new(); close.text="5£yÖ"#²6Æ÷6Rç&W76VBæ6öææV7B†gVæ2‚“¢f—6–&ÆSÖfÇ6S²–çWBæÖ÷W6UöÖöFSÔ–çWBäÔõU4UôÔôDUô4EU$TB“²†VFW"æFEö6†–ÆB†6Æ÷6R¢f"6öÇVÖç3£Ô„&÷„6öçF–æW"ææWr‚“²6öÇVÖç2æFE÷F†VÖUö6öç7FçEö÷fW'&–FR‚'6W&F–öâ"Ãb“²6öÇVÖç2ç6—¦UöfÆw5÷fW'F–6ÃÔ6öçG&öÂå4•¤UôU…äEôd”ÄÃ²&ö÷BæFEö6†–ÆB†6öÇVÖç2¢6Æ÷G5ö&÷ƒÔw&–D6öçF–æW"ææWr‚“²6Æ÷G5ö&÷‚æ6öÇVÖç3Óc²6Æ÷G5ö&÷‚ç6—¦UöfÆw5ö†÷&—¦öçFÃÔ6öçG&öÂå4•¤UôU…äEôd”ÄÃ²6öÇVÖç2æFEö6†–ÆB‡6Æ÷G5ö&÷‚¢&V6—Uö&÷ƒÕd&÷„6öçF–æW"ææWr‚“²&V6—Uö&÷‚æ7W7FöÕöÖ–æ–×VÕ÷6—¦SÕfV7F÷#"ƒ#ƒÃ“²6öÇVÖç2æFEö6†–ÆB‡&V6—Uö&÷‚¢f"'C£ÔÆ&VÂææWr‚“²'BçFW‡CÒ#Z5ÐMhÚ 3×3"; rt.add_theme_font_size_override("font_size",18); recipe_box.add_child(rt)
+    var title:=Label.new(); title.text="Ø§Ù„Ù…Ø®Ø²ÙˆÙ† ÙˆØ§Ù„ØªØµÙ†ÙŠØ¹"; title.add_theme_font_size_override("font_size",24); title.size_flags_horizontal=Control.SIZE_EXPAND_FILL; header.add_child(title)
+    var close:=Button.new(); close.text="Ø¥ØºÙ„Ø§Ù‚"; close.pressed.connect(func(): visible=false; Input.mouse_mode=Input.MOUSE_MODE_CAPTURED); header.add_child(close)
+    var columns:=HBoxContainer.new(); columns.add_theme_constant_override("separation",16); columns.size_flags_vertical=Control.SIZE_EXPAND_FILL; root.add_child(columns)
+    slots_box=GridContainer.new(); slots_box.columns=6; slots_box.size_flags_horizontal=Control.SIZE_EXPAND_FILL; columns.add_child(slots_box)
+    recipe_box=VBoxContainer.new(); recipe_box.custom_minimum_size=Vector2(280,0); columns.add_child(recipe_box)
+    var rt:=Label.new(); rt.text="ÙˆØµÙØ§Øª 3Ã—3"; rt.add_theme_font_size_override("font_size",18); recipe_box.add_child(rt)
     status_label=Label.new(); status_label.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART; recipe_box.add_child(status_label)
     creative_box=VBoxContainer.new(); creative_box.add_theme_constant_override("separation", 6); recipe_box.add_child(creative_box)
     _build_slots(); _build_recipes(); _build_creative_palette(); refresh()
@@ -31,48 +35,37 @@ func _build_creative_palette()->void:
     for child in creative_box.get_children(): child.queue_free()
     if AppState.game_mode != "creative":
         return
-    var title:=Label.new(); title.text="5£x¶éÝyø§yÔ˜œÖrƒZ5ÎHŽÈ]K˜YÝ[YWÙ›ÛÜÚ^™WÛÝ™\œšYJ™›ÛÜÚ^™H‹N
-NÈÜ™X]]™WØ›Þ˜YØÚ[
-]JBˆ˜\ˆÜšYQÜšYÛÛZ[™\‹›™]Ê
-NÈÜšY˜ÛÛ[[œÏLÎÈÜ™X]]™WØ›Þ˜YØÚ[
-ÜšY
-Bˆ›Üˆ][WÚY[ˆ˜[™ÙJK›ØÚÔ™YÚ\ÝžK“TÕÐ“ÐÒÊÌJN‚ˆYˆ][WÚY[ˆÐ›ØÚÔ™YÚ\ÝžK•ÐUT‹›ØÚÔ™YÚ\ÝžK“UK›ØÚÔ™YÚ\ÝžK‘Q“ÐÒ×NˆÛÛ[YBˆ˜\ˆ›ØÚÎP›ØÚÔ™YÚ\ÝžK™Ù]Ø›ØÚÊ][WÚY
-Bˆ˜\ˆ]ÛŽP]Û‹›™]Ê
-NÈ]Û‹^\ÝŠ›ØÚË™Ù]
-›˜[YH‹›ØÚÈŠJNÈ]Û‹˜Ý\ÝÛWÛZ[š[][WÜÚ^™OU™XÝÜŒŠLÍ
-Bˆ]Û‹œ™\ÜÙY˜ÛÛ›™XÝ
-[˜ÊYZ][WÚY
-Nˆ[™[ÜžK˜YÚ][JY[™[ÜžK—ÜÝXÚ×ÜÚ^™WÙ›ÜŠY
-JNÈ™Yœ™\Ú
+    var title:=Label.new(); title.text="Ù„ÙˆØ­Ø© Ø§Ù„Ø¥Ø¨Ø¯Ø§Ø¹"; title.add_theme_font_size_override("font_size",18); creative_box.add_child(title)
+    var grid:=GridContainer.new(); grid.columns=3; creative_box.add_child(grid)
+    for item_id in range(1,BlockRegistry.LAST_BLOCK+1):
+        if item_id in [BlockRegistry.WATER,BlockRegistry.LAVA,BlockRegistry.BEDROCK]: continue
+        var block:=BlockRegistry.get_block(item_id)
+        var button:=Button.new(); button.text=str(block.get("name","Block")); button.custom_minimum_size=Vector2(90,34)
+        button.pressed.connect(func(id:=item_id): inventory.add_item(id, inventory._stack_size_for(id)); refresh())
+        grid.add_child(button)
+    for item_id in [ItemRegistry.HEAL_FOOD,ItemRegistry.WOOD_PICK,ItemRegistry.STONE_PICK,ItemRegistry.IRON_PICK,ItemRegistry.WOOD_AXE,ItemRegistry.STONE_AXE,ItemRegistry.IRON_AXE,ItemRegistry.WOOD_SWORD,ItemRegistry.STONE_SWORD,ItemRegistry.IRON_SWORD,ItemRegistry.AETHER_SWORD,ItemRegistry.BOW,ItemRegistry.ARROW]:
+        var item:=ItemRegistry.get_item(item_id)
+        var button:=Button.new(); button.text=str(item.get("name","Item")); button.custom_minimum_size=Vector2(90,34)
+        button.pressed.connect(func(id:=item_id): inventory.add_item(id, inventory._stack_size_for(id)); refresh())
+        grid.add_child(button)
 
-JBˆÜšY˜YØÚ[
-]ÛŠBˆ›Üˆ][WÚY[ˆÒ][T™YÚ\ÝžK’PSÑ“ÓÑ][T™YÚ\ÝžK•ÓÓÑÔPÒË][T™YÚ\ÝžK”ÕÓ‘WÔPÒË][T™YÚ\ÝžK’T“Ó—ÔPÒË][T™YÚ\ÝžK•ÓÓÑÐVK][T™YÚ\ÝžK”ÕÓ‘WÐVK][T™YÚ\ÝžK’T“Ó—ÐVK][T™YÚ\ÝžK•ÓÓÑÔÕÓÔ‘][T™YÚ\ÝžK”ÕÓ‘WÔÕÓÔ‘][T™YÚ\ÝžK’T“Ó—ÔÕÓÔ‘][T™YÚ\ÝžKQUT—ÔÕÓÔ‘][T™YÚ\ÝžK“ÕË][T™YÚ\ÝžKT”“Õ×N‚ˆ˜\ˆ][NR][T™YÚ\ÝžK™Ù]Ú][J][WÚY
-Bˆ˜\ˆ]ÛŽP]Û‹›™]Ê
-NÈ]Û‹^\ÝŠ][K™Ù]
-›˜[YH‹’][HŠJNÈ]Û‹˜Ý\ÝÛWÛZ[š[][WÜÚ^™OU™XÝÜŒŠLÍ
-Bˆ]Û‹œ™\ÜÙY˜ÛÛ›™XÝ
-[˜ÊYZ][WÚY
-Nˆ[™[ÜžK˜YÚ][JY[™[ÜžK—ÜÝXÚ×ÜÚ^™WÙ›ÜŠY
-JNÈ™Yœ™\Ú
+func _build_recipes()->void:
+    for child in recipe_box.get_children():
+        if child is Button: child.queue_free()
+    for recipe in RecipeRegistry.recipes:
+        var b:=Button.new(); b.text=str(recipe.id); b.custom_minimum_size=Vector2(250,40); b.pressed.connect(func(recipe_id=str(recipe.id)): _craft(recipe_id)); recipe_box.add_child(b)
 
-JBˆÜšY˜YØÚ[
-]ÛŠB‚™[˜ÈØZ[Ü™XÚ\\Ê
-KO›ÚY‚ˆ›ÜˆÚ[[ˆ™XÚ\WØ›Þ™Ù]ØÚ[™[Š
-N‚ˆYˆÚ[\È]ÛŽˆÚ[œ]Y]YWÙœ™YJ
-Bˆ›Üˆ™XÚ\H[ˆ™XÚ\T™YÚ\ÝžKœ™XÚ\\Î‚ˆ˜\ˆŽP]Û‹›™]Ê
-NÈ‹^\ÝŠ™XÚ\KšY
-NÈ‹˜Ý\ÝÛWÛZ[š[][WÜÚ^™OU™XÝÜŒŠL
-NÈ‹œ™\ÜÙY˜ÛÛ›™XÝ
-[˜Ê™XÚ\WÚY\ÝŠ™XÚ\KšY
-JNˆØÜ˜Y
-™XÚ\WÚY
-JNÈ™XÚ\WØ›Þ˜YØÚ[
-ŠB‚™[˜ÈØÜ˜Y
-™XÚ\WÚY”Ýš[™ÊKO›ÚY‚ˆ˜\ˆÚÎ˜›ÛÛXÜ˜Y[™Ë˜Ü˜Y
-[™[ÜžK™XÚ\WÚY
-NÈÝ]\×ÛX™[^IŠ®×ŸŠwI‰ÍhÞ55£xäˆ¥˜½¬•±Í”€˜œÖtƒZ7ÈhØ 5£XÌÖ’Z7ŒHºw^~)ÞuÉÍhÞ)"; refresh()
+func _craft(recipe_id:String)->void:
+    var ok:bool=crafting.craft(inventory,recipe_id); status_label.text="ØªÙ… Ø§Ù„ØªØµÙ†ÙŠØ¹" if ok else "Ø§Ù„Ù…ÙˆØ§Ø¯ Ø£Ùˆ Ø§Ù„Ø³Ø¹Ø© ØºÙŠØ± ÙƒØ§ÙÙŠØ©"; refresh()
 
 func refresh()->void:
     if inventory==null or slots_box==null: return
     for i in mini(inventory.slots.size(),slots_box.get_child_count()):
-        var b:=slots_box.get_child(i) as Button; var s:Dictionary=inventory.slots[i]; var id:=int(s.get("item",0)); var count:=int(s.get("count",0)); var name: String="éÝyø§y×'5£hˆ(€€€€€€€¥˜¥„ôÀ…¹½Õ¹ÐøÀè(€€€€€€€€€€€¹…µ”õÍÑÈ¡%Ñ•µI•¥ÍÑÉä¹•Ñ}¥Ñ•´¡¥¤¹•Ð ‰¹…µ”ˆ°‰%Ñ•´ˆ¤¤(€€€€€€€€€€€¥˜¥øÀ…¹¥ðõ	±½­I•¥ÍÑÉä¹1MQ}	1=,…¹ÍÑÈ¡%Ñ•µI•¥ÍÑÉä¹•Ñ}¥Ñ•´¡¥¤¹•Ð ‰…Ñ•½Éäˆ°‰¹½¹”ˆ¤¤ôô‰¹½¹”ˆè¹…µ”õÍÑÈ¡	±½­I•¥ÍÑÉä¹•Ñ}‰±½¬¡¥¤¹•Ð ‰¹…µ”ˆ°‰	±½¬ˆ¤¤(€€€€€€€ˆ¹Ñ•áÐôˆ•‘q¸•Ìà•ˆ€”m¤¬Ä±¹…µ”±½Õ¹Ñtìˆ¹‰ÕÑÑ½¹}ÁÉ•ÍÍ•õ¤ôõ¥¹Ù•¹Ñ½Éä¹Í•±•Ñ•()™Õ¹Œ}ÁÉ½•ÍÌ¡}‘•±Ñ„é™±½…Ð¤´ùÙ½¥è(€€€¥˜Ù¥Í¥‰±”èÉ•™É•Í  ¤
+        var b:=slots_box.get_child(i) as Button; var s:Dictionary=inventory.slots[i]; var id:=int(s.get("item",0)); var count:=int(s.get("count",0)); var name: String="ÙØ§Ø±Øº"
+        if id!=0 and count>0:
+            name=str(ItemRegistry.get_item(id).get("name","Item"))
+            if id>0 and id<=BlockRegistry.LAST_BLOCK and str(ItemRegistry.get_item(id).get("category","none"))=="none": name=str(BlockRegistry.get_block(id).get("name","Block"))
+        b.text="%d\n%s x%d" % [i+1,name,count]; b.button_pressed=i==inventory.selected
+
+func _process(_delta:float)->void:
+    if visible: refresh()
