@@ -463,12 +463,10 @@ func _on_player_health(_health, _max_health) -> void:
     _update_hud()
 
 func _build_console() -> void:
-    console = load("res://scripts/tools/dev_console.gd").new()
-    console.build(self)
+    return
 
 func toggle_developer_console() -> void:
-    if console:
-        console.toggle()
+    return
 
 func _update_hud() -> void:
     if hud == null or player == null:
@@ -501,9 +499,8 @@ func _show_menu() -> void:
         menu.show()
 
 func _unhandled_input(event: InputEvent) -> void:
-    if event is InputEventKey and event.pressed:
-        if event.physical_keycode == KEY_F8 and console:
-            console.toggle()
+    if event is InputEventKey and event.pressed and event.physical_keycode == KEY_F8:
+        return
         elif event.physical_keycode == KEY_ESCAPE:
             if player != null:
                 Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
