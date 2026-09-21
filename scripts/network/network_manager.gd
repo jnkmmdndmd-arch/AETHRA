@@ -88,7 +88,7 @@ func request_join(profile: Dictionary) -> void:
     var character := str(token_identity.get("character", profile.get("character", "ranger")))
     if character not in ["ranger", "engineer", "shadow", "grove"]:
         character = "ranger"
-    profile = {"name": player_name, "character": character}
+    profile = {"name": player_name, "character": character, "avatar_id": clampi(int(token_identity.get("avatar_id", profile.get("avatar_id", 0))), 0, 29)}
     remote_players[id] = profile.duplicate(true)
     remote_players[id]["position"] = bound_world.spawn_position if bound_world != null else Vector3(8.5, 45.0, 8.5)
     remote_players[id]["yaw"] = 0.0
@@ -131,6 +131,7 @@ func publish_local_player_state(position: Vector3, yaw: float, character: String
         remote_players[1] = {
             "name": AppState.player_name,
             "character": AppState.character_id,
+            "avatar_id": AppState.avatar_id,
             "position": position,
             "yaw": yaw
         }
@@ -166,6 +167,7 @@ func _broadcast_player_states() -> void:
             snapshot[id] = {
                 "name": row.get("name", "Player"),
                 "character": row.get("character", "ranger"),
+                "avatar_id": clampi(int(row.get("avatar_id", 0)), 0, 29),
                 "position": row.get("position", Vector3.ZERO),
                 "yaw": float(row.get("yaw", 0.0))
             }
@@ -363,7 +365,7 @@ func _on_disconnected() -> void:
 
 func _on_peer_connected(id: int) -> void:
     if multiplayer.is_server():
-        remote_players[id] = {"name": "Player-%d" % id, "character": "ranger", "position": Vector3.ZERO, "yaw": 0.0}
+        remote_players.erase(id)
         _broadcast_presence()
 
 func _on_peer_disconnected(id: int) -> void:
