@@ -22,6 +22,7 @@ var is_local := true
 var peer_id := 1
 var attack_cooldown := 0.0
 var footstep_timer := 0.0
+var mining_generation := 0
 
 func setup(voxel_world, local_player: bool = true, id: int = 1) -> void:
     world = voxel_world
@@ -143,6 +144,8 @@ func _update_movement(delta: float) -> void:
     move_and_slide()
 
 func _start_mining() -> void:
+    if mining_active:
+        return
     if world == null or AppState.game_mode == "adventure":
         return
     var result := _raycast_voxel()
@@ -164,17 +167,17 @@ func _start_mining() -> void:
     mining_duration = maxf(0.08, float(block.hardness) / tool_bonus)
     mining_started = Time.get_ticks_msec() / 1000.0
     mining_active = true
-    _finish_mining()
+    mining_generation += 1
+    _finish_mining(mining_generation, mine_target, id)
 
-func _finish_mining() -> void:
+func _finish_mining(generation: int, target_pos: Vector3i, target_id: int) -> void:
     if not mining_active:
         return
     await get_tree().create_timer(maxf(0.0, mining_duration - (Time.get_ticks_msec() / 1000.0 - mining_started))).timeout
-    if not mining_active or world == null:
-        mining_active = false
+    if not mining_active or generation != mining_generation or world == null:
         return
-    var id: int = int(world.get_block(mine_target))
-    if id == BlockRegistry.AIR or id == BlockRegistry.BEDROCK:
+    var id: int = int(world.get_block(target_pos))
+    if id != target_id or id == BlockRegistry.AIR or id == BlockRegistry.BEDROCK:
         mining_active = false
         return
     if not is_local:
@@ -194,9 +197,9 @@ func _finish_mining() -> void:
             inventory.add_item(BlockRegistry.get_drop(id), 1)
             survival.add_xp(1 if id in [BlockRegistry.COPPER_ORE, BlockRegistry.IRON_ORE, BlockRegistry.CRYSTAL_ORE] else 0)
             block_mined.emit()
-            NetworkManager.apply_host_block_change(mine_target, BlockRegistry.AIR)
+            NetworkManager.apply_host_block_change(target_pos, BlockRegistry.AIR)
     else:
-        NetworkManager.request_block_change.rpc_id(1, mine_target, BlockRegistry.AIR, held_id)
+        NetworkManager.request_block_change.rpc_id(1, target_pos, BlockRegistry.AIR, held_id)
     mining_active = false
 
 func _place_block() -> void:
