@@ -71,7 +71,28 @@ func openDB(path, schemaPath string) (*C.sqlite3, error) {
 		C.sqlite3_close(db)
 		return nil, err
 	}
+	if err := ensureAvatarColumn(db); err != nil {
+		C.sqlite3_close(db)
+		return nil, err
+	}
 	return db, nil
+}
+
+func ensureAvatarColumn(db *C.sqlite3) error {
+	cquery := C.CString("PRAGMA table_info(users);")
+	defer C.free(unsafe.Pointer(cquery))
+	var stmt *C.sqlite3_stmt
+	if C.sqlite3_prepare_v2(db, cquery, -1, &stmt, nil) != C.SQLITE_OK {
+		return errors.New("cannot inspect users table")
+	}
+	defer C.sqlite3_finalize(stmt)
+	for C.sqlite3_step(stmt) == C.SQLITE_ROW {
+		namePtr := C.sqlite3_column_text(stmt, 1)
+		if namePtr != nil && C.GoString((*C.char)(unsafe.Pointer(namePtr))) == "avatar_id" {
+			return nil
+		}
+	}
+	return sqlExec(db, "ALTER TABLE users ADD COLUMN avatar_id INTEGER NOT NULL DEFAULT 0;")
 }
 
 func randomID() string {
@@ -118,11 +139,13 @@ type authReq struct {
 	Username  string `json:"username"`
 	Password  string `json:"password"`
 	Character string `json:"character"`
+	AvatarID  int    `json:"avatar_id"`
 }
 type authResp struct {
 	UserID    string `json:"user_id"`
 	Username  string `json:"username"`
 	Character string `json:"character"`
+	AvatarID  int    `json:"avatar_id"`
 	Token     string `json:"token"`
 }
 
@@ -256,13 +279,17 @@ func handleRegister(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid character", 400)
 		return
 	}
+	if req.AvatarID < 0 || req.AvatarID >= 30 {
+		http.Error(w, "invalid avatar", 400)
+		return
+	}
 	uid := randomID()
 	salt := make([]byte, 16)
 	_, _ = rand.Read(salt)
 	hash := pbkdf2SHA256(req.Password, salt, 150000)
 	packed := append(salt, hash...)
 	now := time.Now().Unix()
-	q := fmt.Sprintf("INSERT INTO users(id,username,password_hash,character_id,created_at,updated_at) VALUES('%s','%s',X'%s','%s',%d,%d);", sqlSafe(uid), sqlSafe(req.Username), hex.EncodeToString(packed), sqlSafe(req.Character), now, now)
+	q := fmt.Sprintf("INSERT INTO users(id,username,password_hash,character_id,avatar_id,created_at,updated_at) VALUES('%s','%s',X'%s','%s',%d,%d);", sqlSafe(uid), sqlSafe(req.Username), hex.EncodeToString(packed), sqlSafe(req.Character), now, now)
 	if err := sqlExec(db, q); err != nil {
 		http.Error(w, "account already exists or database error", 409)
 		return
@@ -273,7 +300,7 @@ func handleRegister(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	recordAudit(db, uid, "register", r.RemoteAddr, map[string]any{"character": req.Character})
-	writeJSON(w, 200, authResp{UserID: uid, Username: req.Username, Character: req.Character, Token: token})
+	writeJSON(w, 200, authResp{UserID: uid, Username: req.Username, Character: req.Character, AvatarID: req.AvatarID, Token: token})
 }
 
 func handleLogin(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
@@ -288,7 +315,7 @@ func handleLogin(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	uname := sqlSafe(strings.TrimSpace(req.Username))
-	stmtSQL := fmt.Sprintf("SELECT id,password_hash,character_id FROM users WHERE username='%s' LIMIT 1;", uname)
+	stmtSQL := fmt.Sprintf("SELECT id,password_hash,character_id,avatar_id FROM users WHERE username='%s' LIMIT 1;", uname)
 	c := C.CString(stmtSQL)
 	defer C.free(unsafe.Pointer(c))
 	var stmt *C.sqlite3_stmt
@@ -305,6 +332,7 @@ func handleLogin(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 	blob := C.sqlite3_column_blob(stmt, 1)
 	n := C.sqlite3_column_bytes(stmt, 1)
 	charPtr := C.sqlite3_column_text(stmt, 2)
+	avatarID := int(C.sqlite3_column_int(stmt, 3))
 	uid := C.GoString((*C.char)(unsafe.Pointer(idPtr)))
 	char := C.GoString((*C.char)(unsafe.Pointer(charPtr)))
 	packed := C.GoBytes(blob, n)
@@ -318,7 +346,7 @@ func handleLogin(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	recordAudit(db, uid, "login", r.RemoteAddr, nil)
-	writeJSON(w, 200, authResp{UserID: uid, Username: req.Username, Character: char, Token: token})
+	writeJSON(w, 200, authResp{UserID: uid, Username: req.Username, Character: char, AvatarID: avatarID, Token: token})
 }
 
 func handleVerify(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
