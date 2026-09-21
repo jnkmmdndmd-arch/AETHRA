@@ -98,5 +98,16 @@ func _draw() -> void:
             draw_circle(center, side * 0.34, c, false, w, true)
             draw_line(Vector2(side * 0.31, center.y), Vector2(side * 0.69, center.y), c, w, true)
             draw_line(Vector2(center.x, side * 0.31), Vector2(center.x, side * 0.69), c, w, true)
+        "badge":
+            draw_circle(center, side * 0.34, c, false, w, true)
+            draw_polyline(PackedVector2Array([
+                Vector2(side * 0.32, side * 0.30),
+                Vector2(side * 0.42, side * 0.18),
+                Vector2(side * 0.50, side * 0.27),
+                Vector2(side * 0.58, side * 0.18),
+                Vector2(side * 0.68, side * 0.30)
+            ]), c, w, true)
+            draw_line(Vector2(side * 0.38, side * 0.49), Vector2(side * 0.62, side * 0.49), c, w, true)
+            draw_line(Vector2(side * 0.38, side * 0.59), Vector2(side * 0.62, side * 0.59), c, w, true)
         _:
             draw_circle(center, side * 0.25, c, false, w, true)

@@ -2,11 +2,22 @@ extends Node3D
 
 const SIZE := 16
 const HEIGHT := 96
+const FACE_DIRS: Array[Vector3i] = [Vector3i.UP, Vector3i.DOWN, Vector3i.LEFT, Vector3i.RIGHT, Vector3i.FORWARD, Vector3i.BACK]
+const FACE_VERTS: Array = [
+    [Vector3(0,1,0), Vector3(1,1,0), Vector3(1,1,1), Vector3(0,1,1)],
+    [Vector3(0,0,1), Vector3(1,0,1), Vector3(1,0,0), Vector3(0,0,0)],
+    [Vector3(0,0,0), Vector3(0,0,1), Vector3(0,1,1), Vector3(0,1,0)],
+    [Vector3(1,0,1), Vector3(1,0,0), Vector3(1,1,0), Vector3(1,1,1)],
+    [Vector3(0,0,1), Vector3(0,1,1), Vector3(1,1,1), Vector3(1,0,1)],
+    [Vector3(1,0,0), Vector3(1,1,0), Vector3(0,1,0), Vector3(0,0,0)],
+]
+const FACE_NORMALS: Array[Vector3] = [Vector3.UP, Vector3.DOWN, Vector3.LEFT, Vector3.RIGHT, Vector3.FORWARD, Vector3.BACK]
 var chunk_coord := Vector2i.ZERO
 var voxels := PackedByteArray()
 var mesh_instance: MeshInstance3D
 var collision_body: StaticBody3D
 var dirty := true
+var rebuild_queued := false
 var world_ref: Node = null
 
 func setup(coord: Vector2i, data: PackedByteArray, owner_world: Node = null) -> void:
@@ -39,6 +50,18 @@ func set_voxel(local: Vector3i, id: int) -> void:
     voxels[index_of(local)] = id
     dirty = true
 
+func mark_mesh_dirty() -> void:
+    dirty = true
+    if rebuild_queued:
+        return
+    rebuild_queued = true
+    call_deferred("_rebuild_mesh_if_dirty")
+
+func _rebuild_mesh_if_dirty() -> void:
+    rebuild_queued = false
+    if is_instance_valid(self) and dirty and is_inside_tree():
+        build_mesh()
+
 func build_mesh() -> void:
     if voxels.is_empty():
         return
@@ -59,7 +82,7 @@ func build_mesh() -> void:
         [Vector3(0,0,1), Vector3(0,1,1), Vector3(1,1,1), Vector3(1,0,1)],
         [Vector3(1,0,0), Vector3(1,1,0), Vector3(0,1,0), Vector3(0,0,0)],
     ]
-    var normals_face := [Vector3.UP, Vector3.DOWN, Vector3.LEFT, Vector3.RIGHT, Vector3.FORWARD, Vector3.BACK]
+    var normals_face := FACE_NORMALS
     for x in SIZE:
         for z in SIZE:
             for y in HEIGHT:
@@ -70,7 +93,7 @@ func build_mesh() -> void:
                 var base := Vector3(x, y, z)
                 var is_fluid := id == BlockRegistry.WATER or id == BlockRegistry.LAVA
                 for face_index in 6:
-                    var n: Vector3i = Vector3i(x,y,z) + face_dirs[face_index]
+                    var n: Vector3i = Vector3i(x,y,z) + FACE_DIRS[face_index]
                     var neighbor: int = get_voxel(n)
                     if is_fluid:
                         if neighbor == id:
@@ -78,7 +101,7 @@ func build_mesh() -> void:
                         if BlockRegistry.is_solid(neighbor):
                             continue
                         var fluid_base := fluid_vertices.size()
-                        var verts: Array = face_verts[face_index]
+                        var verts: Array = FACE_VERTS[face_index]
                         for raw_p in verts:
                             var p: Vector3 = raw_p as Vector3
                             var fp: Vector3 = p
@@ -96,7 +119,7 @@ func build_mesh() -> void:
                         var start := vertices.size()
                         var shade := 0.74 + face_index * 0.035
                         var c: Color = block.color * shade
-                        for p in face_verts[face_index]:
+                        for p in FACE_VERTS[face_index]:
                             vertices.append(base + p)
                             normals.append(normals_face[face_index])
                             colors.append(c)

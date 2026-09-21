@@ -141,7 +141,7 @@ func set_block(pos: Vector3i, id: int) -> bool:
     var chunk: Node3D = chunks.get(coord) as Node3D
     if chunk:
         chunk.call("set_voxel", world_to_local(pos), id)
-        chunk.call("build_mesh")
+        chunk.call("mark_mesh_dirty")
     _mark_neighbor_dirty(pos)
     block_changed.emit(pos, id)
     return true
@@ -153,7 +153,7 @@ func _mark_neighbor_dirty(pos: Vector3i) -> void:
         if chunks.has(coord):
             var chunk: Node3D = chunks[coord] as Node3D
             if chunk:
-                chunk.call("build_mesh")
+                chunk.call("mark_mesh_dirty")
 
 func _apply_changed_to_chunk(chunk: Node3D, coord: Vector2i) -> void:
     for world_pos in changed_blocks:

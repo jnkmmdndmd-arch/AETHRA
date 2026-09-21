@@ -188,8 +188,6 @@ func _build_sidebar(parent: PanelContainer) -> void:
     _label(logo, "AETHRA", 32, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
     _label(logo, "WILDBOUND", 15, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
     _label(logo, "بقاء فوكسيلي أصلي", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
-    _label(logo, "المطور : عبدالله لازم", 11, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
-    _label(logo, "برمجه وتطوير : عبدالله لازم", 11, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
 
     var sep := HSeparator.new()
     sep.modulate.a = 0.25
@@ -403,6 +401,28 @@ func _hero_panel() -> PanelContainer:
     var multi := _button("متعدد اللاعبين", Vector2(170, 38))
     multi.pressed.connect(func(): _show_page("multiplayer"))
     sub.add_child(multi)
+
+    var developer_credit := _panel(Color(0.01, 0.025, 0.055, 0.78), 12, Color(0.35, 0.8, 1.0, 0.22))
+    developer_credit.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+    developer_credit.position = Vector2(18, -18)
+    developer_credit.size = Vector2(240, 46)
+    developer_credit.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var credit_row := HBoxContainer.new()
+    credit_row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    credit_row.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    credit_row.add_theme_constant_override("separation", 7)
+    developer_credit.add_child(credit_row)
+    var dev_icon = load("res://scripts/ui/vector_icon.gd").new()
+    dev_icon.icon_name = "badge"
+    dev_icon.icon_color = ACCENT_BRIGHT
+    dev_icon.custom_minimum_size = Vector2(24, 24)
+    credit_row.add_child(dev_icon)
+    var credit_text := VBoxContainer.new()
+    credit_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    credit_row.add_child(credit_text)
+    _label(credit_text, "المطور: عبدالله لازم", 10, TEXT)
+    _label(credit_text, "برمجة وتطوير: عبدالله لازم", 9, MUTED)
+
     return panel
 
 func _build_auth_gate() -> void:
