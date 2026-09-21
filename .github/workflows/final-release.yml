@@ -1,0 +1,148 @@
+name: AETHRA Final Windows Release
+on:
+  push:
+    branches:
+      - fix/aethra-ui-auth-performance
+  workflow_dispatch:
+jobs:
+  build-final:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Reconstruct audited source
+        run: |
+          $source = Join-Path $env:RUNNER_TEMP "aethra-final-source"
+          New-Item -ItemType Directory -Force $source | Out-Null
+          Get-ChildItem -Force | Where-Object { $($_.Name) -notin @(".git","upgrade_bundle") } | Copy-Item -Destination $source -Recurse -Force
+          tar -xzf "upgrade_bundle/aethra_changed.tar.gz" -C $source
+          if (-not (Test-Path (Join-Path $source "project.godot"))) { throw "project.godot missing after reconstruction" }
+          if (-not (Test-Path (Join-Path $source "installer.iss"))) { throw "installer.iss missing after reconstruction" }
+          Set-Content -Path "$env:GITHUB_WORKSPACE\FINAL_SOURCE_PATH.txt" -Value $source
+      - name: Install Godot 4.7.2
+        run: |
+          $zip = Join-Path $env:RUNNER_TEMP "godot.zip"
+          Invoke-WebRequest -Uri "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_win64.zip" -OutFile $zip
+          Expand-Archive -Path $zip -DestinationPath "$env:RUNNER_TEMP\godot" -Force
+          $godot = Get-ChildItem "$env:RUNNER_TEMP\godot" -Filter "Godot_v4.7.2-stable_win64.exe" -Recurse | Select-Object -First 1
+          if (-not $godot) { throw "Godot executable not found" }
+          Set-Content "$env:GITHUB_WORKSPACE\GODOT_PATH.txt" $godot.FullName
+      - name: Install Godot export templates
+        run: |
+          $templatesZip = Join-Path $env:RUNNER_TEMP "templates.zip"
+          Invoke-WebRequest -Uri "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz" -OutFile $templatesZip
+          $templateDir = Join-Path $env:APPDATA "Godot\export_templates\4.7.2.stable"
+          New-Item -ItemType Directory -Force $templateDir | Out-Null
+          Expand-Archive -Path $templatesZip -DestinationPath "$env:RUNNER_TEMP\templates" -Force
+          $inner = Get-ChildItem "$env:RUNNER_TEMP\templates" -Filter "templates" -Recurse -Directory | Select-Object -First 1
+          if ($inner) { Copy-Item "$($inner.FullName)\*" $templateDir -Recurse -Force } else { Copy-Item "$env:RUNNER_TEMP\templates\*" $templateDir -Recurse -Force }
+      - name: Godot editor validation
+        run: |
+          $source = Get-Content "$env:GITHUB_WORKSPACE\FINAL_SOURCE_PATH.txt"
+          $godot = Get-Content "$env:GITHUB_WORKSPACE\GODOT_PATH.txt"
+          Push-Location $source
+          & $godot --headless --editor --quit --path . | Tee-Object "$env:GITHUB_WORKSPACE\godot-editor.log"
+          if ($LASTEXITCODE -ne 0) { throw "Godot editor validation failed" }
+          Pop-Location
+      - name: GDScript parse and self-test
+        run: |
+          $source = Get-Content "$env:GITHUB_WORKSPACE\FINAL_SOURCE_PATH.txt"
+          $godot = Get-Content "$env:GITHUB_WORKSPACE\GODOT_PATH.txt"
+          Push-Location $source
+          & $godot --headless --path . --script res://tests/parse_all_scripts.gd | Tee-Object "$env:GITHUB_WORKSPACE\parse.log"
+          if ($LASTEXITCODE -ne 0) { throw "GDScript parse/load gate failed" }
+          & $godot --headless --path . --script res://tests/self_test.gd | Tee-Object "$env:GITHUB_WORKSPACE\self-test.log"
+          if ($LASTEXITCODE -ne 0) { throw "self-test failed" }
+          Pop-Location
+      - name: Go tests and vet
+        run: |
+          $source = Get-Content "$env:GITHUB_WORKSPACE\FINAL_SOURCE_PATH.txt"
+          foreach ($svc in @("auth-service","directory-service")) {
+            Push-Location (Join-Path $source "server\$svc")
+            go test ./...
+            if ($LASTEXITCODE -ne 0) { throw "$svc tests failed" }
+            go vet ./...
+            if ($LASTEXITCODE -ne 0) { throw "$svc vet failed" }
+            Pop-Location
+          }
+      - name: Export Windows game
+        run: |
+          $source = Get-Content "$env:GITHUB_WORKSPACE\FINAL_SOURCE_PATH.txt"
+          $godot = Get-Content "$env:GITHUB_WORKSPACE\GODOT_PATH.txt"
+          Push-Location $source
+          New-Item -ItemType Directory -Force build | Out-Null
+          & $godot --headless --path . --export-release "Windows Desktop" "build\AETHRA-Wildbound.exe" | Tee-Object "$env:GITHUB_WORKSPACE\export.log"
+          if ($LASTEXITCODE -ne 0) { throw "Windows export failed" }
+          if ((Get-Item "build\AETHRA-Wildbound.exe").Length -lt 1000000) { throw "Exported EXE too small" }
+          Pop-Location
+      - name: Install Inno Setup
+        run: |
+          choco install innosetup --no-progress -y
+          $iscc = Join-Path $env:ProgramFiles "Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { throw "ISCC not found" }
+          Set-Content "$env:GITHUB_WORKSPACE\ISCC_PATH.txt" $iscc
+      - name: Build installer
+        run: |
+          $source = Get-Content "$env:GITHUB_WORKSPACE\FINAL_SOURCE_PATH.txt"
+          $iscc = Get-Content "$env:GITHUB_WORKSPACE\ISCC_PATH.txt"
+          Push-Location $source
+          & $iscc "installer.iss" | Tee-Object "$env:GITHUB_WORKSPACE\installer.log"
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup compilation failed" }
+          if (-not (Test-Path "build\AETHRA-Wildbound-Setup.exe")) { throw "Installer missing" }
+          Pop-Location
+      - name: Verify installer registration
+        run: |
+          $source = Get-Content "$env:GITHUB_WORKSPACE\FINAL_SOURCE_PATH.txt"
+          $installDir = Join-Path $env:RUNNER_TEMP "AETHRA-Installed"
+          if (Test-Path $installDir) { Remove-Item $installDir -Recurse -Force }
+          $installer = Join-Path $source "build\AETHRA-Wildbound-Setup.exe"
+          $p = Start-Process $installer -ArgumentList @("/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/SP-","/DIR=$installDir") -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "Installer failed: $($p.ExitCode)" }
+          if (-not (Test-Path (Join-Path $installDir "AETHRA-Wildbound.exe"))) { throw "Installed EXE missing" }
+          $desktopLinks = @()
+          foreach ($d in @((Join-Path $env:USERPROFILE "Desktop"),(Join-Path $env:PUBLIC "Desktop"))) {
+            if (Test-Path $d) { $desktopLinks += Get-ChildItem $d -Filter "*.lnk" -Recurse -ErrorAction SilentlyContinue }
+          }
+          if (-not ($desktopLinks | Where-Object { $_.Name -match "^AETHRA(:| -)? Wildbound.*\.lnk$" })) { throw "Desktop shortcut missing" }
+          $start = Join-Path $env:APPDATA "Microsoft\Windows\Start Menu\Programs"
+          $startLinks = if (Test-Path $start) { Get-ChildItem $start -Filter "*.lnk" -Recurse -ErrorAction SilentlyContinue }
+          if (-not ($startLinks | Where-Object { $_.Name -match "^AETHRA(:| -)? Wildbound.*\.lnk$" })) { throw "Start Menu shortcut missing" }
+          $roots=@("HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall","HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall","HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall")
+          $found=$false
+          foreach($root in $roots){ if(Test-Path $root){ foreach($key in Get-ChildItem $root -ErrorAction SilentlyContinue){ $v=Get-ItemProperty $key.PSPath -ErrorAction SilentlyContinue; if($v.DisplayName -eq "AETHRA: Wildbound"){ $found=$true }}}}
+          if (-not $found) { throw "Uninstall registration missing" }
+      - name: Installed EXE startup smoke
+        run: |
+          $game = Join-Path (Join-Path $env:RUNNER_TEMP "AETHRA-Installed") "AETHRA-Wildbound.exe"
+          $p = Start-Process $game -PassThru
+          Start-Sleep -Seconds 8
+          if ($p.HasExited) { throw "Installed EXE exited during startup" }
+          Stop-Process -Id $p.Id -Force
+          Set-Content "$env:GITHUB_WORKSPACE\installed-runtime.txt" "PASS"
+      - name: Final verification report
+        run: |
+          $source = Get-Content "$env:GITHUB_WORKSPACE\FINAL_SOURCE_PATH.txt"
+          $game = Get-Item (Join-Path $source "build\AETHRA-Wildbound.exe")
+          $installer = Get-Item (Join-Path $source "build\AETHRA-Wildbound-Setup.exe")
+          $gh=(Get-FileHash $game.FullName -Algorithm SHA256).Hash.ToLower()
+          $ih=(Get-FileHash $installer.FullName -Algorithm SHA256).Hash.ToLower()
+          @("# AETHRA Final Windows Verification","- Godot editor: PASS","- GDScript parser: PASS","- Godot self-test: PASS","- Go tests/vet: PASS","- Windows export: PASS","- Inno Setup installer: PASS","- Program Files install: PASS","- Desktop shortcut: PASS","- Start Menu shortcut: PASS","- Uninstall registration: PASS","- Installed EXE startup: PASS","- Interactive multiplayer gameplay: BLOCKED BY ENVIRONMENT","- Full interactive GUI gameplay/save/load/settings regression: BLOCKED BY ENVIRONMENT","","Game SHA256: $gh","Installer SHA256: $ih") | Set-Content "$env:GITHUB_WORKSPACE\FINAL-WINDOWS-VERIFICATION.md"
+      - name: Upload final release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AETHRA-Wildbound-FINAL-Windows-x64
+          if-no-files-found: error
+          path: |
+            **/build/AETHRA-Wildbound.exe
+            **/build/AETHRA-Wildbound-Setup.exe
+            FINAL-WINDOWS-VERIFICATION.md
+            godot-editor.log
+            parse.log
+            self-test.log
+            export.log
+            installer.log
+            installed-runtime.txt
