@@ -150,7 +150,7 @@ func build_mesh(build_collision: bool = false) -> void:
                             fluid_normals.append(FACE_NORMALS[face_index])
                             fluid_colors.append(Color.WHITE)
                         fluid_uvs.append_array(tile_uvs)
-                        fluid_indices.append_array(PackedInt32Array([fluid_base,fluid_base+1,fluid_base+2,fluid_base,fluid_base+2,fluid_base+3]))
+                        fluid_indices.append_array(PackedInt32Array([fluid_base,fluid_base+2,fluid_base+1,fluid_base,fluid_base+3,fluid_base+2]))
                     else:
                         if neighbor < solid_flags.size() and solid_flags[neighbor] == 1:
                             continue
@@ -163,7 +163,7 @@ func build_mesh(build_collision: bool = false) -> void:
                             normals.append(FACE_NORMALS[face_index])
                             colors.append(c)
                         uvs.append_array(tile_uvs)
-                        indices.append_array(PackedInt32Array([start,start+1,start+2,start,start+2,start+3]))
+                        indices.append_array(PackedInt32Array([start,start+2,start+1,start,start+3,start+2]))
 
     var array := []
     array.resize(Mesh.ARRAY_MAX)
@@ -180,6 +180,7 @@ func build_mesh(build_collision: bool = false) -> void:
         mat.albedo_texture = load("res://assets/mc_bridge/aethra_minecraft_atlas.png") as Texture2D
         mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
         mat.vertex_color_use_as_albedo = true
+        mat.cull_mode = BaseMaterial3D.CULL_DISABLED
         mat.roughness = 0.88
         if str(Settings.get_value("graphics_quality", "low")) == "low":
             mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -200,6 +201,7 @@ func build_mesh(build_collision: bool = false) -> void:
         fluid_mat.albedo_texture = load("res://assets/mc_bridge/aethra_minecraft_atlas.png") as Texture2D
         fluid_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
         fluid_mat.vertex_color_use_as_albedo = true
+        fluid_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
         fluid_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
         fluid_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
         fluid_mat.albedo_color = Color(1,1,1,0.62)
