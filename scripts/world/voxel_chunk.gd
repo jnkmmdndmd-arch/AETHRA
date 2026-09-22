@@ -225,7 +225,7 @@ func build_mesh(build_collision: bool = false, requested_lod: int = 0) -> void:
                         for xx in width: mask[i+xx+(j+yy)*dims[u_axis]]=0
                     var p:=Vector3.ZERO; p[axis]=slice+1; p[u_axis]=i; p[v_axis]=j
                     var u:=Vector3.ZERO; u[u_axis]=width; var v:=Vector3.ZERO; v[v_axis]=height_merge
-                    var positive:=value>0; var block_id:=abs(value); var face_idx:=_face_index(axis,positive)
+                    var positive: bool = value > 0; var block_id: int = absi(value); var face_idx: int = _face_index(axis, positive)
                     var shade:=_face_shade(face_idx)*_quad_ao(Vector3i(i,slice,j),axis)*(1.0+_emission_factor(block_id)*0.30)
                     _append_quad(vertices,normals,colors,uvs,indices,p,u,v,FACE_NORMALS[face_idx],shade,positive,block_id)
                     i+=width
