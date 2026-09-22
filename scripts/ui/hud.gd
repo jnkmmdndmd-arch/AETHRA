@@ -38,9 +38,11 @@ func build() -> void:
     ui_root.add_child(stats)
 
     fps_badge = Label.new()
-    fps_badge.position = Vector2(-80, 12)
-    fps_badge.set_anchors_preset(Control.PRESET_TOP_WIDE)
-    fps_badge.size = Vector2(160, 30)
+    fps_badge.set_anchors_preset(Control.PRESET_CENTER_TOP)
+    fps_badge.offset_left = -80
+    fps_badge.offset_top = 12
+    fps_badge.offset_right = 80
+    fps_badge.offset_bottom = 42
     fps_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     fps_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
     fps_badge.text = "FPS: --"
@@ -51,8 +53,10 @@ func build() -> void:
 
     players_panel = PanelContainer.new()
     players_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-    players_panel.position = Vector2(-286, 20)
-    players_panel.size = Vector2(266, 132)
+    players_panel.offset_left = -286
+    players_panel.offset_top = 20
+    players_panel.offset_right = -20
+    players_panel.offset_bottom = 152
     players_panel.add_theme_stylebox_override("panel", _panel_style())
     players_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
     ui_root.add_child(players_panel)
@@ -98,8 +102,10 @@ func build() -> void:
     hotbar = HBoxContainer.new()
     hotbar.layout_direction = Control.LAYOUT_DIRECTION_LTR
     hotbar.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-    hotbar.position = Vector2(-270, -82)
-    hotbar.size = Vector2(540, 62)
+    hotbar.offset_left = -270
+    hotbar.offset_top = -82
+    hotbar.offset_right = 270
+    hotbar.offset_bottom = -20
     hotbar.add_theme_constant_override("separation", 5)
     hotbar.mouse_filter = Control.MOUSE_FILTER_IGNORE
     ui_root.add_child(hotbar)
@@ -130,8 +136,10 @@ func build() -> void:
 
     crosshair = Control.new()
     crosshair.set_anchors_preset(Control.PRESET_CENTER)
-    crosshair.position = Vector2(-16, -16)
-    crosshair.size = Vector2(32, 32)
+    crosshair.offset_left = -16
+    crosshair.offset_top = -16
+    crosshair.offset_right = 16
+    crosshair.offset_bottom = 16
     crosshair.mouse_filter = Control.MOUSE_FILTER_IGNORE
     ui_root.add_child(crosshair)
     _build_crosshair()
