@@ -6,7 +6,6 @@ var world: Node3D
 var player
 var creatures: Node3D
 var hud
-var console: Control
 var time_system
 var auth
 var menu_visible := true
@@ -50,8 +49,8 @@ func _ensure_bootstrap_controls() -> void:
     AudioManager.apply_settings()
 
 func _restore_window_state() -> void:
-    var width := int(Settings.get_value("window_width", 1366))
-    var height := int(Settings.get_value("window_height", 768))
+    var width := int(Settings.get_value("window_width", 1280))
+    var height := int(Settings.get_value("window_height", 720))
     get_window().size = Vector2i(clampi(width, 960, 3840), clampi(height, 540, 2160))
     var mode := int(Settings.get_value("window_mode", 0))
     match mode:
@@ -205,7 +204,7 @@ func _on_remote_player_states(players: Dictionary) -> void:
 func _build_auth() -> void:
     auth = load("res://scripts/auth/auth_client.gd").new()
     add_child(auth)
-    auth.configure(str(Settings.get_value("auth_server_url", "http://127.0.0.1:8090")))
+    auth.configure(str(Settings.get_value("auth_server_url", "")))
     auth.success.connect(_on_auth_success)
     auth.failure.connect(_on_auth_failure)
     auth.session_invalid.connect(_on_saved_session_invalid)
@@ -249,7 +248,7 @@ func _start_singleplayer() -> void:
     if config.is_empty():
         config = {"name":"Aurora Valley", "seed":randi() % 2147480000, "mode":"survival"}
     _hide_menu()
-    _start_world(int(config.get("seed", 7777)), str(config.get("name", "World")), str(config.get("mode", "survival")))
+    await _start_world(int(config.get("seed", 7777)), str(config.get("name", "World")), str(config.get("mode", "survival")))
 
 func _host() -> void:
     _hide_menu()
@@ -316,18 +315,16 @@ func _start_world(seed_value: int, world_name: String, mode: String) -> void:
     var configured_world_id := str(AppState.pending_world_config.get("world_id", ""))
     var world_id := configured_world_id if not configured_world_id.is_empty() else "world-%d" % seed_value
     AppState.set_world(world_id, world_name, seed_value, mode)
-    world = load("res://scripts/world/voxel_world.gd").new()
-    add_child(world)
-    world.initialize(seed_value)
-    if world.has_method("is_ready_for_spawn") and not world.is_ready_for_spawn():
-        await world.world_ready
     var config := AppState.pending_world_config.duplicate(true)
     if not config.has("world_height"):
         var quality := str(Settings.get_value("graphics_quality", "low"))
-        config["world_height"] = {"low": 500, "medium": 600, "high": 800, "ultra": 1000}.get(quality, 500)
+        config["world_height"] = {"low": 192, "medium": 256, "high": 384, "ultra": 512}.get(quality, 192)
     AppState.world_settings = config.duplicate(true)
+    world = load("res://scripts/world/voxel_world.gd").new()
+    add_child(world)
     if world.has_method("configure"):
         world.configure(config)
+    world.initialize(seed_value)
     if time_system:
         time_system.weather_enabled = bool(config.get("weather", true))
     var resume_id := str(AppState.pending_world_config.get("resume_id", ""))
@@ -384,7 +381,6 @@ func _start_world(seed_value: int, world_name: String, mode: String) -> void:
         add_child(creatures)
         creatures.setup(world, bool(config.get("creatures", true)))
     _build_hud()
-    _build_console()
     if not remote_world:
         SaveDB.save_world(AppState.current_world_id, {"name": world_name, "seed": seed_value, "mode": mode, "time": time_system.serialize() if time_system else {}, "settings": config.duplicate(true)}, world.save_delta(), _player_save())
     AppState.pending_world_config.clear()
@@ -409,13 +405,6 @@ func _on_inventory_snapshot(snapshot: Array) -> void:
 func _on_player_health(_health, _max_health) -> void:
     _update_hud()
 
-func _build_console() -> void:
-    console = load("res://scripts/tools/dev_console.gd").new()
-    console.build(self)
-
-func toggle_developer_console() -> void:
-    if console:
-        console.toggle()
 
 func _update_hud() -> void:
     if hud == null or player == null:
@@ -449,9 +438,7 @@ func _show_menu() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed:
-        if event.physical_keycode == KEY_F8 and console:
-            console.toggle()
-        elif event.physical_keycode == KEY_ESCAPE:
+        if event.physical_keycode == KEY_ESCAPE:
             if player != null:
                 Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
         elif event.physical_keycode == KEY_F11:
