@@ -33,7 +33,7 @@ func save_world(world_id: String, metadata: Dictionary, blocks: Dictionary, play
         save_mutex.unlock()
         return ERR_BUSY
     save_in_progress = true
-    defer: _finish_save()
+    defer _finish_save()
     var dir_path := world_path(world_id)
     DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(dir_path))
     var payload := {"format_version": FORMAT_VERSION, "metadata": metadata, "blocks": blocks, "player": player_state, "saved_at": Time.get_datetime_string_from_system(true)}
