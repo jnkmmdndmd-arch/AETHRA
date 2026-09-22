@@ -1,6 +1,7 @@
 extends Node3D
 
 var menu: Control
+var menu_layer: CanvasLayer
 var settings_menu: Control
 var world: Node3D
 var player
@@ -22,8 +23,12 @@ var performance_low_time := 0.0
 var performance_high_time := 0.0
 var java_engine_bridge
 var java_backend_info: Dictionary = {}
+var world_boot_elapsed := 0.0
+var world_boot_reported := false
+var boot_failure_message := ""
 
 func _ready() -> void:
+    print("[BOOT] AETHRA: starting app root")
     randomize()
     var args := OS.get_cmdline_user_args()
     if DisplayServer.get_name() == "headless" or "--server" in args:
@@ -37,12 +42,15 @@ func _ready() -> void:
     get_window().min_size = Vector2i(960, 540)
     _restore_window_state()
     _build_lighting()
+    print("[BOOT] WorldEnvironment + sunlight initialized")
     _apply_graphics_profile()
     if not Settings.settings_changed.is_connected(_apply_graphics_profile):
         Settings.settings_changed.connect(_apply_graphics_profile)
     _initialize_java_backend()
     _build_auth()
+    print("[BOOT] Auth service initialized (non-blocking)")
     _build_menu()
+    print("[BOOT] Main menu constructed and visible")
     _build_remote_players_root()
     _wire_network_presence()
     _ensure_bootstrap_controls()
@@ -72,6 +80,7 @@ func _save_window_state() -> void:
     Settings.save_settings()
 
 func _build_lighting() -> void:
+    print("[BOOT] Building WorldEnvironment")
     var env := WorldEnvironment.new()
     world_environment = Environment.new()
     var environment: Environment = world_environment
@@ -89,6 +98,10 @@ func _build_lighting() -> void:
     environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
     env.environment = environment
     add_child(env)
+    if env.environment == null:
+        push_error("[BOOT] FATAL: WorldEnvironment has no Environment resource.")
+    else:
+        print("[BOOT] WorldEnvironment ready background_mode=", env.environment.background_mode)
     sun_light = DirectionalLight3D.new()
     sun_light.rotation_degrees = Vector3(-55,-35,0)
     sun_light.light_energy = 1.15
@@ -243,9 +256,18 @@ func _build_auth() -> void:
         auth.restore_session(saved_token)
 
 func _build_menu() -> void:
-    menu = load("res://scripts/ui/main_menu.gd").new()
-    add_child(menu)
+    menu_layer = CanvasLayer.new()
+    menu_layer.name = "MainMenuLayer"
+    menu_layer.layer = 100
+    add_child(menu_layer)
+    var menu_script := load("res://scripts/ui/main_menu.gd") as GDScript
+    if menu_script == null or not menu_script.can_instantiate():
+        push_error("[BOOT] FATAL: main_menu.gd could not be loaded/instantiated.")
+        return
+    menu = menu_script.new()
+    menu_layer.add_child(menu)
     menu.build(self)
+    print("[BOOT] main_menu.gd -> build() complete")
     menu.play_singleplayer.connect(_start_singleplayer)
     menu.host_multiplayer.connect(_host)
     menu.join_multiplayer.connect(_join)
@@ -271,6 +293,7 @@ func _on_saved_session_invalid() -> void:
     AppState.clear_saved_session()
 
 func _start_singleplayer() -> void:
+    print("[BOOT] PLAY: singleplayer requested from main menu")
     var config := AppState.pending_world_config.duplicate(true)
     if config.is_empty():
         config = {"name":"Aurora Valley", "seed":randi() % 2147480000, "mode":"survival"}
@@ -278,6 +301,7 @@ func _start_singleplayer() -> void:
     await _start_world(int(config.get("seed", 7777)), str(config.get("name", "World")), str(config.get("mode", "survival")))
 
 func _host() -> void:
+    print("[BOOT] PLAY: multiplayer host requested from main menu")
     _hide_menu()
     var err := NetworkManager.host()
     if err != OK:
@@ -337,6 +361,10 @@ func _on_remote_connection_error(_message: String) -> void:
     _show_menu()
 
 func _start_world(seed_value: int, world_name: String, mode: String) -> void:
+    print("[WORLD] start requested name=", world_name, " seed=", seed_value, " mode=", mode)
+    world_boot_elapsed = 0.0
+    world_boot_reported = false
+    boot_failure_message = ""
     if world != null:
         world.queue_free()
     var configured_world_id := str(AppState.pending_world_config.get("world_id", ""))
@@ -347,11 +375,19 @@ func _start_world(seed_value: int, world_name: String, mode: String) -> void:
         var quality := str(Settings.get_value("graphics_quality", "low"))
         config["world_height"] = {"low": 96, "medium": 128, "high": 192, "ultra": 256}.get(quality, 96)
     AppState.world_settings = config.duplicate(true)
-    world = load("res://scripts/world/voxel_world.gd").new()
+    var world_script := load("res://scripts/world/voxel_world.gd") as GDScript
+    if world_script == null or not world_script.can_instantiate():
+        push_error("[WORLD] FATAL: voxel_world.gd failed to load/instantiate.")
+        _show_menu()
+        return
+    world = world_script.new()
     add_child(world)
+    print("[WORLD] voxel_world node created")
     if world.has_method("configure"):
         world.configure(config)
+    print("[WORLD] configuring generator/world height=", config.get("world_height", 96))
     world.initialize(seed_value)
+    print("[WORLD] initialize() returned; spawn=", world.spawn_position, " ready=", world.is_ready_for_spawn() if world.has_method("is_ready_for_spawn") else false)
     if time_system:
         time_system.weather_enabled = bool(config.get("weather", true))
     var resume_id := str(AppState.pending_world_config.get("resume_id", ""))
@@ -377,13 +413,25 @@ func _start_world(seed_value: int, world_name: String, mode: String) -> void:
             if time_system and saved_meta.has("time"):
                 time_system.deserialize(saved_meta["time"])
     NetworkManager.bind_world(world)
+    print("[WORLD] NetworkManager bound (no network wait)")
     var spawn: Vector3 = world.spawn_position
-    player = load("res://scripts/player/player_avatar.gd").new()
+    var player_script := load("res://scripts/player/player_avatar.gd") as GDScript
+    if player_script == null or not player_script.can_instantiate():
+        push_error("[WORLD] FATAL: player_avatar.gd failed to load/instantiate.")
+        _abort_world_boot("Player script could not be loaded.")
+        return
+    player = player_script.new()
     add_child(player)
     var authoritative_spawn: Variant = config.get("spawn", spawn)
     player.position = authoritative_spawn if authoritative_spawn is Vector3 else spawn
     player.add_to_group("players")
     player.setup(world, true, multiplayer.get_unique_id())
+    if player.camera == null:
+        push_error("[WORLD] FATAL: player camera was not created.")
+        _abort_world_boot("Camera creation failed.")
+        return
+    player.camera.current = true
+    print("[WORLD] player + Camera3D ready current=", player.camera.current, " position=", player.position)
     if not remote_world and not resume_id.is_empty():
         var saved_player: Dictionary = SaveDB.load_world(resume_id).get("player", {})
         if saved_player is Dictionary:
@@ -408,6 +456,7 @@ func _start_world(seed_value: int, world_name: String, mode: String) -> void:
         add_child(creatures)
         creatures.setup(world, bool(config.get("creatures", true)))
     _build_hud()
+    print("[WORLD] HUD built; world boot completed from app perspective")
     if not remote_world:
         SaveDB.save_world(AppState.current_world_id, {"name": world_name, "seed": seed_value, "mode": mode, "time": time_system.serialize() if time_system else {}, "settings": config.duplicate(true)}, world.save_delta(), _player_save())
     AppState.pending_world_config.clear()
@@ -456,14 +505,20 @@ func _open_settings(_return_page: String = "home") -> void:
     )
 
 func _hide_menu() -> void:
+    print("[BOOT] Main menu hidden -> explicit gameplay transition")
     if menu:
         menu.hide()
+    if menu_layer:
+        menu_layer.hide()
     menu_visible = false
 
 func _show_menu() -> void:
+    print("[BOOT] Main menu shown")
     menu_visible = true
     if menu:
         menu.show()
+    if menu_layer:
+        menu_layer.show()
 
 func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed:
@@ -476,6 +531,19 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
     _adaptive_resolution(delta)
+    if world != null:
+        world_boot_elapsed += delta
+        if not world_boot_reported and world_boot_elapsed >= 2.5:
+            var rendered_chunks := int(world.get_rendered_chunk_count()) if world.has_method("get_rendered_chunk_count") else -1
+            if rendered_chunks <= 0:
+                world_boot_reported = true
+                boot_failure_message = "World exists but no rendered chunk is available after 2.5s."
+                push_error("[WORLD] FATAL RENDER: " + boot_failure_message)
+                _show_menu()
+            else:
+                world_boot_reported = true
+                print("[WORLD] render watchdog: rendered_chunks=", rendered_chunks)
+
     if world != null and player != null and world.has_method("set_stream_center"):
         world.set_stream_center(player.global_position)
         NetworkManager.publish_local_player_state(player.global_position, player.rotation.y, AppState.character_id)
@@ -488,6 +556,24 @@ func _process(delta: float) -> void:
                 world.save_delta(),
                 _player_save()
             )
+
+func _abort_world_boot(reason: String) -> void:
+    boot_failure_message = reason
+    push_error("[WORLD] BOOT ABORTED: " + reason)
+    if hud != null and is_instance_valid(hud):
+        hud.queue_free()
+        hud = null
+    if creatures != null and is_instance_valid(creatures):
+        creatures.queue_free()
+        creatures = null
+    if player != null and is_instance_valid(player):
+        player.queue_free()
+        player = null
+    if world != null and is_instance_valid(world):
+        world.queue_free()
+        world = null
+    Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+    _show_menu()
 
 func request_close() -> void:
     if world != null and player != null and not AppState.current_world_id.is_empty():

@@ -27,7 +27,7 @@ func _scan(path: String) -> void:
         if not file.ends_with(".gd"):
             continue
         var script: GDScript = load(path + "/" + file) as GDScript
-        if script == null:
+        if script == null or not script.can_instantiate():
             failures.append(path + "/" + file)
             continue
     for dir_name in dir.get_directories():

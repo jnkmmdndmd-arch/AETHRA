@@ -23,6 +23,7 @@ var auth_secret := ""
 var server_inventories: Dictionary = {}
 var connection_state := "offline"
 var server_max_peers := MAX_PEERS
+var connection_timeout_remaining := 0.0
 
 func host(port: int = DEFAULT_PORT, max_peers: int = MAX_PEERS) -> Error:
     peer = ENetMultiplayerPeer.new()
@@ -46,6 +47,7 @@ func join(address: String, port: int = DEFAULT_PORT) -> Error:
     multiplayer.multiplayer_peer = peer
     server_started = false
     connection_state = "connecting"
+    connection_timeout_remaining = 8.0
     _wire_signals()
     return OK
 
@@ -67,6 +69,14 @@ func _wire_signals() -> void:
 
 func _process(delta: float) -> void:
     player_snapshot_timer -= delta
+    if connection_state == "connecting" and connection_timeout_remaining > 0.0:
+        connection_timeout_remaining -= delta
+        if connection_timeout_remaining <= 0.0:
+            connection_timeout_remaining = 0.0
+            connection_state = "offline"
+            if multiplayer.multiplayer_peer != null:
+                multiplayer.multiplayer_peer = null
+            connection_error.emit("Connection timeout: server did not respond within 8 seconds.")
     if player_snapshot_timer <= 0.0 and multiplayer.multiplayer_peer != null:
         player_snapshot_timer = 0.1
     player_state_accumulator = maxf(0.0, player_state_accumulator - delta)
@@ -376,16 +386,19 @@ func _decode_token(token: String) -> Dictionary:
     return {"user_id": fields[0], "username": fields[1], "character": fields[2], "expires_at": int(fields[3])}
 
 func _on_connected() -> void:
+    connection_timeout_remaining = 0.0
     connection_state = "connected"
     connected.emit()
     request_join.rpc({"name": AppState.player_name, "character": AppState.character_id, "token": AppState.auth_token})
 
 func _on_connection_failed() -> void:
+    connection_timeout_remaining = 0.0
     connection_state = "offline"
     connection_error.emit("Unable to connect to the game server.")
     multiplayer.multiplayer_peer = null
 
 func _on_disconnected() -> void:
+    connection_timeout_remaining = 0.0
     server_started = false
     connection_state = "offline"
     remote_players.clear()

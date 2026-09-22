@@ -71,6 +71,7 @@ func configure(enable_structures: bool = true, biome_override: String = "", heig
     forced_biome = biome_override.to_lower()
     world_height = clampi(height_value, MIN_WORLD_HEIGHT, MAX_WORLD_HEIGHT)
     sea_level = maxi(16, int(world_height * SEA_LEVEL_RATIO))
+    print("[WORLD_GENERATOR] configured height=", world_height, " sea_level=", sea_level, " structures=", structures_enabled, " biome=", forced_biome)
 
 func terrain_height(x: int, z: int) -> int:
     var macro: float = continental.get_noise_2d(x, z)
@@ -164,6 +165,10 @@ func generate_chunk(cx: int, cz: int) -> PackedByteArray:
                     id = _subsurface_resource(wx, y, wz)
                 data[i] = id
                 i += 1
+    var expected_size := CHUNK_SIZE * CHUNK_SIZE * world_height
+    if data.size() != expected_size:
+        push_error("[WORLD_GENERATOR] Invalid chunk size got=%d expected=%d coord=(%d,%d)" % [data.size(), expected_size, cx, cz])
+        return PackedByteArray()
     return data
 
 func _is_cave(x: int, y: int, z: int) -> bool:
