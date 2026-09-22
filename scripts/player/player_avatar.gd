@@ -10,6 +10,7 @@ var crafting = preload("res://scripts/gameplay/crafting.gd").new()
 var world
 var camera: Camera3D
 var head: Node3D
+var player_model: MeshInstance3D
 var pitch := 0.0
 var walk_speed := 5.0
 var sprint_speed := 8.0
@@ -32,32 +33,95 @@ func setup(voxel_world, local_player: bool = true, id: int = 1) -> void:
     _build_body()
 
 func _build_body() -> void:
-    var capsule := CapsuleMesh.new()
-    capsule.height = 1.8
-    capsule.radius = 0.34
-    var body := MeshInstance3D.new()
-    body.mesh = capsule
-    var mat := StandardMaterial3D.new()
-    mat.albedo_color = _character_color(AppState.character_id if is_local else "ranger")
-    mat.roughness = 0.75
-    body.material_override = mat
-    body.position.y = 0.9
-    add_child(body)
+    player_model = MeshInstance3D.new()
+    player_model.name = "AethraMinecraftStyleBody"
+    player_model.mesh = _build_skin_mesh()
+    var skin := load("res://assets/mc_bridge/aethra_steve.png") as Texture2D
+    var material := StandardMaterial3D.new()
+    material.albedo_texture = skin
+    material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
+    material.roughness = 0.82
+    material.cull_mode = BaseMaterial3D.CULL_DISABLED
+    player_model.material_override = material
+    add_child(player_model)
+
     var collision := CollisionShape3D.new()
     var shape := CapsuleShape3D.new()
-    shape.height = 1.8
-    shape.radius = 0.34
+    shape.height = 2.0
+    shape.radius = 0.32
     collision.shape = shape
-    collision.position.y = 0.9
+    collision.position.y = 1.0
     add_child(collision)
+
     head = Node3D.new()
-    head.position.y = 1.55
+    head.position.y = 2.02
     add_child(head)
     camera = Camera3D.new()
     camera.current = is_local
     camera.fov = float(Settings.get_value("fov", 75.0))
     head.add_child(camera)
 
+func _build_skin_mesh() -> ArrayMesh:
+    const S := 0.075
+    var vertices: Array = []
+    var normals: Array = []
+    var uvs: Array = []
+    var indices: Array = []
+
+    _append_skin_box(vertices, normals, uvs, indices,
+        Vector3(-0.30, 1.80, -0.30), Vector3(0.30, 2.40, 0.30),
+        [Rect2(8, 0, 8, 8), Rect2(16, 0, 8, 8), Rect2(0, 8, 8, 8), Rect2(8, 8, 8, 8), Rect2(16, 8, 8, 8), Rect2(24, 8, 8, 8)], S)
+    _append_skin_box(vertices, normals, uvs, indices,
+        Vector3(-0.30, 0.90, -0.19), Vector3(0.30, 1.80, 0.19),
+        [Rect2(20, 16, 8, 4), Rect2(28, 16, 8, 4), Rect2(16, 20, 4, 12), Rect2(20, 20, 8, 12), Rect2(28, 20, 4, 12), Rect2(32, 20, 8, 12)], S)
+    _append_skin_box(vertices, normals, uvs, indices,
+        Vector3(-0.60, 0.90, -0.15), Vector3(-0.30, 1.80, 0.15),
+        [Rect2(44, 16, 4, 4), Rect2(48, 16, 4, 4), Rect2(40, 20, 4, 12), Rect2(44, 20, 4, 12), Rect2(48, 20, 4, 12), Rect2(52, 20, 4, 12)], S)
+    _append_skin_box(vertices, normals, uvs, indices,
+        Vector3(0.30, 0.90, -0.15), Vector3(0.60, 1.80, 0.15),
+        [Rect2(36, 48, 4, 4), Rect2(40, 48, 4, 4), Rect2(32, 52, 4, 12), Rect2(36, 52, 4, 12), Rect2(40, 52, 4, 12), Rect2(44, 52, 4, 12)], S)
+    _append_skin_box(vertices, normals, uvs, indices,
+        Vector3(-0.30, 0.0, -0.15), Vector3(0.0, 0.90, 0.15),
+        [Rect2(4, 16, 4, 4), Rect2(8, 16, 4, 4), Rect2(0, 20, 4, 12), Rect2(4, 20, 4, 12), Rect2(8, 20, 4, 12), Rect2(12, 20, 4, 12)], S)
+    _append_skin_box(vertices, normals, uvs, indices,
+        Vector3(0.0, 0.0, -0.15), Vector3(0.30, 0.90, 0.15),
+        [Rect2(20, 48, 4, 4), Rect2(24, 48, 4, 4), Rect2(16, 52, 4, 12), Rect2(20, 52, 4, 12), Rect2(24, 52, 4, 12), Rect2(28, 52, 4, 12)], S)
+
+    var mesh := ArrayMesh.new()
+    var arrays: Array = []
+    arrays.resize(Mesh.ARRAY_MAX)
+    arrays[Mesh.ARRAY_VERTEX] = PackedVector3Array(vertices)
+    arrays[Mesh.ARRAY_NORMAL] = PackedVector3Array(normals)
+    arrays[Mesh.ARRAY_TEX_UV] = PackedVector2Array(uvs)
+    arrays[Mesh.ARRAY_INDEX] = PackedInt32Array(indices)
+    mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+    return mesh
+
+func _append_skin_box(vertices: Array, normals: Array, uvs: Array, indices: Array, minp: Vector3, maxp: Vector3, regions: Array, scale: float) -> void:
+    var faces := [
+        [Vector3(minp.x, minp.y, maxp.z), Vector3(maxp.x, minp.y, maxp.z), Vector3(maxp.x, maxp.y, maxp.z), Vector3(minp.x, maxp.y, maxp.z), Vector3.FORWARD],
+        [Vector3(maxp.x, minp.y, minp.z), Vector3(minp.x, minp.y, minp.z), Vector3(minp.x, maxp.y, minp.z), Vector3(maxp.x, maxp.y, minp.z), Vector3.BACK],
+        [Vector3(minp.x, minp.y, minp.z), Vector3(minp.x, minp.y, maxp.z), Vector3(minp.x, maxp.y, maxp.z), Vector3(minp.x, maxp.y, minp.z), Vector3.LEFT],
+        [Vector3(maxp.x, minp.y, maxp.z), Vector3(maxp.x, minp.y, minp.z), Vector3(maxp.x, maxp.y, minp.z), Vector3(maxp.x, maxp.y, maxp.z), Vector3.RIGHT],
+        [Vector3(minp.x, maxp.y, minp.z), Vector3(minp.x, maxp.y, maxp.z), Vector3(maxp.x, maxp.y, maxp.z), Vector3(maxp.x, maxp.y, minp.z), Vector3.UP],
+        [Vector3(minp.x, minp.y, maxp.z), Vector3(minp.x, minp.y, minp.z), Vector3(maxp.x, minp.y, minp.z), Vector3(maxp.x, minp.y, maxp.z), Vector3.DOWN],
+    ]
+    for face_index in faces.size():
+        var face = faces[face_index]
+        var region: Rect2 = regions[face_index]
+        var base := vertices.size()
+        for i in 4:
+            vertices.append(face[i])
+            normals.append(face[4])
+        var u0 := region.position.x / 64.0
+        var v0 := region.position.y / 64.0
+        var u1 := (region.position.x + region.size.x) / 64.0
+        var v1 := (region.position.y + region.size.y) / 64.0
+        uvs.append(Vector2(u0, v0))
+        uvs.append(Vector2(u1, v0))
+        uvs.append(Vector2(u1, v1))
+        uvs.append(Vector2(u0, v1))
+        indices.append_array([base, base + 1, base + 2, base, base + 2, base + 3])
 func _character_color(id: String) -> Color:
     match id:
         "engineer": return Color("#e29b52")
