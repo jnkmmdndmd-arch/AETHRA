@@ -7,6 +7,9 @@ var hotbar: HBoxContainer
 var selected := 0
 var inventory_ref
 var slot_labels: Array[Label] = []
+var fps_badge: Label
+var fps_elapsed := 0.0
+var fps_smooth := 0.0
 
 func build() -> void:
     add_to_group("aethra_hud")
@@ -16,6 +19,19 @@ func build() -> void:
     stats.position = Vector2(24,24)
     stats.add_theme_font_size_override("font_size", 15)
     add_child(stats)
+
+    fps_badge = Label.new()
+    fps_badge.set_anchors_preset(Control.PRESET_TOP_WIDE)
+    fps_badge.position = Vector2(0, 16)
+    fps_badge.size = Vector2(get_viewport().get_visible_rect().size.x, 28)
+    fps_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    fps_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    fps_badge.text = "FPS: --"
+    fps_badge.add_theme_font_size_override("font_size", 15)
+    fps_badge.add_theme_color_override("font_color", Color("#eaf6ff"))
+    fps_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    add_child(fps_badge)
+
     players_panel = PanelContainer.new()
     players_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
     players_panel.position = Vector2(-286, 24)
@@ -131,3 +147,12 @@ func set_players(data: Dictionary) -> void:
         if value is Dictionary:
             names.append(str(value.get("name", "Player")))
     players.text = "\n".join(names) if not names.is_empty() else "لا يوجد لاعبون متصلون حاليًا."
+
+
+func _process(delta: float) -> void:
+    fps_elapsed += delta
+    var live_fps := float(Engine.get_frames_per_second())
+    fps_smooth = live_fps if fps_smooth <= 0.0 else lerpf(fps_smooth, live_fps, 0.18)
+    if fps_badge != null and fps_elapsed >= 0.10:
+        fps_elapsed = 0.0
+        fps_badge.text = "FPS: %d" % maxi(0, int(round(fps_smooth)))
