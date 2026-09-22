@@ -116,13 +116,17 @@ func _resolve_spawn_position() -> void:
     var ground_x := 8
     var ground_z := 8
     var ground_y := 32
-    for scan_y in range(maxi(8, world_height - 4), 0, -1):
-        var ground := int(generator.block_at(ground_x, scan_y, ground_z))
-        var above := int(generator.block_at(ground_x, scan_y + 1, ground_z))
-        if BlockRegistry.is_solid(ground) and above == BlockRegistry.AIR:
-            ground_y = scan_y
-            break
-    spawn_position = Vector3(8.5, ground_y + 1.05, 8.5)
+    if generator.has_method("terrain_height"):
+        ground_y = int(generator.terrain_height(ground_x, ground_z))
+    else:
+        for scan_y in range(maxi(8, world_height - 4), 0, -1):
+            var ground := int(generator.block_at(ground_x, scan_y, ground_z))
+            var above := int(generator.block_at(ground_x, scan_y + 1, ground_z))
+            if BlockRegistry.is_solid(ground) and above == BlockRegistry.AIR:
+                ground_y = scan_y
+                break
+    # Always spawn above the procedural surface, never inside a cave ceiling/wall.
+    spawn_position = Vector3(8.5, ground_y + 2.05, 8.5)
     spawn_ready = true
     ready_emitted = false
 
