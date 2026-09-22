@@ -392,7 +392,7 @@ func _start_world(seed_value: int, world_name: String, mode: String) -> void:
         if time_system and data_has_time(AppState.pending_world_config):
             time_system.deserialize(AppState.pending_world_config.get("world_time", {}))
     elif not resume_id.is_empty():
-        var saved := SaveDB.load_world(resume_id)
+        var saved: Dictionary = SaveDB.load_world(resume_id)
         if not saved.is_empty():
             world.load_delta(saved.get("blocks", {}))
             var saved_meta: Dictionary = saved.get("metadata", {})
