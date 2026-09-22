@@ -384,7 +384,9 @@ func _start_world(seed_value: int, world_name: String, mode: String) -> void:
     if not remote_world:
         SaveDB.save_world(AppState.current_world_id, {"name": world_name, "seed": seed_value, "mode": mode, "time": time_system.serialize() if time_system else {}, "settings": config.duplicate(true)}, world.save_delta(), _player_save())
     AppState.pending_world_config.clear()
-    Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+    # Start with the Windows pointer visible; the HUD captures it on the first click.
+    # This prevents the cursor from seemingly disappearing when a new world opens.
+    Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 func _build_hud() -> void:
     hud = load("res://scripts/ui/hud.gd").new()
