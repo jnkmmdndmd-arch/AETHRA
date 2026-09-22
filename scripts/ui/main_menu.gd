@@ -353,7 +353,6 @@ func _show_page(page: String) -> void:
         "servers": _page_servers()
         "worlds": _page_worlds()
         "store": _page_store()
-        "developer": _page_developer()
         "profile": _page_profile()
     _update_nav_state()
 
@@ -840,38 +839,6 @@ func _page_profile() -> void:
     )
     root.add_child(save)
     
-func _page_developer() -> void:
-    _section_title(content, "أدوات المطور", "مقاييس تشغيل فعلية فقط")
-    var grid := GridContainer.new()
-    grid.columns = 2
-    grid.add_theme_constant_override("h_separation", 10)
-    grid.add_theme_constant_override("v_separation", 10)
-    content.add_child(grid)
-    _metric(grid, "FPS", str(Engine.get_frames_per_second()))
-    _metric(grid, "الذاكرة", "%0.2f MB" % (Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0))
-    _metric(grid, "لاعبو الشبكة", str(multiplayer.get_peers().size()))
-    _metric(grid, "العوالم المحفوظة", str(SaveDB.list_worlds().size()))
-    _metric(grid, "عقد المشهد", str(get_tree().get_node_count()))
-    _metric(grid, "الاتصال", "متصل" if multiplayer.multiplayer_peer != null else "غير متصل")
-    var console := _button("فتح وحدة المطور (F8)", Vector2(270, 44))
-    console.pressed.connect(func():
-        var root := get_parent()
-        if root and root.has_method("toggle_developer_console"):
-            root.toggle_developer_console()
-    )
-    content.add_child(console)
-
-func _metric(parent: Control, title: String, value: String) -> void:
-    var card := _panel(PANEL_2, 14, Color(0.22, 0.7, 1.0, 0.12))
-    card.custom_minimum_size = Vector2(0, 92)
-    parent.add_child(card)
-    var box := VBoxContainer.new()
-    box.alignment = BoxContainer.ALIGNMENT_CENTER
-    card.add_child(box)
-    _label(box, title, 11, MUTED)
-    var value_label := _label(box, value, 24, ACCENT_BRIGHT)
-    value_label.name = "MetricValue"
-
 func _refresh_friends(players: Dictionary) -> void:
     if friends_box == null:
         return
