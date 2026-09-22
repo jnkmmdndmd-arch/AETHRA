@@ -16,7 +16,6 @@ var fps_smooth := 0.0
 
 const ACCENT := Color("#78ddff")
 const TEXT := Color("#eaf6ff")
-const MUTED := Color("#91a9bf")
 const PANEL := Color(0.015, 0.035, 0.065, 0.90)
 
 func build() -> void:
