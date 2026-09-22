@@ -1158,7 +1158,6 @@ func _animate_intro() -> void:
     , CONNECT_ONE_SHOT)
     # Cosmetic fade only; the menu is already visible before the tween starts.
     var tween := create_tween()
-    tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
     tween.tween_property(self, "modulate:a", 1.0, 0.55).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 func _panel(color: Color, radius: int, border: Color) -> PanelContainer:
