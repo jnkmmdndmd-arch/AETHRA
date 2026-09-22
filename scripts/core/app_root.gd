@@ -121,10 +121,13 @@ func _build_lighting() -> void:
     var environment: Environment = world_environment
     environment.background_mode = Environment.BG_SKY
     var sky := Sky.new()
-    var sky_material := PhysicalSkyMaterial.new()
-    sky_material.rayleigh_coefficient = 1.7
-    sky_material.mie_coefficient = 0.004
-    sky_material.sun_disk_scale = 1.2
+    var sky_material := ProceduralSkyMaterial.new()
+    sky_material.sky_top_color = Color("#1e4d78")
+    sky_material.sky_horizon_color = Color("#8fc7e8")
+    sky_material.ground_bottom_color = Color("#101820")
+    sky_material.ground_horizon_color = Color("#668a9d")
+    sky_material.sun_angle_max = 12.0
+    sky_material.sun_curve = 0.08
     sky.sky_material = sky_material
     environment.sky = sky
     environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
