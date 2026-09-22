@@ -69,6 +69,7 @@ func set_world(world_id: String, name: String, seed: int, mode: String) -> void:
     current_world_name = name
     world_seed = seed
     game_mode = mode
+    print("[BOOT][STATE] world selected id=", world_id, " name=", name, " seed=", seed, " mode=", mode)
     world_changed.emit()
 
 func save_profile(name: String, selected_avatar: int) -> void:
@@ -105,3 +106,4 @@ func get_display_name() -> String:
 
 func _ready() -> void:
     load_profile()
+    print("[BOOT][STATE] AppState ready; current_world_id=", current_world_id, " pending_world_config_empty=", pending_world_config.is_empty())
