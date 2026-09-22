@@ -73,10 +73,7 @@ func build() -> void:
     heading.add_theme_constant_override("separation", 7)
     player_box.add_child(heading)
 
-    var heading_icon = load("res://scripts/ui/vector_icon.gd").new()
-    heading_icon.icon_name = "players"
-    heading_icon.icon_color = ACCENT
-    heading_icon.custom_minimum_size = Vector2(20, 20)
+    var heading_icon := UIFactory.make_icon("players", ACCENT, Vector2(20, 20))
     heading_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
     heading.add_child(heading_icon)
 
