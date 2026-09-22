@@ -1,2 +1,0 @@
-final-windows-release
-source=061e2ce2ae7c9c244f5896ec17025c1c9c262818
