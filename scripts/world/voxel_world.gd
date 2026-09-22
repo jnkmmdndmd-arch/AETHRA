@@ -30,11 +30,28 @@ func initialize(seed_value: int) -> void:
     world_seed = seed_value
     generator = load("res://scripts/world/world_generator.gd").new(world_seed)
     if generator.has_method("configure"):
-        generator.configure(true)
+        generator.configure(
+            bool(world_settings.get("structures", true)),
+            str(world_settings.get("world_type", "")),
+            int(world_settings.get("world_height", DEFAULT_WORLD_HEIGHT))
+        )
     _resolve_spawn_position()
+    stream_center = spawn_position
+    var spawn_coord := world_to_chunk(spawn_position)
+    if not chunks.has(spawn_coord) and not pending.has(spawn_coord):
+        pending[spawn_coord] = true
+        var spawn_data: PackedByteArray = generator.generate_chunk(spawn_coord.x, spawn_coord.y)
+        _apply_chunk(spawn_coord, spawn_data)
+        var spawn_chunk: Node3D = chunks.get(spawn_coord) as Node3D
+        if spawn_chunk != null and is_instance_valid(spawn_chunk):
+            spawn_chunk.call("set_collision_enabled", true)
+            spawn_chunk.call("build_mesh", true)
+            ready_emitted = true
+            world_ready.emit()
     for x in range(-INITIAL_RADIUS, INITIAL_RADIUS + 1):
         for z in range(-INITIAL_RADIUS, INITIAL_RADIUS + 1):
             queue_chunk(Vector2i(x, z))
+    chunk_queue.erase(spawn_coord)
     _sort_chunk_queue()
 
 func _process(_delta: float) -> void:
@@ -250,7 +267,7 @@ func world_to_local(pos: Vector3i) -> Vector3i:
     return Vector3i(posmod(pos.x, CHUNK_SIZE), pos.y, posmod(pos.z, CHUNK_SIZE))
 
 func get_block(pos: Vector3i) -> int:
-    if pos.y < 0 or pos.y >= 96:
+    if pos.y < 0 or pos.y >= world_height:
         return BlockRegistry.AIR
     if changed_blocks.has(pos):
         return int(changed_blocks[pos])
@@ -262,7 +279,7 @@ func get_block(pos: Vector3i) -> int:
     return int(chunk.call("get_voxel", world_to_local(pos)))
 
 func set_block(pos: Vector3i, id: int) -> bool:
-    if pos.y < 0 or pos.y >= 96:
+    if pos.y < 0 or pos.y >= world_height:
         return false
     var old := get_block(pos)
     if old == id:
