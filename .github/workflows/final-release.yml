@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - fix/aethra-ui-auth-performance
+  pull_request:
+    branches:
+      - main
 jobs:
   release:
     runs-on: windows-latest
