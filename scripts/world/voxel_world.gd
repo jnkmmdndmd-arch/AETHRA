@@ -113,10 +113,12 @@ func _process(_delta: float) -> void:
 func _resolve_spawn_position() -> void:
     if generator == null:
         return
+    var ground_x := 8
+    var ground_z := 8
     var ground_y := 32
     for scan_y in range(maxi(8, world_height - 4), 0, -1):
-        var ground := int(generator.block_at(0, scan_y, 0))
-        var above := int(generator.block_at(0, scan_y + 1, 0))
+        var ground := int(generator.block_at(ground_x, scan_y, ground_z))
+        var above := int(generator.block_at(ground_x, scan_y + 1, ground_z))
         if BlockRegistry.is_solid(ground) and above == BlockRegistry.AIR:
             ground_y = scan_y
             break
