@@ -91,15 +91,44 @@ func _run() -> void:
         return bool(economy.can_spend(0)) and not bool(economy.can_spend(int(economy.coins) + 1))
     ))
     checks.append(_check("Minecraft 1.17.1 compatibility", func() -> bool:
-        var manifest: Dictionary = MinecraftCompat.source_manifest()
+        var script: GDScript = load("res://scripts/integration/minecraft_compat.gd") as GDScript
+        if script == null:
+            return false
+        var compat: Node = script.new() as Node
+        if compat == null:
+            return false
+        var manifest: Dictionary = compat.source_manifest()
         var blocks: Array = manifest.get("blocks", [])
-        return MinecraftCompat.SOURCE_VERSION == "Minecraft Java 1.17.1" and blocks.size() == 64 and str(blocks[2]) == "stone"
+        return str(compat.SOURCE_VERSION) == "Minecraft Java 1.17.1" and blocks.size() == 64 and str(blocks[2]) == "stone"
+    ))
+    checks.append(_check("Minecraft atlas base64 integrity", func() -> bool:
+        for path in [
+            "res://assets/minecraft/atlas/minecraft_blocks_1_17_1.webp.b64",
+            "res://assets/minecraft/atlas/minecraft_entities_1_17_1.webp.b64",
+            "res://assets/minecraft/atlas/minecraft_items_1_17_1.webp.b64"
+        ]:
+            var file := FileAccess.open(path, FileAccess.READ)
+            if file == null:
+                return false
+            var encoded := file.get_as_text().strip_edges()
+            file.close()
+            if encoded.is_empty() or encoded.length() % 4 != 0:
+                return false
+            if Marshalls.base64_to_raw(encoded).is_empty():
+                return false
+        return true
     ))
     checks.append(_check("Expanded crafting recipes", func() -> bool:
         return not recipe_registry.find_recipe("iron_sword").is_empty() and not recipe_registry.find_recipe("chest").is_empty()
     ))
     checks.append(_check("Minecraft atlases", func() -> bool:
-        return MinecraftCompat.get_atlas() != null and MinecraftCompat.get_entity_atlas() != null and MinecraftCompat.get_item_atlas() != null
+        var script: GDScript = load("res://scripts/integration/minecraft_compat.gd") as GDScript
+        if script == null:
+            return false
+        var compat: Node = script.new() as Node
+        if compat == null:
+            return false
+        return compat._load_b64_texture(compat.BLOCK_ATLAS_PATH) != null and compat._load_b64_texture(compat.ENTITY_ATLAS_PATH) != null and compat._load_b64_texture(compat.ITEM_ATLAS_PATH) != null
     ))
     checks.append(_check("Minecraft item catalog", func() -> bool:
         return ItemRegistry.MINECRAFT_ITEM_IDS.size() == 44 and ItemRegistry.get_item(ItemRegistry.MC_DIAMOND).get("name", "") == "Diamond"
