@@ -14,8 +14,8 @@ const DEFAULTS := {
     "render_distance": 4,
     "simulation_distance": 3,
     "first_person": true,
-    "window_width": 1366,
-    "window_height": 768,
+    "window_width": 1280,
+    "window_height": 720,
     "window_mode": 0,
     "auth_server_url": "http://127.0.0.1:8090",
 }
