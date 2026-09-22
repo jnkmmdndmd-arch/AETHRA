@@ -395,6 +395,7 @@ func _on_remote_connection_error(_message: String) -> void:
     _show_menu()
 
 func _start_world(seed_value: int, world_name: String, mode: String) -> void:
+    _boot_log("world_start")
     print("[WORLD] start requested name=", world_name, " seed=", seed_value, " mode=", mode)
     world_boot_elapsed = 0.0
     world_boot_reported = false
@@ -422,6 +423,7 @@ func _start_world(seed_value: int, world_name: String, mode: String) -> void:
     print("[WORLD] configuring generator/world height=", config.get("world_height", 96))
     world.initialize(seed_value)
     print("[WORLD] initialize() returned; spawn=", world.spawn_position, " ready=", world.is_ready_for_spawn() if world.has_method("is_ready_for_spawn") else false)
+    _boot_log("world_initialized")
     if time_system:
         time_system.weather_enabled = bool(config.get("weather", true))
     var resume_id := str(AppState.pending_world_config.get("resume_id", ""))
@@ -466,6 +468,7 @@ func _start_world(seed_value: int, world_name: String, mode: String) -> void:
         return
     player.camera.current = true
     print("[WORLD] player + Camera3D ready current=", player.camera.current, " position=", player.position)
+    _boot_log("player_camera_ready")
     if not remote_world and not resume_id.is_empty():
         var saved_player: Dictionary = SaveDB.load_world(resume_id).get("player", {})
         if saved_player is Dictionary:
@@ -491,6 +494,7 @@ func _start_world(seed_value: int, world_name: String, mode: String) -> void:
         creatures.setup(world, bool(config.get("creatures", true)))
     _build_hud()
     print("[WORLD] HUD built; world boot completed from app perspective")
+    _boot_log("world_boot_complete")
     if not remote_world:
         SaveDB.save_world(AppState.current_world_id, {"name": world_name, "seed": seed_value, "mode": mode, "time": time_system.serialize() if time_system else {}, "settings": config.duplicate(true)}, world.save_delta(), _player_save())
     AppState.pending_world_config.clear()
