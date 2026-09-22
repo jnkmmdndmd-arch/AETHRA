@@ -14,6 +14,7 @@ var generator: RefCounted
 var chunks: Dictionary = {}
 var chunk_queue: Array[Vector2i] = []
 var pending: Dictionary = {}
+var generation_threads: Dictionary = {}
 var build_queue: Array[Vector2i] = []
 var build_pending: Dictionary = {}
 var changed_blocks: Dictionary = {}
@@ -37,15 +38,16 @@ func initialize(seed_value: int) -> void:
     _sort_chunk_queue()
 
 func _process(_delta: float) -> void:
+    _poll_generation_threads()
     _stream_chunks()
 
-    var load_budget := LOAD_PER_FRAME
+    var load_budget := 0 if generation_threads.size() >= 1 else LOAD_PER_FRAME
     while load_budget > 0 and not chunk_queue.is_empty():
         var coord: Vector2i = chunk_queue.pop_front()
         if chunks.has(coord) or pending.has(coord):
             continue
         pending[coord] = true
-        _generate_chunk(coord)
+        _generate_chunk_async(coord)
         load_budget -= 1
 
     var build_budget := 1
@@ -182,6 +184,37 @@ func _queue_build(coord: Vector2i) -> void:
         build_pending[coord] = true
         build_queue.append(coord)
 
+func _generate_chunk_async(coord: Vector2i) -> void:
+    var thread := Thread.new()
+    var err := thread.start(Callable(self, "_generate_chunk_worker").bind(coord))
+    if err != OK:
+        pending.erase(coord)
+        var fallback: PackedByteArray = generator.generate_chunk(coord.x, coord.y)
+        call_deferred("_apply_chunk", coord, fallback)
+        return
+    generation_threads[coord] = thread
+
+func _generate_chunk_worker(coord: Vector2i) -> PackedByteArray:
+    if generator == null:
+        return PackedByteArray()
+    return generator.generate_chunk(coord.x, coord.y)
+
+func _poll_generation_threads() -> void:
+    var completed: Array[Vector2i] = []
+    for key in generation_threads:
+        var coord: Vector2i = key
+        var thread: Thread = generation_threads[key]
+        if thread.is_alive():
+            continue
+        var data = thread.wait_to_finish()
+        completed.append(coord)
+        if data is PackedByteArray and not data.is_empty():
+            call_deferred("_apply_chunk", coord, data)
+        else:
+            pending.erase(coord)
+    for coord in completed:
+        generation_threads.erase(coord)
+
 func _generate_chunk(coord: Vector2i) -> void:
     var data: PackedByteArray = generator.generate_chunk(coord.x, coord.y)
     call_deferred("_apply_chunk", coord, data)
@@ -277,3 +310,10 @@ func load_delta(data: Dictionary) -> void:
         if is_instance_valid(chunk):
             _apply_changed_to_chunk(chunk, coord)
             _queue_build(coord)
+
+
+func _exit_tree() -> void:
+    for key in generation_threads:
+        var thread: Thread = generation_threads[key]
+        thread.wait_to_finish()
+    generation_threads.clear()
