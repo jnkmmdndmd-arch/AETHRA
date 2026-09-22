@@ -37,7 +37,7 @@ func _run() -> void:
         return false
     ))
     checks.append(_check("World bounds", func() -> bool:
-        return generator.block_at(0, 0, 0) == 17 and generator.block_at(0, 100, 0) == 0
+        return generator.block_at(0, 0, 0) == block_registry.BEDROCK and generator.block_at(0, generator.world_height, 0) == block_registry.AIR
     ))
     var voxel_script: GDScript = load("res://scripts/world/voxel_world.gd") as GDScript
     checks.append(_check("Voxel world parser", func() -> bool:
@@ -65,13 +65,85 @@ func _run() -> void:
     ))
     var inventory = load("res://scripts/gameplay/inventory.gd").new()
     checks.append(_check("Inventory validation", func() -> bool:
-        return inventory.add_item(BlockRegistry.WATER, 1) == 0 and inventory.add_item(BlockRegistry.STONE, -1) == 0 and inventory.count_item(BlockRegistry.WATER) == 0
+        return inventory.add_item(block_registry.WATER, 1) == 0 and inventory.add_item(block_registry.STONE, -1) == 0 and inventory.count_item(block_registry.WATER) == 0
     ))
-    inventory.add_item(BlockRegistry.LOG, 2)
+    inventory.add_item(block_registry.LOG, 2)
     checks.append(_check("Crafting transaction", func() -> bool:
         var crafting = load("res://scripts/gameplay/crafting.gd").new()
         var crafted: bool = crafting.craft(inventory, "wood_pick")
-        return not crafted and inventory.count_item(BlockRegistry.LOG) == 2
+        return not crafted and inventory.count_item(block_registry.LOG) == 2
+    ))
+    checks.append(_check("World height presets", func() -> bool:
+        for value in [500,800,1000]:
+            var g: RefCounted = load("res://scripts/world/world_generator.gd").new(99)
+            g.configure(true, "", value)
+            if g.world_height!=value or g.block_at(0,value,0)!=block_registry.AIR:
+                return false
+        return true
+    ))
+    checks.append(_check("Inventory UI resource", func() -> bool:
+        return load("res://scripts/ui/inventory_menu.gd") != null and FileAccess.file_exists("res://scripts/ui/inventory_menu.gd")
+    ))
+    checks.append(_check("Economy validation", func() -> bool:
+        var economy = get_root().get_node_or_null("Economy")
+        if economy == null:
+            return false
+        return bool(economy.can_spend(0)) and not bool(economy.can_spend(int(economy.coins) + 1))
+    ))
+    checks.append(_check("Minecraft 1.17.1 compatibility", func() -> bool:
+        var script: GDScript = load("res://scripts/integration/minecraft_compat.gd") as GDScript
+        if script == null:
+            return false
+        var compat: Node = script.new() as Node
+        if compat == null:
+            return false
+        var manifest: Dictionary = compat.source_manifest()
+        var blocks: Array = manifest.get("blocks", [])
+        return str(compat.SOURCE_VERSION) == "Minecraft Java 1.17.1" and blocks.size() == 65 and str(blocks[2]) == "stone"
+    ))
+    checks.append(_check("Minecraft atlas base64 integrity", func() -> bool:
+        for path in [
+            "res://assets/minecraft/atlas/minecraft_blocks_1_17_1.webp.b64",
+            "res://assets/minecraft/atlas/minecraft_entities_1_17_1.webp.b64",
+            "res://assets/minecraft/atlas/minecraft_items_1_17_1.webp.b64"
+        ]:
+            var file := FileAccess.open(path, FileAccess.READ)
+            if file == null:
+                return false
+            var encoded := file.get_as_text().strip_edges()
+            file.close()
+            if encoded.is_empty() or encoded.length() % 4 != 0:
+                return false
+            if Marshalls.base64_to_raw(encoded).is_empty():
+                return false
+        return true
+    ))
+    checks.append(_check("Expanded crafting recipes", func() -> bool:
+        return not recipe_registry.find_recipe("iron_sword").is_empty() and not recipe_registry.find_recipe("chest").is_empty()
+    ))
+    checks.append(_check("Minecraft atlases", func() -> bool:
+        var script: GDScript = load("res://scripts/integration/minecraft_compat.gd") as GDScript
+        if script == null:
+            return false
+        var compat: Node = script.new() as Node
+        if compat == null:
+            return false
+        return compat.get_atlas() != null and compat.get_entity_atlas() != null and compat.get_item_atlas() != null
+    ))
+    checks.append(_check("Minecraft item catalog", func() -> bool:
+        return item_registry.MINECRAFT_ITEM_IDS.size() == 44 and str(item_registry.get_item(item_registry.MC_DIAMOND).get("name", "")) == "Diamond"
+    ))
+    checks.append(_check("Minecraft crafting content", func() -> bool:
+        return (not recipe_registry.find_recipe("minecraft_bow").is_empty() and not recipe_registry.find_recipe("minecraft_shield").is_empty() and not recipe_registry.find_recipe("minecraft_arrow").is_empty())
+    ))
+    checks.append(_check("Minecraft texture mapping", func() -> bool:
+        var compat_script: GDScript = load("res://scripts/integration/minecraft_compat.gd") as GDScript
+        if compat_script == null:
+            return false
+        var compat: Node = compat_script.new() as Node
+        if compat == null:
+            return false
+        return int(compat.get_block_tile(block_registry.STONE)) == 2 and int(compat.get_item_tile(item_registry.MC_DIAMOND)) == 28 and int(compat.get_entity_tile("creeper")) == 10
     ))
     for result in checks:
         print("[TEST] %s: %s" % [result[0], "PASS" if result[1] else "FAIL"])

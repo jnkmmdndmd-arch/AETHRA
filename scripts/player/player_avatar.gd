@@ -22,6 +22,11 @@ var is_local := true
 var peer_id := 1
 var attack_cooldown := 0.0
 var footstep_timer := 0.0
+var mining_generation := 0
+var body_mesh: MeshInstance3D
+var body_collision: CollisionShape3D
+var is_crouched := false
+var death_lock := false
 
 func setup(voxel_world, local_player: bool = true, id: int = 1) -> void:
     world = voxel_world
@@ -35,21 +40,21 @@ func _build_body() -> void:
     var capsule := CapsuleMesh.new()
     capsule.height = 1.8
     capsule.radius = 0.34
-    var body := MeshInstance3D.new()
-    body.mesh = capsule
+    body_mesh = MeshInstance3D.new()
+    body_mesh.mesh = capsule
     var mat := StandardMaterial3D.new()
     mat.albedo_color = _character_color(AppState.character_id if is_local else "ranger")
     mat.roughness = 0.75
-    body.material_override = mat
-    body.position.y = 0.9
-    add_child(body)
-    var collision := CollisionShape3D.new()
+    body_mesh.material_override = mat
+    body_mesh.position.y = 0.9
+    add_child(body_mesh)
+    body_collision = CollisionShape3D.new()
     var shape := CapsuleShape3D.new()
     shape.height = 1.8
     shape.radius = 0.34
-    collision.shape = shape
-    collision.position.y = 0.9
-    add_child(collision)
+    body_collision.shape = shape
+    body_collision.position.y = 0.9
+    add_child(body_collision)
     head = Node3D.new()
     head.position.y = 1.55
     add_child(head)
@@ -112,6 +117,13 @@ func _unhandled_input(event: InputEvent) -> void:
         Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
     elif event.is_action_pressed("attack"):
         _attack()
+    elif event.is_action_pressed("inventory"):
+        var inventory_ui := get_tree().get_first_node_in_group("aethra_inventory_ui")
+        if inventory_ui != null:
+            inventory_ui.visible = not inventory_ui.visible
+            Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if inventory_ui.visible else Input.MOUSE_MODE_CAPTURED
+    elif event.is_action_pressed("use_item"):
+        _use_selected_item()
     elif event.is_action_pressed("mine"):
         _start_mining()
     elif event.is_action_released("mine"):
@@ -139,10 +151,60 @@ func _update_movement(delta: float) -> void:
     else:
         footstep_timer = 0.0
     if Input.is_action_just_pressed("crouch"):
-        scale.y = 0.8 if is_equal_approx(scale.y, 1.0) else 1.0
+        _toggle_crouch()
     move_and_slide()
 
+func _toggle_crouch() -> void:
+    if is_crouched:
+        var query := PhysicsShapeQueryParameters3D.new()
+        var capsule := CapsuleShape3D.new()
+        capsule.height = 1.8
+        capsule.radius = 0.34
+        query.shape = capsule
+        query.transform = Transform3D(Basis.IDENTITY, global_position + Vector3.UP * 0.9)
+        query.exclude = [self]
+        query.collision_mask = collision_mask
+        if not get_world_3d().direct_space_state.intersect_shape(query, 1).is_empty():
+            return
+    _set_crouched(not is_crouched)
+
+func _use_selected_item() -> void:
+    if death_lock:
+        return
+    var slot:Dictionary = inventory.slots[inventory.selected]
+    var item_id: int = int(slot.get("item", ItemRegistry.EMPTY))
+    if survival.is_food(item_id) and inventory.count_item(item_id) > 0:
+        if survival.consume_food(item_id) and inventory.remove_item(item_id, 1):
+            AudioManager.play("ui_click", -5.0)
+
+func respawn_at(world_position:Vector3) -> void:
+    global_position=world_position
+    velocity=Vector3.ZERO
+    survival.reset_after_death()
+    death_lock=false
+    _set_crouched(false)
+    Input.mouse_mode=Input.MOUSE_MODE_CAPTURED
+
+func _set_crouched(value: bool) -> void:
+    is_crouched = value
+    var standing_height := 1.8
+    var crouched_height := 1.35
+    var height := crouched_height if is_crouched else standing_height
+    var center_y := height * 0.5
+    if body_collision and body_collision.shape is CapsuleShape3D:
+        var collision_capsule: CapsuleShape3D = body_collision.shape
+        collision_capsule.height = height
+        body_collision.position.y = center_y
+    if body_mesh and body_mesh.mesh is CapsuleMesh:
+        var mesh_capsule: CapsuleMesh = body_mesh.mesh
+        mesh_capsule.height = height
+        body_mesh.position.y = center_y
+    if head:
+        head.position.y = 1.18 if is_crouched else 1.55
+
 func _start_mining() -> void:
+    if mining_active:
+        return
     if world == null or AppState.game_mode == "adventure":
         return
     var result := _raycast_voxel()
@@ -164,17 +226,17 @@ func _start_mining() -> void:
     mining_duration = maxf(0.08, float(block.hardness) / tool_bonus)
     mining_started = Time.get_ticks_msec() / 1000.0
     mining_active = true
-    _finish_mining()
+    mining_generation += 1
+    _finish_mining(mining_generation, mine_target, id)
 
-func _finish_mining() -> void:
+func _finish_mining(generation: int, target_pos: Vector3i, target_id: int) -> void:
     if not mining_active:
         return
     await get_tree().create_timer(maxf(0.0, mining_duration - (Time.get_ticks_msec() / 1000.0 - mining_started))).timeout
-    if not mining_active or world == null:
-        mining_active = false
+    if not mining_active or generation != mining_generation or world == null:
         return
-    var id: int = int(world.get_block(mine_target))
-    if id == BlockRegistry.AIR or id == BlockRegistry.BEDROCK:
+    var id: int = int(world.get_block(target_pos))
+    if id != target_id or id == BlockRegistry.AIR or id == BlockRegistry.BEDROCK:
         mining_active = false
         return
     if not is_local:
@@ -194,9 +256,9 @@ func _finish_mining() -> void:
             inventory.add_item(BlockRegistry.get_drop(id), 1)
             survival.add_xp(1 if id in [BlockRegistry.COPPER_ORE, BlockRegistry.IRON_ORE, BlockRegistry.CRYSTAL_ORE] else 0)
             block_mined.emit()
-            NetworkManager.apply_host_block_change(mine_target, BlockRegistry.AIR)
+            NetworkManager.apply_host_block_change(target_pos, BlockRegistry.AIR)
     else:
-        NetworkManager.request_block_change.rpc_id(1, mine_target, BlockRegistry.AIR, held_id)
+        NetworkManager.request_block_change.rpc_id(1, target_pos, BlockRegistry.AIR, held_id)
     mining_active = false
 
 func _place_block() -> void:
@@ -292,19 +354,19 @@ func _refresh_hotbar_ui() -> void:
         hud_node.set_selected(inventory.selected)
 
 func _attack() -> void:
-    if attack_cooldown > 0.0:
+    if death_lock or attack_cooldown > 0.0:
         return
     attack_cooldown = 0.45
+    var forward := -camera.global_transform.basis.z
     var best: Node3D = null
     var best_distance := 3.2
-    var forward := -camera.global_transform.basis.z
     for node in get_tree().get_nodes_in_group("creatures"):
         var target := node as Node3D
-        if target == null:
+        if target == null or not is_instance_valid(target):
             continue
         var offset := target.global_position - global_position
         var distance := offset.length()
-        if distance > 0.1 and distance <= 3.2 and distance < best_distance and forward.dot(offset.normalized()) > 0.35:
+        if distance > 0.1 and distance <= 3.2 and distance < best_distance and forward.dot(offset.normalized()) > 0.35 and _combat_has_line_of_sight(target):
             best = target
             best_distance = distance
     if best != null and best.has_method("apply_damage"):
@@ -316,3 +378,29 @@ func _attack() -> void:
             damage = 1.0
         best.apply_damage(damage + 2.0)
         AudioManager.play("dig", -7.0)
+        return
+    if multiplayer.multiplayer_peer != null and not multiplayer.is_server():
+        var player_target := _nearest_remote_player_target(forward)
+        if player_target >= 0:
+            NetworkManager.request_player_attack.rpc_id(1, player_target, camera.global_position, forward, inventory.selected)
+
+func _nearest_remote_player_target(forward: Vector3) -> int:
+    var best_id := -1
+    var best_distance := 3.2
+    for key in NetworkManager.remote_players:
+        var id:=int(key)
+        if id==multiplayer.get_unique_id(): continue
+        var row:Dictionary=NetworkManager.remote_players[key]
+        var position:Vector3=row.get("position",Vector3.ZERO)
+        var offset:=position-global_position
+        var distance:=offset.length()
+        if distance>0.1 and distance<=best_distance and forward.dot(offset.normalized())>0.35:
+            best_id=id; best_distance=distance
+    return best_id
+
+func _combat_has_line_of_sight(target: Node3D) -> bool:
+    var query:=PhysicsRayQueryParameters3D.create(global_position+Vector3.UP*0.8,target.global_position+Vector3.UP*0.8)
+    query.exclude=[self]
+    query.collision_mask=1
+    var hit:=get_world_3d().direct_space_state.intersect_ray(query)
+    return hit.is_empty() or hit.get("collider")==target

@@ -62,3 +62,20 @@ The project is verified for editor import, headless source validation, and clean
 - Optimized terrain generation to calculate surface/biome once per column instead of once per block.
 - Added real 3D resolution scaling and adaptive runtime scaling for low/medium profiles while keeping the 2D UI at native window resolution.
 - Lowered low-end defaults and creature counts to reduce CPU/physics load.
+
+
+## 2026-09-21 audited release
+- Branch: `fix/aethra-ui-auth-performance`
+- Audited commit before documentation-only updates: `a2116b26b599081be9409e66579d5cea6aa8f995`
+- Windows CI run: `35641143024`
+- Godot editor validation: PASS
+- GDScript load gate: PASS
+- Godot self-test: PASS
+- Go auth-service tests: PASS
+- Go vet: PASS
+- Windows export: PASS
+- EXE process start: PASS
+- GUI/gameplay/save/load/settings/multiplayer automation: BLOCKED — the repository does not currently contain `tests/windows_gui_smoke.ps1`, so the workflow cannot claim interactive GUI verification.
+- Audited artifact SHA-256: `d3e256e8f2a8ae4061ef156841f6f55319fbd67b341594894736c50aacafe599`
+- Repository scope: 118 files total, including 31 GDScript files; all 31 GDScript source files were fetched and structurally scanned in batches, and critical scene/config/build/security/gameplay files were inspected.
+- Persistent local account fallback is implemented and tested through source/CI gates. Public multi-device account service deployment is BLOCKED without an external deployed auth endpoint and shared secret.

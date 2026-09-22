@@ -4,7 +4,15 @@ var world
 var enabled := true
 var spawn_timer := 0.0
 var max_creatures := 8
-var kinds := ["goat","deer","boar","fox","rabbit","wolf","horse","chicken","camel","vulture","fennec","lizard","snake","scorpion","bee","butterfly","dragonfly","firefly","beetle","moth","spider","slime","wraith","brute","drake","sand_wyrm","stone_golem","marsh_lurker","bat","crystal_mite"]
+var kinds := [
+    "cow","pig","sheep","chicken","horse","wolf","fox","goat","bee",
+    "rabbit","bat","spider","creeper","zombie","skeleton","enderman",
+    "witch","guardian","blaze","ghast","endermite","silverfish","piglin",
+    "hoglin","ravager","phantom",
+    "deer","boar","camel","vulture","fennec","lizard","snake","scorpion",
+    "butterfly","dragonfly","firefly","beetle","moth","slime","wraith",
+    "brute","drake","sand_wyrm","stone_golem","marsh_lurker","crystal_mite"
+]
 
 func setup(voxel_world, enable_creatures: bool = true) -> void:
     world = voxel_world
@@ -33,8 +41,11 @@ func _process(delta: float) -> void:
 
 func _ground_position(x: float, z: float) -> Vector3:
     var y := 48
+    var max_y := 90
+    if world != null and world.has_method("get_world_height"):
+        max_y = int(world.get_world_height()) - 2
     if world != null and world.has_method("get_block"):
-        for scan_y in range(90, 0, -1):
+        for scan_y in range(max_y, 0, -1):
             var ground := int(world.get_block(Vector3i(floori(x), scan_y, floori(z))))
             var above := int(world.get_block(Vector3i(floori(x), scan_y + 1, floori(z))))
             if BlockRegistry.is_solid(ground) and above == BlockRegistry.AIR:
@@ -57,10 +68,10 @@ func _kind_for_biome(position: Vector3, fallback: String) -> String:
         return fallback
     var biome := str(world.get_biome_at(floori(position.x), floori(position.z)))
     var tables := {
-        "arid": ["camel","vulture","fennec","lizard","snake","scorpion","beetle","firefly","sand_wyrm","brute"],
-        "frost": ["wolf","rabbit","bat","wraith","drake","crystal_mite"],
-        "grove": ["deer","boar","fox","rabbit","bee","butterfly","moth","spider","marsh_lurker"],
-        "meadow": ["goat","deer","boar","fox","rabbit","horse","chicken","butterfly","dragonfly","bee","wolf","spider","slime"]
+        "arid": ["camel","vulture","fennec","lizard","snake","scorpion","beetle","firefly","sand_wyrm","brute","creeper","skeleton","zombie"],
+        "frost": ["wolf","rabbit","bat","wraith","drake","crystal_mite","skeleton","zombie","spider"],
+        "grove": ["deer","boar","fox","rabbit","bee","butterfly","moth","spider","marsh_lurker","cow","sheep","witch","zombie"],
+        "meadow": ["goat","deer","boar","fox","rabbit","horse","chicken","butterfly","dragonfly","bee","wolf","spider","slime","cow","pig","sheep","creeper","zombie","skeleton"]
     }
     var options: Array = tables.get(biome, kinds)
     return str(options[randi_range(0, options.size() - 1)]) if not options.is_empty() else fallback

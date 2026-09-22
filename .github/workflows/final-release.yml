@@ -1,0 +1,120 @@
+name: AETHRA Final Windows Release
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - fix/aethra-ui-auth-performance
+  pull_request:
+    branches:
+      - main
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Godot 4.7.2
+        run: |
+          $root="$env:RUNNER_TEMP\godot"
+          New-Item -ItemType Directory -Force $root | Out-Null
+          $zip="$root\Godot.zip"
+          Invoke-WebRequest "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_win64.exe.zip" -OutFile $zip
+          Expand-Archive -Force $zip $root
+          $godot=Get-ChildItem $root -Filter "Godot_v4.7.2-stable_win64.exe" -Recurse | Select-Object -First 1
+          if(-not $godot){throw "Godot 4.7.2 editor not found"}
+          "GODOT_PATH=$($godot.FullName)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Install export template
+        run: |
+          $root="$env:RUNNER_TEMP\godot"
+          $zip="$root\templates.tpz"
+          $dst="$env:APPDATA\Godot\export_templates\4.7.2.stable"
+          New-Item -ItemType Directory -Force $dst | Out-Null
+          Invoke-WebRequest "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz" -OutFile $zip
+          $ext="$root\templates_extract"
+          New-Item -ItemType Directory -Force $ext | Out-Null
+          Expand-Archive -Force $zip $ext
+          $templates=Get-ChildItem $ext -File -Recurse | Where-Object { $_.Name -match "^windows_(debug|release)_x86_64.*\.exe$" }
+          if($templates.Count -lt 2){throw "Windows x86_64 debug/release export templates not found"}
+          foreach($template in $templates){ Copy-Item -Force $template.FullName (Join-Path $dst $template.Name) }
+          if(-not (Test-Path (Join-Path $dst "windows_release_x86_64.exe"))){throw "Windows release template missing"}
+          if(-not (Test-Path (Join-Path $dst "windows_debug_x86_64.exe"))){throw "Windows debug template missing"}
+      - name: Godot editor validation
+        run: |
+          & $env:GODOT_PATH --headless --editor --quit --path . | Tee-Object editor.log
+          if($LASTEXITCODE -ne 0){throw "Godot editor validation failed"}
+      - name: GDScript parse and self-test
+        run: |
+          & $env:GODOT_PATH --headless --path . --script res://tests/parse_all_scripts.gd | Tee-Object parse.log
+          if($LASTEXITCODE -ne 0){throw "GDScript parser failed"}
+          & $env:GODOT_PATH --headless --path . --script res://tests/self_test.gd | Tee-Object self-test.log
+          if($LASTEXITCODE -ne 0){throw "Self-test failed"}
+      - name: Install SQLite headers for Go auth build
+        run: |
+          $vcpkgRoot = "$env:VCPKG_INSTALLATION_ROOT"
+          if([string]::IsNullOrWhiteSpace($vcpkgRoot) -or -not (Test-Path "$vcpkgRoot\vcpkg.exe")){
+            if(-not (Test-Path "$env:RUNNER_TEMP\vcpkg")){
+              git clone https://github.com/Microsoft/vcpkg.git "$env:RUNNER_TEMP\vcpkg"
+              & "$env:RUNNER_TEMP\vcpkg\bootstrap-vcpkg.bat"
+            }
+            $vcpkgRoot = "$env:RUNNER_TEMP\vcpkg"
+          }
+          & "$vcpkgRoot\vcpkg.exe" install sqlite3:x64-windows --triplet x64-windows
+          $sqliteRoot = "$vcpkgRoot\installed\x64-windows"
+          $sqliteHeader = Get-ChildItem "$sqliteRoot" -Recurse -Filter "sqlite3.h" | Select-Object -First 1
+          if(-not $sqliteHeader){throw "sqlite3.h was not found"}
+          $include = ((Split-Path -Parent $sqliteHeader.FullName) -replace "\\","/")
+          $rootUnix = ($sqliteRoot -replace "\\","/")
+          "CGO_CFLAGS=-I$include" | Out-File $env:GITHUB_ENV -Encoding ascii -Append
+          "CGO_LDFLAGS=-L$rootUnix/lib -lsqlite3" | Out-File $env:GITHUB_ENV -Encoding ascii -Append
+          "CPATH=$include" | Out-File $env:GITHUB_ENV -Encoding ascii -Append
+
+      - name: Auth tests
+        working-directory: server/auth-service
+        run: |
+          go test ./...
+          if($LASTEXITCODE -ne 0){throw "Auth tests failed"}
+          go vet ./...
+          if($LASTEXITCODE -ne 0){throw "Auth vet failed"}
+      - name: Export final Windows EXE
+        run: |
+          New-Item -ItemType Directory -Force build | Out-Null
+          & $env:GODOT_PATH --headless --path . --export-release "Windows Desktop" "build\AETHRA-Wildbound.exe" | Tee-Object export.log
+          if($LASTEXITCODE -ne 0){throw "Windows export failed"}
+          if(-not (Test-Path "build\AETHRA-Wildbound.exe")){throw "Final EXE missing"}
+          if((Get-Item "build\AETHRA-Wildbound.exe").Length -lt 1000000){throw "Final EXE unexpectedly small"}
+      - name: Build Windows installer
+        run: |
+          choco install innosetup --yes --no-progress
+          $iscc = Get-ChildItem "C:\Program Files (x86)\Inno Setup" -Filter "ISCC.exe" -Recurse | Select-Object -First 1 -ExpandProperty FullName
+          if(-not $iscc){throw "Inno Setup compiler not found"}
+          & $iscc "installer.iss" | Tee-Object installer.log
+          if($LASTEXITCODE -ne 0){throw "Inno Setup compilation failed"}
+          if(-not (Test-Path "build\AETHRA-Wildbound-Setup.exe")){throw "Installer missing"}
+
+      - name: Final EXE startup smoke
+        run: |
+          $p=Start-Process ".\build\AETHRA-Wildbound.exe" -PassThru
+          Start-Sleep 8
+          if($p.HasExited){throw "Final EXE exited during startup"}
+          Stop-Process -Id $p.Id -Force
+      - name: Hashes
+        run: |
+          $game=(Get-FileHash "build\AETHRA-Wildbound.exe" -Algorithm SHA256).Hash.ToLowerInvariant()
+          $setup=(Get-FileHash "build\AETHRA-Wildbound-Setup.exe" -Algorithm SHA256).Hash.ToLowerInvariant()
+          @("AETHRA FINAL WINDOWS RELEASE","Game SHA256: $game","Installer SHA256: $setup","Startup smoke: PASS") | Set-Content FINAL-WINDOWS-VERIFICATION.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AETHRA-Wildbound-FINAL-Windows-x64
+          if-no-files-found: error
+          path: |
+            build/AETHRA-Wildbound.exe
+            build/AETHRA-Wildbound-Setup.exe
+            FINAL-WINDOWS-VERIFICATION.md
+            installer.log
+            editor.log
+            parse.log
+            self-test.log
+            export.log

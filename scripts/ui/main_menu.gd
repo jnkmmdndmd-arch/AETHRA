@@ -96,6 +96,7 @@ func _build_shell() -> void:
     add_child(root)
 
     var columns := HBoxContainer.new()
+    columns.layout_direction = Control.LAYOUT_DIRECTION_LTR
     columns.add_theme_constant_override("separation", 14)
     root.add_child(columns)
 
@@ -204,7 +205,6 @@ func _build_sidebar(parent: PanelContainer) -> void:
         ["worlds", "world", "العوالم"],
         ["store", "store", "المتجر"],
         ["settings", "settings", "الإعدادات"],
-        ["developer", "developer", "أدوات المطور"],
     ]
     for item in items:
         var b := _nav_button(item[1], item[2])
@@ -240,6 +240,7 @@ func _build_sidebar(parent: PanelContainer) -> void:
 func _build_header(parent: PanelContainer) -> void:
     var row := HBoxContainer.new()
     row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    row.layout_direction = Control.LAYOUT_DIRECTION_LTR
     row.add_theme_constant_override("separation", 10)
     parent.add_child(row)
     search_line = LineEdit.new()
@@ -248,6 +249,7 @@ func _build_header(parent: PanelContainer) -> void:
     search_line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     search_line.custom_minimum_size = Vector2(0, 42)
     search_line.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    search_line.alignment = HORIZONTAL_ALIGNMENT_RIGHT
     row.add_child(search_line)
     search_line.text_changed.connect(_search)
 
@@ -354,7 +356,6 @@ func _show_page(page: String) -> void:
         "servers": _page_servers()
         "worlds": _page_worlds()
         "store": _page_store()
-        "developer": _page_developer()
         "profile": _page_profile()
     _update_nav_state()
 
@@ -465,17 +466,20 @@ func _build_auth_gate() -> void:
     box.add_theme_constant_override("separation", 10)
     margin.add_child(box)
     _label(box, "تسجيل الدخول إلى AETHRA", 27, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
-    _label(box, "الحساب يحسن تجربة اللعب الجماعي، ويمكنك متابعة اللعب محليًا دون حساب.", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "حساب حقيقي محفوظ على هذا الجهاز، ومع توفر خدمة الحساب البعيدة تُستخدم تلقائيًا.", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
     auth_server = LineEdit.new()
     auth_server.text = str(Settings.get_value("auth_server_url", "http://127.0.0.1:8090"))
-    auth_server.placeholder_text = "عنوان خدمة المصادقة"
-    box.add_child(auth_server)
+    auth_server.visible = false
     auth_user = LineEdit.new()
     auth_user.placeholder_text = "اسم المستخدم"
+    auth_user.alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    auth_user.custom_minimum_size = Vector2(0, 44)
     box.add_child(auth_user)
     auth_password = LineEdit.new()
     auth_password.placeholder_text = "كلمة المرور"
     auth_password.secret = true
+    auth_password.alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    auth_password.custom_minimum_size = Vector2(0, 44)
     box.add_child(auth_password)
     var character_select := OptionButton.new()
     character_select.name = "CharacterSelect"
@@ -582,6 +586,12 @@ func _page_create_world() -> void:
     var difficulty_ids := ["peaceful", "easy", "normal", "hard"]
     difficulty.select(2)
     form.add_child(difficulty)
+    var height := OptionButton.new()
+    height.add_item("عمق 500")
+    height.add_item("عمق 800")
+    height.add_item("عمق 1000")
+    height.select(0)
+    form.add_child(height)
     var privacy := OptionButton.new()
     privacy.add_item("عام")
     privacy.add_item("خاص")
@@ -619,6 +629,8 @@ func _page_create_world() -> void:
             "mode": mode_ids[mode.selected],
             "world_type": world_type_ids[world_type.selected],
             "difficulty": difficulty_ids[difficulty.selected],
+            "world_height": [500, 800, 1000][height.selected],
+            "world_radius": 32768,
             "privacy": privacy_ids[privacy.selected],
             "structures": structures.button_pressed,
             "creatures": creatures.button_pressed,
@@ -753,16 +765,23 @@ func _server_card(server: Dictionary) -> void:
     row.add_child(remove)
 
 func _page_store() -> void:
-    _section_title(content, "المتجر", "التجارة الحقيقية تحتاج مزود دفع وخدمة تجارية متصلة")
-    var panel := _panel(PANEL, 22, Color(0.22, 0.7, 1.0, 0.18))
-    panel.custom_minimum_size = Vector2(0, 280)
-    content.add_child(panel)
-    var box := VBoxContainer.new()
-    box.alignment = BoxContainer.ALIGNMENT_CENTER
-    box.add_theme_constant_override("separation", 10)
-    panel.add_child(box)
-    _label(box, "المتجر غير مفعّل", 24, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
-    _label(box, "لا توجد مشتريات وهمية أو أسعار غير مرتبطة بخدمة حقيقية. عند إضافة خدمة التجارة سيتم ربط هذه الصفحة بالبيانات الفعلية.", 12, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    _section_title(content, "المتجر", "اقتصاد محلي محفوظ فعليًا مع مخزن مشتريات")
+    var wallet:=_panel(PANEL_2, 18, Color(0.22, 0.7, 1.0, 0.14)); content.add_child(wallet)
+    var wbox:=HBoxContainer.new(); wallet.add_child(wbox)
+    var coins_label:=_label(wbox, "الرصيد: %d" % Economy.coins, 18, ACCENT_BRIGHT); coins_label.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+    Economy.wallet_changed.connect(func(value:int): if is_instance_valid(coins_label): coins_label.text="الرصيد: %d" % value)
+    var grid:=GridContainer.new(); grid.columns=2; grid.add_theme_constant_override("h_separation",12); grid.add_theme_constant_override("v_separation",12); content.add_child(grid)
+    for offer in Economy.shop_catalog():
+        var card:=_panel(PANEL_2, 14, Color(0.15,0.20,0.28,0.94)); card.custom_minimum_size=Vector2(280,110); grid.add_child(card)
+        var box:=VBoxContainer.new(); box.add_theme_constant_override("separation",6); card.add_child(box)
+        _label(box, str(offer.get("name","Item")), 16, TEXT)
+        _label(box, "%d x بسعر %d" % [int(offer.get("amount",1)),int(offer.get("price",0))], 11, MUTED)
+        var buy:=_primary_button("شراء", Vector2(120,36))
+        buy.pressed.connect(func(id: int = int(offer.get("item_id",0)), amount: int = int(offer.get("amount",1)), price: int = int(offer.get("price",0))) -> void:
+            var ok:=Economy.purchase(id,amount,price)
+            _show_page("store") if not ok else _show_page("store")
+        )
+        box.add_child(buy)
 
 func _page_profile() -> void:
     _section_title(content, "الملف الشخصي", "بيانات الحساب والصورة المحفوظة")
@@ -787,13 +806,13 @@ func _page_profile() -> void:
     info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     identity.add_child(info)
     _label(info, AppState.get_display_name(), 24, TEXT)
-    _label(info, "الحساب: %s" % ("موثّق" if AppState.is_authenticated else "محلي"), 11, GREEN if AppState.is_authenticated else MUTED)
+    _label(info, "الحساب: %s" % ("متحقق — بيانات محفوظة فعليًا" if AppState.is_authenticated else "محلي"), 11, GREEN if AppState.is_authenticated else MUTED)
     _label(info, "الشخصية: %s" % _character_label(AppState.character_id), 11, ACCENT_BRIGHT)
 
     var name_field := LineEdit.new()
     name_field.text = AppState.get_display_name()
     name_field.placeholder_text = "اسم العرض"
-    name_field.editable = not AppState.is_authenticated
+    name_field.editable = true
     name_field.custom_minimum_size = Vector2(0, 40)
     name_field.layout_direction = Control.LAYOUT_DIRECTION_RTL
     root.add_child(name_field)
@@ -823,7 +842,7 @@ func _page_profile() -> void:
         text.layout_direction = Control.LAYOUT_DIRECTION_RTL
         text.mouse_filter = Control.MOUSE_FILTER_IGNORE
         button.add_child(text)
-        button.pressed.connect(func(selected_index := index):
+        button.pressed.connect(func(selected_index: int = index) -> void:
             AppState.avatar_id = selected_index
             for peer in avatar_buttons:
                 peer.button_pressed = false
@@ -836,7 +855,13 @@ func _page_profile() -> void:
 
     var save := _primary_button("حفظ الملف الشخصي", Vector2(220, 46))
     save.pressed.connect(func():
-        AppState.save_profile(name_field.text, AppState.avatar_id)
+        if AppState.is_authenticated:
+            var auth_root = get_parent()
+            var auth_node = auth_root.get("auth") if auth_root != null else null
+            if auth_node != null:
+                auth_node.update_profile(AppState.auth_token, name_field.text, AppState.avatar_id)
+        else:
+            AppState.save_profile(name_field.text, AppState.avatar_id)
         _show_page("profile")
     )
     root.add_child(save)

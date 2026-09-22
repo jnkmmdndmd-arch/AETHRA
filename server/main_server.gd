@@ -22,7 +22,7 @@ func _ready() -> void:
         var i := args.find("--seed")
         if i + 1 < args.size():
             world_seed = int(args[i + 1])
-    var saved := SaveDB.load_world("dedicated-world")
+    var saved: Dictionary = SaveDB.load_world("dedicated-world")
     if not saved.is_empty():
         var metadata: Dictionary = saved.get("metadata", {})
         world_seed = int(metadata.get("seed", world_seed))
@@ -35,7 +35,6 @@ func _ready() -> void:
         server_port = cli_port
     world = load("res://scripts/world/voxel_world.gd").new()
     add_child(world)
-    world.initialize(world_seed)
     var settings := {
         "difficulty": server_difficulty,
         "privacy": "public",
@@ -43,17 +42,21 @@ func _ready() -> void:
         "creatures": true,
         "weather": true,
         "pvp": server_pvp,
+        "world_height": 500,
+        "world_radius": 32768,
     }
     if not saved.is_empty():
         var saved_settings = saved.get("metadata", {}).get("settings", {})
         if saved_settings is Dictionary:
             settings.merge(saved_settings, true)
-        world.load_delta(saved.get("blocks", {}))
     AppState.world_settings = settings.duplicate(true)
     server_difficulty = str(settings.get("difficulty", server_difficulty))
     server_pvp = bool(settings.get("pvp", server_pvp))
     if world.has_method("configure"):
         world.configure(settings)
+    world.initialize(world_seed)
+    if not saved.is_empty():
+        world.load_delta(saved.get("blocks", {}))
     time_system = load("res://scripts/world/world_time.gd").new()
     time_system.name = "WorldTime"
     add_child(time_system)

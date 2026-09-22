@@ -11,11 +11,14 @@ func craft(inventory, recipe_id: String) -> bool:
     var output: Dictionary = recipe.output
     if not inventory.can_add_items(output):
         return false
+    var before: Dictionary = inventory.serialize()
     for key in recipe.inputs:
         if not inventory.remove_item(int(key), int(recipe.inputs[key])):
+            inventory.deserialize(before)
             return false
     for key in output:
         var remaining: int = inventory.add_item(int(key), int(output[key]))
         if remaining > 0:
+            inventory.deserialize(before)
             return false
     return true

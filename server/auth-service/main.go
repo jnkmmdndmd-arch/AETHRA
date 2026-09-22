@@ -4,6 +4,14 @@ package main
 #cgo LDFLAGS: -lsqlite3
 #include <sqlite3.h>
 #include <stdlib.h>
+
+static int aethra_bind_text(sqlite3_stmt *stmt, int index, const char *value) {
+    return sqlite3_bind_text(stmt, index, value, -1, SQLITE_TRANSIENT);
+}
+
+static int aethra_bind_blob(sqlite3_stmt *stmt, int index, const void *value, int len) {
+    return sqlite3_bind_blob(stmt, index, value, len, SQLITE_TRANSIENT);
+}
 */
 import "C"
 
@@ -17,8 +25,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -34,6 +44,40 @@ type Config struct {
 var cfg Config
 var rateMu sync.Mutex
 var rateBuckets = map[string][]time.Time{}
+
+func prepareStmt(db *C.sqlite3, query string) (*C.sqlite3_stmt, error) {
+	cquery := C.CString(query)
+	defer C.free(unsafe.Pointer(cquery))
+	var stmt *C.sqlite3_stmt
+	if C.sqlite3_prepare_v2(db, cquery, -1, &stmt, nil) != C.SQLITE_OK {
+		return nil, errors.New("sqlite prepare failed")
+	}
+	return stmt, nil
+}
+
+func bindText(stmt *C.sqlite3_stmt, index int, value string) bool {
+	cvalue := C.CString(value)
+	defer C.free(unsafe.Pointer(cvalue))
+	return C.aethra_bind_text(stmt, C.int(index), cvalue) == C.SQLITE_OK
+}
+
+func bindBlob(stmt *C.sqlite3_stmt, index int, value []byte) bool {
+	if len(value) == 0 {
+		return C.aethra_bind_blob(stmt, C.int(index), nil, 0) == C.SQLITE_OK
+	}
+	return C.aethra_bind_blob(stmt, C.int(index), unsafe.Pointer(&value[0]), C.int(len(value))) == C.SQLITE_OK
+}
+
+func bindInt64(stmt *C.sqlite3_stmt, index int, value int64) bool {
+	return C.sqlite3_bind_int64(stmt, C.int(index), C.sqlite3_int64(value)) == C.SQLITE_OK
+}
+
+func stepExec(stmt *C.sqlite3_stmt) error {
+	if C.sqlite3_step(stmt) != C.SQLITE_DONE {
+		return errors.New("sqlite statement execution failed")
+	}
+	return nil
+}
 
 func sqlExec(db *C.sqlite3, query string) error {
 	cquery := C.CString(query)
@@ -123,12 +167,12 @@ func pbkdf2SHA256(password string, salt []byte, iterations int) []byte {
 }
 
 func signToken(uid, username string, ttl time.Duration) string {
-	return signTokenWithCharacter(uid, username, "ranger", ttl)
+	return signTokenWithCharacter(uid, username, "ranger", 0, ttl)
 }
 
-func signTokenWithCharacter(uid, username, character string, ttl time.Duration) string {
+func signTokenWithCharacter(uid, username, character string, avatarID int, ttl time.Duration) string {
 	exp := time.Now().Add(ttl).Unix()
-	body := fmt.Sprintf("%s|%s|%s|%d", uid, username, character, exp)
+	body := fmt.Sprintf("%s|%s|%s|%d|%d", uid, username, character, avatarID, exp)
 	mac := hmac.New(sha256.New, cfg.Secret)
 	mac.Write([]byte(body))
 	sig := hex.EncodeToString(mac.Sum(nil))
@@ -155,33 +199,46 @@ func tokenHash(token string) []byte {
 }
 
 func recordSession(db *C.sqlite3, userID, token string, exp int64) error {
-	q := fmt.Sprintf("INSERT INTO sessions(id,user_id,token_hash,created_at,expires_at,revoked_at) VALUES('%s','%s',X'%s',%d,%d,NULL);", sqlSafe(randomID()), sqlSafe(userID), hex.EncodeToString(tokenHash(token)), time.Now().Unix(), exp)
-	return sqlExec(db, q)
+	stmt, err := prepareStmt(db, "INSERT INTO sessions(id,user_id,token_hash,created_at,expires_at,revoked_at) VALUES(?,?,?, ?,?,NULL);")
+	if err != nil {
+		return err
+	}
+	defer C.sqlite3_finalize(stmt)
+	if !bindText(stmt, 1, randomID()) || !bindText(stmt, 2, userID) || !bindBlob(stmt, 3, tokenHash(token)) || !bindInt64(stmt, 4, time.Now().Unix()) || !bindInt64(stmt, 5, exp) {
+		return errors.New("sqlite bind failed")
+	}
+	return stepExec(stmt)
 }
 
 func verifySession(db *C.sqlite3, userID, token string) bool {
-	q := fmt.Sprintf("SELECT expires_at,revoked_at FROM sessions WHERE user_id='%s' AND token_hash=X'%s' LIMIT 1;", sqlSafe(userID), hex.EncodeToString(tokenHash(token)))
-	c := C.CString(q)
-	defer C.free(unsafe.Pointer(c))
-	var stmt *C.sqlite3_stmt
-	if C.sqlite3_prepare_v2(db, c, -1, &stmt, nil) != C.SQLITE_OK {
+	stmt, err := prepareStmt(db, "SELECT expires_at,revoked_at FROM sessions WHERE user_id=? AND token_hash=? LIMIT 1;")
+	if err != nil {
 		return false
 	}
 	defer C.sqlite3_finalize(stmt)
+	if !bindText(stmt, 1, userID) || !bindBlob(stmt, 2, tokenHash(token)) {
+		return false
+	}
 	if C.sqlite3_step(stmt) != C.SQLITE_ROW {
 		return false
 	}
 	exp := int64(C.sqlite3_column_int64(stmt, 0))
-	revokedPtr := C.sqlite3_column_type(stmt, 1)
-	if revokedPtr != 5 && C.sqlite3_column_int64(stmt, 1) > 0 {
+	if C.sqlite3_column_type(stmt, 1) != C.SQLITE_NULL && C.sqlite3_column_int64(stmt, 1) > 0 {
 		return false
 	}
 	return time.Now().Unix() <= exp
 }
 
 func revokeSession(db *C.sqlite3, token string) error {
-	q := fmt.Sprintf("UPDATE sessions SET revoked_at=%d WHERE token_hash=X'%s' AND revoked_at IS NULL;", time.Now().Unix(), hex.EncodeToString(tokenHash(token)))
-	return sqlExec(db, q)
+	stmt, err := prepareStmt(db, "UPDATE sessions SET revoked_at=? WHERE token_hash=? AND revoked_at IS NULL;")
+	if err != nil {
+		return err
+	}
+	defer C.sqlite3_finalize(stmt)
+	if !bindInt64(stmt, 1, time.Now().Unix()) || !bindBlob(stmt, 2, tokenHash(token)) {
+		return errors.New("sqlite bind failed")
+	}
+	return stepExec(stmt)
 }
 
 func allowRate(key string, limit int, window time.Duration) bool {
@@ -201,17 +258,42 @@ func allowRate(key string, limit int, window time.Duration) bool {
 		return false
 	}
 	rateBuckets[key] = append(kept, now)
+	if len(rateBuckets) > 10000 {
+		for k, times := range rateBuckets {
+			if len(times) == 0 || times[len(times)-1].Before(cutoff) {
+				delete(rateBuckets, k)
+			}
+		}
+	}
 	return true
 }
 
 func clientKey(r *http.Request) string {
-	return r.RemoteAddr + "|" + r.URL.Path
+	host := r.RemoteAddr
+	if parsed, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
+		host = parsed
+	}
+	return host + "|" + r.URL.Path
 }
 
 func recordAudit(db *C.sqlite3, userID, action, ip string, metadata map[string]any) {
 	encoded, _ := json.Marshal(metadata)
-	q := fmt.Sprintf("INSERT INTO audit_logs(user_id,action,ip,created_at,metadata) VALUES('%s','%s','%s',%d,'%s');", sqlSafe(userID), sqlSafe(action), sqlSafe(ip), time.Now().Unix(), sqlSafe(string(encoded)))
-	_ = sqlExec(db, q)
+	stmt, err := prepareStmt(db, "INSERT INTO audit_logs(user_id,action,ip,created_at,metadata) VALUES(?,?,?,?,?);")
+	if err != nil {
+		return
+	}
+	defer C.sqlite3_finalize(stmt)
+	if userID == "" {
+		if C.sqlite3_bind_null(stmt, 1) != C.SQLITE_OK {
+			return
+		}
+	} else if !bindText(stmt, 1, userID) {
+		return
+	}
+	if !bindText(stmt, 2, action) || !bindText(stmt, 3, ip) || !bindInt64(stmt, 4, time.Now().Unix()) || !bindText(stmt, 5, string(encoded)) {
+		return
+	}
+	_ = stepExec(stmt)
 }
 
 func main() {
@@ -237,6 +319,8 @@ func main() {
 	mux.HandleFunc("/v1/auth/login", func(w http.ResponseWriter, r *http.Request) { handleLogin(db, w, r) })
 	mux.HandleFunc("/v1/auth/verify", func(w http.ResponseWriter, r *http.Request) { handleVerify(db, w, r) })
 	mux.HandleFunc("/v1/auth/logout", func(w http.ResponseWriter, r *http.Request) { handleLogout(db, w, r) })
+	mux.HandleFunc("/v1/profile", func(w http.ResponseWriter, r *http.Request) { handleProfile(db, w, r) })
+	mux.HandleFunc("/v1/session/validate", func(w http.ResponseWriter, r *http.Request) { handleValidateSession(db, w, r) })
 	handler := rateLimitMiddleware(loggingMiddleware(mux))
 	srv := &http.Server{Addr: cfg.Listen, Handler: handler, ReadHeaderTimeout: 5 * time.Second, IdleTimeout: 30 * time.Second, MaxHeaderBytes: 16 << 10}
 	fmt.Println("AETHRA auth service listening on", cfg.Listen)
@@ -256,6 +340,19 @@ func main() {
 	}
 }
 
+func validUsername(value string) bool {
+	if len(value) < 3 || len(value) > 24 {
+		return false
+	}
+	for _, ch := range value {
+		if (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '_' {
+			continue
+		}
+		return false
+	}
+	return true
+}
+
 func handleRegister(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "method not allowed", 405)
@@ -268,7 +365,7 @@ func handleRegister(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	req.Username = strings.TrimSpace(req.Username)
-	if len(req.Username) < 3 || len(req.Username) > 24 || len(req.Password) < 8 || len(req.Password) > 128 {
+	if !validUsername(req.Username) || len(req.Password) < 8 || len(req.Password) > 128 {
 		http.Error(w, "account policy failed", 400)
 		return
 	}
@@ -289,12 +386,21 @@ func handleRegister(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 	hash := pbkdf2SHA256(req.Password, salt, 150000)
 	packed := append(salt, hash...)
 	now := time.Now().Unix()
-	q := fmt.Sprintf("INSERT INTO users(id,username,password_hash,character_id,avatar_id,created_at,updated_at) VALUES('%s','%s',X'%s','%s',%d,%d);", sqlSafe(uid), sqlSafe(req.Username), hex.EncodeToString(packed), sqlSafe(req.Character), now, now)
-	if err := sqlExec(db, q); err != nil {
+	stmt, stmtErr := prepareStmt(db, "INSERT INTO users(id,username,password_hash,character_id,avatar_id,created_at,updated_at) VALUES(?,?,?, ?,?,?,?);")
+	if stmtErr != nil {
+		http.Error(w, "database error", 500)
+		return
+	}
+	defer C.sqlite3_finalize(stmt)
+	if !bindText(stmt, 1, uid) || !bindText(stmt, 2, req.Username) || !bindBlob(stmt, 3, packed) || !bindText(stmt, 4, req.Character) || C.sqlite3_bind_int(stmt, 5, C.int(req.AvatarID)) != C.SQLITE_OK || !bindInt64(stmt, 6, now) || !bindInt64(stmt, 7, now) {
+		http.Error(w, "database error", 500)
+		return
+	}
+	if err := stepExec(stmt); err != nil {
 		http.Error(w, "account already exists or database error", 409)
 		return
 	}
-	token := signTokenWithCharacter(uid, req.Username, req.Character, 24*time.Hour)
+	token := signTokenWithCharacter(uid, req.Username, req.Character, req.AvatarID, 24*time.Hour)
 	if err := recordSession(db, uid, token, time.Now().Add(24*time.Hour).Unix()); err != nil {
 		http.Error(w, "session creation failed", 500)
 		return
@@ -314,16 +420,17 @@ func handleLogin(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid JSON", 400)
 		return
 	}
-	uname := sqlSafe(strings.TrimSpace(req.Username))
-	stmtSQL := fmt.Sprintf("SELECT id,password_hash,character_id,avatar_id FROM users WHERE username='%s' LIMIT 1;", uname)
-	c := C.CString(stmtSQL)
-	defer C.free(unsafe.Pointer(c))
-	var stmt *C.sqlite3_stmt
-	if C.sqlite3_prepare_v2(db, c, -1, &stmt, nil) != C.SQLITE_OK {
+	uname := strings.TrimSpace(req.Username)
+	stmt, err := prepareStmt(db, "SELECT id,password_hash,character_id,avatar_id FROM users WHERE username=? LIMIT 1;")
+	if err != nil {
 		http.Error(w, "database error", 500)
 		return
 	}
 	defer C.sqlite3_finalize(stmt)
+	if !bindText(stmt, 1, uname) {
+		http.Error(w, "database error", 500)
+		return
+	}
 	if C.sqlite3_step(stmt) != C.SQLITE_ROW {
 		http.Error(w, "invalid credentials", 401)
 		return
@@ -340,13 +447,14 @@ func handleLogin(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid credentials", 401)
 		return
 	}
-	token := signTokenWithCharacter(uid, req.Username, char, 24*time.Hour)
+	normalizedUsername := strings.TrimSpace(req.Username)
+	token := signTokenWithCharacter(uid, normalizedUsername, char, avatarID, 24*time.Hour)
 	if err := recordSession(db, uid, token, time.Now().Add(24*time.Hour).Unix()); err != nil {
 		http.Error(w, "session creation failed", 500)
 		return
 	}
 	recordAudit(db, uid, "login", r.RemoteAddr, nil)
-	writeJSON(w, 200, authResp{UserID: uid, Username: req.Username, Character: char, AvatarID: avatarID, Token: token})
+	writeJSON(w, 200, authResp{UserID: uid, Username: normalizedUsername, Character: char, AvatarID: avatarID, Token: token})
 }
 
 func handleVerify(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
@@ -373,12 +481,12 @@ func handleVerify(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fields := strings.Split(string(body), "|")
-	if len(fields) != 4 {
+	if len(fields) != 5 {
 		http.Error(w, "invalid token", 401)
 		return
 	}
 	var exp int64
-	if _, err := fmt.Sscan(fields[3], &exp); err != nil || time.Now().Unix() > exp {
+	if _, err := fmt.Sscan(fields[4], &exp); err != nil || time.Now().Unix() > exp {
 		http.Error(w, "expired token", 401)
 		return
 	}
@@ -386,7 +494,7 @@ func handleVerify(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "session revoked or expired", 401)
 		return
 	}
-	writeJSON(w, 200, map[string]any{"ok": true, "user_id": fields[0], "username": fields[1], "character": fields[2]})
+	writeJSON(w, 200, map[string]any{"ok": true, "user_id": fields[0], "username": fields[1], "character": fields[2], "avatar_id": atoiSafe(fields[3])})
 }
 
 func handleLogout(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
@@ -403,7 +511,7 @@ func handleLogout(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 	if parts := strings.Split(token, "."); len(parts) == 2 {
 		if body, err := base64.RawURLEncoding.DecodeString(parts[0]); err == nil {
 			fields := strings.Split(string(body), "|")
-			if len(fields) == 4 {
+			if len(fields) == 5 {
 				userID = fields[0]
 			}
 		}
@@ -412,7 +520,105 @@ func handleLogout(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 200, map[string]bool{"ok": true})
 }
 
-func sqlSafe(v string) string { return strings.ReplaceAll(v, "'", "''") }
+func handleValidateSession(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", 405)
+		return
+	}
+	token := strings.TrimSpace(strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer "))
+	parts := strings.Split(token, ".")
+	if len(parts) != 2 || token == "" {
+		writeJSON(w, 401, map[string]any{"valid": false})
+		return
+	}
+	body, err := base64.RawURLEncoding.DecodeString(parts[0])
+	if err != nil {
+		writeJSON(w, 401, map[string]any{"valid": false})
+		return
+	}
+	fields := strings.Split(string(body), "|")
+	if len(fields) != 5 || !verifySession(db, fields[0], token) {
+		writeJSON(w, 401, map[string]any{"valid": false})
+		return
+	}
+	exp, err := strconv.ParseInt(fields[4], 10, 64)
+	if err != nil || time.Now().Unix() > exp {
+		writeJSON(w, 401, map[string]any{"valid": false})
+		return
+	}
+	writeJSON(w, 200, map[string]any{"valid": true, "user_id": fields[0], "username": fields[1], "character": fields[2], "avatar_id": atoiSafe(fields[3]), "expires_at": exp})
+}
+
+func handleProfile(db *C.sqlite3, w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", 405)
+		return
+	}
+	token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+	parts := strings.Split(token, ".")
+	if len(parts) != 2 {
+		http.Error(w, "invalid token", 401)
+		return
+	}
+	body, err := base64.RawURLEncoding.DecodeString(parts[0])
+	if err != nil {
+		http.Error(w, "invalid token", 401)
+		return
+	}
+	fields := strings.Split(string(body), "|")
+	if len(fields) != 5 || !verifySession(db, fields[0], token) {
+		http.Error(w, "invalid session", 401)
+		return
+	}
+	var req struct {
+		Username string `json:"username"`
+		AvatarID int    `json:"avatar_id"`
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, 4096)
+	if json.NewDecoder(r.Body).Decode(&req) != nil || req.AvatarID < 0 || req.AvatarID >= 30 {
+		http.Error(w, "invalid profile", 400)
+		return
+	}
+	username := strings.TrimSpace(req.Username)
+	if username == "" {
+		username = fields[1]
+	}
+	if !validUsername(username) {
+		http.Error(w, "invalid username", 400)
+		return
+	}
+	stmt, stmtErr := prepareStmt(db, "UPDATE users SET username=?, avatar_id=?, updated_at=? WHERE id=?;")
+	if stmtErr != nil {
+		http.Error(w, "profile update failed", 500)
+		return
+	}
+	defer C.sqlite3_finalize(stmt)
+	if !bindText(stmt, 1, username) || C.sqlite3_bind_int(stmt, 2, C.int(req.AvatarID)) != C.SQLITE_OK || !bindInt64(stmt, 3, time.Now().Unix()) || !bindText(stmt, 4, fields[0]) {
+		http.Error(w, "profile update failed", 500)
+		return
+	}
+	if err := stepExec(stmt); err != nil {
+		http.Error(w, "username already exists or profile update failed", 409)
+		return
+	}
+	character := fields[2]
+	newToken := signTokenWithCharacter(fields[0], username, character, req.AvatarID, 24*time.Hour)
+	if err := recordSession(db, fields[0], newToken, time.Now().Add(24*time.Hour).Unix()); err != nil {
+		http.Error(w, "session creation failed", 500)
+		return
+	}
+	_ = revokeSession(db, token)
+	writeJSON(w, 200, map[string]any{"username": username, "character": character, "avatar_id": req.AvatarID, "token": newToken})
+}
+
+func atoiSafe(v string) int {
+	var n int
+	_, _ = fmt.Sscan(v, &n)
+	if n < 0 || n > 29 {
+		return 0
+	}
+	return n
+}
 func getenv(k, d string) string {
 	if v := os.Getenv(k); v != "" {
 		return v

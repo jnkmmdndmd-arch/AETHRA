@@ -21,6 +21,9 @@ var performance_frame_sum := 0.0
 var performance_frame_count := 0
 var performance_low_time := 0.0
 var performance_high_time := 0.0
+var fps_overlay: Label
+var boot_overlay: Control
+var weather_controller: Node3D
 
 func _ready() -> void:
     randomize()
@@ -29,6 +32,7 @@ func _ready() -> void:
     _restore_window_state()
     _build_lighting()
     _apply_graphics_profile()
+    _build_fps_overlay()
     if not Settings.settings_changed.is_connected(_apply_graphics_profile):
         Settings.settings_changed.connect(_apply_graphics_profile)
     _build_auth()
@@ -190,7 +194,7 @@ func _on_remote_player_states(players: Dictionary) -> void:
         if node == null or not is_instance_valid(node):
             node = load("res://scripts/network/remote_player_avatar.gd").new()
             remote_players_root.add_child(node)
-            node.setup(id, str(row.get("name", "Player")), str(row.get("character", "ranger")))
+            node.setup(id, str(row.get("name", "Player")), str(row.get("character", "ranger")), clampi(int(row.get("avatar_id", 0)), 0, 29))
             remote_player_nodes[id] = node
         node.apply_state(row.get("position", Vector3.ZERO), float(row.get("yaw", 0.0)))
 
@@ -208,10 +212,71 @@ func _build_auth() -> void:
         AppState.avatar_id = clampi(int(saved_session.get("avatar_id", AppState.avatar_id)), 0, AppState.MAX_AVATARS - 1)
         auth.restore_session(saved_token)
 
+func _build_fps_overlay() -> void:
+    var layer := CanvasLayer.new()
+    layer.layer = 100
+    add_child(layer)
+
+    boot_overlay = Control.new()
+    boot_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    boot_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    layer.add_child(boot_overlay)
+
+    var boot_bg := ColorRect.new()
+    boot_bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    boot_bg.color = Color("#0b111c")
+    boot_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    boot_overlay.add_child(boot_bg)
+
+    var boot_box := VBoxContainer.new()
+    boot_box.set_anchors_preset(Control.PRESET_CENTER)
+    boot_box.position = Vector2(-180, -55)
+    boot_box.size = Vector2(360, 110)
+    boot_box.alignment = BoxContainer.ALIGNMENT_CENTER
+    boot_box.add_theme_constant_override("separation", 6)
+    boot_overlay.add_child(boot_box)
+    var title := Label.new()
+    title.text = "AETHRA"
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size", 34)
+    title.add_theme_color_override("font_color", Color("#78ddff"))
+    boot_box.add_child(title)
+    var subtitle := Label.new()
+    subtitle.text = "WILDBOUND"
+    subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    subtitle.add_theme_font_size_override("font_size", 15)
+    subtitle.add_theme_color_override("font_color", Color("#eaf6ff"))
+    boot_box.add_child(subtitle)
+    var loading := Label.new()
+    loading.text = "جاري تحميل العالم..."
+    loading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    loading.add_theme_font_size_override("font_size", 11)
+    loading.add_theme_color_override("font_color", Color("#91a9bf"))
+    boot_box.add_child(loading)
+
+    fps_overlay = Label.new()
+    fps_overlay.name = "BootFPS"
+    fps_overlay.text = "FPS: 0 / %d" % Engine.max_fps
+    fps_overlay.position = Vector2(16, 10)
+    fps_overlay.size = Vector2(180, 30)
+    fps_overlay.text_direction = Control.TEXT_DIRECTION_LTR
+    fps_overlay.layout_direction = Control.LAYOUT_DIRECTION_LTR
+    fps_overlay.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+    fps_overlay.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    fps_overlay.add_theme_font_size_override("font_size", 14)
+    fps_overlay.add_theme_color_override("font_color", Color("#eaf6ff"))
+    fps_overlay.add_theme_color_override("font_shadow_color", Color(0,0,0,0.85))
+    fps_overlay.add_theme_constant_override("shadow_offset_x", 2)
+    fps_overlay.add_theme_constant_override("shadow_offset_y", 2)
+    layer.add_child(fps_overlay)
+
 func _build_menu() -> void:
     menu = load("res://scripts/ui/main_menu.gd").new()
     add_child(menu)
     menu.build(self)
+    if boot_overlay and is_instance_valid(boot_overlay):
+        boot_overlay.queue_free()
+        boot_overlay = null
     menu.play_singleplayer.connect(_start_singleplayer)
     menu.host_multiplayer.connect(_host)
     menu.join_multiplayer.connect(_join)
@@ -310,13 +375,12 @@ func _start_world(seed_value: int, world_name: String, mode: String) -> void:
     AppState.set_world(world_id, world_name, seed_value, mode)
     world = load("res://scripts/world/voxel_world.gd").new()
     add_child(world)
+    var config := AppState.pending_world_config.duplicate(true)
+    AppState.world_settings = config.duplicate(true)
+    world.configure(config)
     world.initialize(seed_value)
     if world.has_method("is_ready_for_spawn") and not world.is_ready_for_spawn():
         await world.world_ready
-    var config := AppState.pending_world_config.duplicate(true)
-    AppState.world_settings = config.duplicate(true)
-    if world.has_method("configure"):
-        world.configure(config)
     if time_system:
         time_system.weather_enabled = bool(config.get("weather", true))
     var resume_id := str(AppState.pending_world_config.get("resume_id", ""))
@@ -328,7 +392,7 @@ func _start_world(seed_value: int, world_name: String, mode: String) -> void:
         if time_system and data_has_time(AppState.pending_world_config):
             time_system.deserialize(AppState.pending_world_config.get("world_time", {}))
     elif not resume_id.is_empty():
-        var saved := SaveDB.load_world(resume_id)
+        var saved: Dictionary = SaveDB.load_world(resume_id)
         if not saved.is_empty():
             world.load_delta(saved.get("blocks", {}))
             var saved_meta: Dictionary = saved.get("metadata", {})
@@ -368,11 +432,13 @@ func _start_world(seed_value: int, world_name: String, mode: String) -> void:
         if starting_inventory is Dictionary:
             for item_id in starting_inventory:
                 player.inventory.add_item(int(item_id), int(starting_inventory[item_id]))
+        Economy.consume_stash_into_inventory(player.inventory)
     if not remote_world:
         creatures = load("res://scripts/entities/spawn_manager.gd").new()
         add_child(creatures)
         creatures.setup(world, bool(config.get("creatures", true)))
     _build_hud()
+    _build_weather_controller()
     _build_console()
     if not remote_world:
         SaveDB.save_world(AppState.current_world_id, {"name": world_name, "seed": seed_value, "mode": mode, "time": time_system.serialize() if time_system else {}, "settings": config.duplicate(true)}, world.save_delta(), _player_save())
@@ -388,7 +454,22 @@ func _build_hud() -> void:
     hud.set_inventory(player.inventory)
     if not player.survival.health_changed.is_connected(_on_player_health):
         player.survival.health_changed.connect(_on_player_health)
+    if not player.survival.died.is_connected(_on_player_died):
+        player.survival.died.connect(_on_player_died)
+    _build_inventory_ui()
     _update_hud()
+
+func _build_inventory_ui() -> void:
+    var existing:=get_tree().get_first_node_in_group("aethra_inventory_ui")
+    if existing!=null: existing.queue_free()
+    var ui=load("res://scripts/ui/inventory_menu.gd").new()
+    ui.add_to_group("aethra_inventory_ui"); add_child(ui); ui.build(self,player.inventory,player.crafting); ui.visible=false
+
+func _on_player_died() -> void:
+    if player==null or player.death_lock: return
+    player.death_lock=true; Input.mouse_mode=Input.MOUSE_MODE_VISIBLE
+    await get_tree().create_timer(2.0).timeout
+    if player!=null and is_instance_valid(player) and world!=null: player.respawn_at(world.spawn_position)
 
 func _on_inventory_snapshot(snapshot: Array) -> void:
     if player == null or snapshot.is_empty():
@@ -398,13 +479,18 @@ func _on_inventory_snapshot(snapshot: Array) -> void:
 func _on_player_health(_health, _max_health) -> void:
     _update_hud()
 
+func _build_weather_controller() -> void:
+    if weather_controller!=null and is_instance_valid(weather_controller): weather_controller.queue_free()
+    if player==null or time_system==null: return
+    weather_controller=load("res://scripts/world/weather_controller.gd").new()
+    add_child(weather_controller)
+    weather_controller.setup(player,time_system)
+
 func _build_console() -> void:
-    console = load("res://scripts/tools/dev_console.gd").new()
-    console.build(self)
+    return
 
 func toggle_developer_console() -> void:
-    if console:
-        console.toggle()
+    return
 
 func _update_hud() -> void:
     if hud == null or player == null:
@@ -438,8 +524,8 @@ func _show_menu() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed:
-        if event.physical_keycode == KEY_F8 and console:
-            console.toggle()
+        if event.physical_keycode == KEY_F8:
+            return
         elif event.physical_keycode == KEY_ESCAPE:
             if player != null:
                 Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -448,6 +534,8 @@ func _unhandled_input(event: InputEvent) -> void:
             DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if mode == DisplayServer.WINDOW_MODE_FULLSCREEN else DisplayServer.WINDOW_MODE_FULLSCREEN)
 
 func _process(delta: float) -> void:
+    if fps_overlay:
+        fps_overlay.text = "FPS: %d / %d" % [Engine.get_frames_per_second(), Engine.max_fps]
     _adaptive_resolution(delta)
     if world != null and player != null and world.has_method("set_stream_center"):
         world.set_stream_center(player.global_position)
@@ -475,4 +563,4 @@ func _notification(what: int) -> void:
 func _player_save() -> Dictionary:
     if player == null:
         return {}
-    return {"position": player.position, "health": player.survival.health, "hunger": player.survival.hunger, "xp": player.survival.xp, "inventory": player.inventory.serialize()}
+    return {"position": player.position, "health": clampf(player.survival.health,0.0,player.survival.max_health), "hunger": clampf(player.survival.hunger,0.0,20.0), "xp": maxi(0,player.survival.xp), "inventory": player.inventory.serialize()}

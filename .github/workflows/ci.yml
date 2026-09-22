@@ -19,7 +19,7 @@ jobs:
             echo "Forbidden placeholder marker found."
             exit 1
           fi
-          if grep -RInE '‚ôü|‚åÇ|‚ñ∂|‚ñ£|‚óá|‚óÜ|‚öô|‚Ü™|‚óè|‚óâ|‚ñ°|√ó' scripts/ui; then
+          if grep -RInE '∫w^~)ﬁw{ßuÁ‚ùÁB~È›y¯ßy÷|∫w^~)ﬁw{ßuÁ‚ùÁG~È›y¯ßy÷|∫w^~)ﬁu{ßuÁ‚ùÁj~È›y¯ßyﬂ|∫w^~)ﬁu{ßuÁ‚ùÁa|◊' scripts/ui; then
             echo "Forbidden UI glyph found. Use drawn vector icons instead."
             exit 1
           fi
@@ -170,6 +170,13 @@ jobs:
         run: |
           go vet ./...
 
+      - name: Directory service tests
+        shell: pwsh
+        working-directory: server/directory-service
+        run: |
+          go test ./...
+          go vet ./...
+
       - name: Export Windows release
         shell: pwsh
         run: |
@@ -182,13 +189,24 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Windows export failed." }
           if (-not (Test-Path build/AETHRA-Wildbound.exe -PathType Leaf)) { throw "AETHRA-Wildbound.exe was not created." }
 
-      - name: Verify single EXE and hash
+      - name: Build Windows installer
         shell: pwsh
         run: |
-          $files = Get-ChildItem build -File
-          if ($files.Count -ne 1 -or $files[0].Name -ne "AETHRA-Wildbound.exe") { throw "Standalone check failed." }
+          choco install innosetup --yes --no-progress
+          $iscc = Get-ChildItem "C:\Program Files (x86)\Inno Setup" -Filter "ISCC.exe" -Recurse | Select-Object -First 1 -ExpandProperty FullName
+          if (-not $iscc) { throw "Inno Setup compiler not found." }
+          & $iscc "installer.iss"
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup compilation failed." }
+          if (-not (Test-Path "build/AETHRA-Wildbound-Setup.exe")) { throw "Installer was not created." }
+
+      - name: Verify single EXE and installer
+        shell: pwsh
+        run: |
+          if (-not (Test-Path build/AETHRA-Wildbound.exe)) { throw "Standalone EXE missing." }
+          if (-not (Test-Path build/AETHRA-Wildbound-Setup.exe)) { throw "Installer missing." }
           $sha = (Get-FileHash build/AETHRA-Wildbound.exe -Algorithm SHA256).Hash.ToLowerInvariant()
-          "$sha  AETHRA-Wildbound.exe" | Out-File -Encoding ascii build/AETHRA-Wildbound.sha256
+          $setupSha = (Get-FileHash build/AETHRA-Wildbound-Setup.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$sha  AETHRA-Wildbound.exe`n$setupSha  AETHRA-Wildbound-Setup.exe" | Out-File -Encoding ascii build/AETHRA-Wildbound.sha256
 
       - name: Write runtime verification report
         shell: pwsh
@@ -205,6 +223,7 @@ jobs:
             "Source revision: $commit",
             "Godot version: $godotVersion",
             "Build result: PASS",
+            "Installer result: PASS",
             "EXE SHA: $sha",
             "EXE size: $($exe.Length) bytes",
             "Process start: NOT RUN YET",
@@ -275,5 +294,6 @@ jobs:
           name: AETHRA-Wildbound-Windows-x64
           path: |
             build/AETHRA-Wildbound.exe
+            build/AETHRA-Wildbound-Setup.exe
             build/AETHRA-Wildbound.sha256
             WINDOWS-RUNTIME-VERIFICATION.md

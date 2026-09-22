@@ -61,5 +61,7 @@ func deserialize(data: Dictionary) -> void:
     world_time = fmod(float(data.get("world_time", world_time)), maxf(1.0, day_length_seconds))
     day_length_seconds = maxf(60.0, float(data.get("day_length", day_length_seconds)))
     weather = str(data.get("weather", weather))
+    if weather not in ["clear", "rain", "fog"]:
+        weather = "clear"
     weather_enabled = bool(data.get("weather_enabled", weather_enabled))
     weather_timer = maxf(1.0, float(data.get("weather_timer", weather_timer)))

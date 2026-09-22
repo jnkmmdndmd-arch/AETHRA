@@ -2,7 +2,7 @@
 
 ## Current engineering status
 
-The continuation pass fixes a real startup type mismatch, rejects invalid inventory quantities/IDs, and restricts server chat to accepted peers. Godot 4.7.2, the Godot self-test, Go tests, Go vet, and bounded headless startup validation pass locally. Windows GUI gameplay, save/load GUI, settings GUI, and multiplayer GUI remain blocked without interactive automation.
+The continuation pass now also integrates user-supplied Minecraft Java 1.17.1 content into the native AETHRA gameplay layer: real block/entity/item atlases, Minecraft item definitions, crafting recipes, food support, and a Minecraft creature roster. AETHRA UI, voxel meshing/streaming and world presentation remain the existing native systems. Release validation is performed by Windows CI; target GUI gameplay is only marked PASS when actually exercised.
 
 Original 3D open-world voxel survival sandbox game project — corrected release candidate 0.2.3.
 
@@ -12,7 +12,7 @@ The client is a native Godot application with a recreated premium game hub built
 
 The current hub includes:
 - Home hero panel with local original artwork
-- Functional sidebar routing: Home, Solo, Multiplayer, Servers, Worlds, Store, Settings, Developer Tools, Log Out
+- Functional sidebar routing: Home, Solo, Multiplayer, Servers, Worlds, Store, Settings, Profile, Log Out
 - Live profile/session state
 - Search over saved worlds, saved servers and current network presence
 - Recent world cards backed by SaveDB
@@ -23,7 +23,7 @@ The current hub includes:
 - Runtime FPS/memory/network/node diagnostics
 - Native window minimize/maximize/close controls
 - Control rebinding, graphics, audio, camera and gameplay settings
-- Authentication gate backed by the existing AuthClient, with an explicit offline path
+- Authentication gate backed by AuthClient with persistent same-device local accounts when no remote auth service is reachable; remote multi-device auth remains deployment-dependent
 
 ## Run
 
@@ -37,8 +37,12 @@ Self-test: `godot --headless --path . --script res://tests/self_test.gd`
 
 ## Assets
 
-`assets/ui/hero_background.png` is original AETHRA artwork generated for this project. Existing audio assets are local project assets.
+`assets/ui/hero_background.png` is original AETHRA artwork. Existing audio assets are local project assets. Minecraft-derived source atlases used by the new compatibility layer live under `assets/minecraft/atlas/`; see `ASSET_LICENSES.md` and `docs/MINECRAFT_INTEGRATION.md` for the integration boundary.
 
 ## Validation note
 
-Source/static checks and the auth-service test suite were performed in this environment. The current source additionally fixes real control rebinding, fluid rendering, periodic world autosave, persisted day/night/weather state, and remote player state synchronization. Full Godot editor import, Windows runtime, Android export, iOS export, and live dedicated-server/load testing remain blocked by the absence of the Godot 4.7.2 exporter/runtime toolchains in this environment. The project does not claim commercial completion until the release gates are executed on target environments.
+Source/static checks and the auth-service test suite were performed in this environment. The current source additionally fixes real control rebinding, fluid rendering, periodic world autosave, persisted day/night/weather state, and remote player state synchronization. Full Godot target-environment testing remains separate from source validation; Windows release CI supplies the reproducible export/runtime gate. The project does not claim commercial completion until the release gates are executed on target environments.
+
+
+## 2026-09-21 audit state
+The audited branch enumerates 118 repository files. All 31 GDScript source files were fetched and structurally scanned; critical scenes, project/export configuration, auth schema/service, persistence, networking, world generation, gameplay, UI, tests, and build scripts were inspected. Latest Windows CI on commit `a2116b26b599081be9409e66579d5cea6aa8f995` passed editor validation, GDScript load gate, Godot self-test, Go tests, Go vet, Windows export, EXE process start, and the configured static gate. Interactive GUI gameplay/save/settings/multiplayer checks are explicitly not claimed as PASS when the automation script/environment is unavailable.

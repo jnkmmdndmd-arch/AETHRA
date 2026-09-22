@@ -11,7 +11,7 @@ const DEFAULTS := {
     "master_volume": 0.8,
     "music_volume": 0.5,
     "sfx_volume": 0.85,
-    "render_distance": 4,
+    "render_distance": 3,
     "simulation_distance": 3,
     "first_person": true,
     "window_width": 1366,
@@ -32,6 +32,7 @@ const DEFAULT_CONTROLS := {
     "attack": "F",
     "inventory": "E",
     "pause": "ESC",
+    "use_item": "R",
 }
 
 var values: Dictionary = {}
@@ -61,6 +62,22 @@ func load_settings() -> void:
             for key in DEFAULT_CONTROLS:
                 if data["controls"].has(key):
                     controls[key] = str(data["controls"][key])
+    _sanitize_values()
+
+func _sanitize_values() -> void:
+    var quality := str(values.get("graphics_quality", "low")).to_lower()
+    if quality not in ["low", "medium", "high", "ultra"]:
+        quality = "low"
+    values["graphics_quality"] = quality
+    values["fov"] = clampf(float(values.get("fov", 75.0)), 50.0, 110.0)
+    values["mouse_sensitivity"] = clampf(float(values.get("mouse_sensitivity", 0.15)), 0.01, 2.0)
+    for key in ["master_volume", "music_volume", "sfx_volume"]:
+        values[key] = clampf(float(values.get(key, 0.8)), 0.0, 1.0)
+    values["render_distance"] = clampi(int(values.get("render_distance", 3)), 3, 10)
+    values["simulation_distance"] = clampi(int(values.get("simulation_distance", 3)), 2, 10)
+    values["window_width"] = clampi(int(values.get("window_width", 1366)), 1120, 3840)
+    values["window_height"] = clampi(int(values.get("window_height", 768)), 680, 2160)
+    values["window_mode"] = clampi(int(values.get("window_mode", 0)), 0, 2)
 
 func save_settings() -> void:
     var file := FileAccess.open(PATH, FileAccess.WRITE)
@@ -84,7 +101,7 @@ func set_control(action: String, binding: String) -> void:
     settings_changed.emit()
 
 func apply_input_map() -> void:
-    var actions := ["move_forward","move_back","move_left","move_right","sprint","jump","crouch","inventory","pause","mine","place","attack"]
+    var actions := ["move_forward","move_back","move_left","move_right","sprint","jump","crouch","inventory","pause","mine","place","attack","use_item"]
     for action in actions:
         if not InputMap.has_action(action):
             InputMap.add_action(action)
