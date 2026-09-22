@@ -121,6 +121,9 @@ func configure(settings: Dictionary) -> void:
 func is_ready_for_spawn() -> bool:
     return ready_emitted
 
+func get_world_height() -> int:
+    return world_height
+
 func get_biome_at(x: int, z: int) -> String:
     if generator == null:
         return "meadow"
