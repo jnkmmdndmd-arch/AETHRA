@@ -108,6 +108,8 @@ func build_mesh(build_collision: bool = false) -> void:
     var fluid_normals := PackedVector3Array()
     var fluid_colors := PackedColorArray()
     var fluid_indices := PackedInt32Array()
+    var uvs := PackedVector2Array()
+    var fluid_uvs := PackedVector2Array()
 
     var solid_flags: PackedByteArray = []
     var block_colors: Array[Color] = []
@@ -136,6 +138,8 @@ func build_mesh(build_collision: bool = false) -> void:
                         if neighbor < solid_flags.size() and solid_flags[neighbor] == 1:
                             continue
                         var fluid_base := fluid_vertices.size()
+                        var tile := _tile_index(id)
+                        var tile_uvs := _tile_uvs(tile)
                         var verts: PackedVector3Array = FACE_VERTS[face_index]
                         for p in verts:
                             var fp: Vector3 = p
@@ -145,24 +149,28 @@ func build_mesh(build_collision: bool = false) -> void:
                                 fp.y *= 0.88
                             fluid_vertices.append(base + fp)
                             fluid_normals.append(FACE_NORMALS[face_index])
-                            fluid_colors.append(block_color)
+                            fluid_colors.append(Color.WHITE)
+                        fluid_uvs.append_array(tile_uvs)
                         fluid_indices.append_array(PackedInt32Array([fluid_base,fluid_base+1,fluid_base+2,fluid_base,fluid_base+2,fluid_base+3]))
                     else:
                         if neighbor < solid_flags.size() and solid_flags[neighbor] == 1:
                             continue
                         var start := vertices.size()
-                        var shade := 0.74 + face_index * 0.035
-                        var c: Color = block_color * shade
+                        var tile := _tile_index(id)
+                        var tile_uvs := _tile_uvs(tile)
+                        var c := Color.WHITE
                         for p in FACE_VERTS[face_index]:
                             vertices.append(base + p)
                             normals.append(FACE_NORMALS[face_index])
                             colors.append(c)
+                        uvs.append_array(tile_uvs)
                         indices.append_array(PackedInt32Array([start,start+1,start+2,start,start+2,start+3]))
 
     var array := []
     array.resize(Mesh.ARRAY_MAX)
     array[Mesh.ARRAY_VERTEX] = vertices
     array[Mesh.ARRAY_NORMAL] = normals
+    array[Mesh.ARRAY_TEX_UV] = uvs
     array[Mesh.ARRAY_COLOR] = colors
     array[Mesh.ARRAY_INDEX] = indices
 
@@ -170,8 +178,12 @@ func build_mesh(build_collision: bool = false) -> void:
     if vertices.size() > 0:
         arr_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, array)
         var mat := StandardMaterial3D.new()
+        mat.albedo_texture = load("res://assets/mc_bridge/aethra_minecraft_atlas.png") as Texture2D
+        mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
         mat.vertex_color_use_as_albedo = true
         mat.roughness = 0.88
+        if str(Settings.get_value("graphics_quality", "low")) == "low":
+            mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
         arr_mesh.surface_set_material(0, mat)
     mesh_instance.mesh = arr_mesh
 
@@ -179,12 +191,15 @@ func build_mesh(build_collision: bool = false) -> void:
     fluid_array.resize(Mesh.ARRAY_MAX)
     fluid_array[Mesh.ARRAY_VERTEX] = fluid_vertices
     fluid_array[Mesh.ARRAY_NORMAL] = fluid_normals
+    fluid_array[Mesh.ARRAY_TEX_UV] = fluid_uvs
     fluid_array[Mesh.ARRAY_COLOR] = fluid_colors
     fluid_array[Mesh.ARRAY_INDEX] = fluid_indices
     var fluid_arr := ArrayMesh.new()
     if fluid_vertices.size() > 0:
         fluid_arr.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, fluid_array)
         var fluid_mat := StandardMaterial3D.new()
+        fluid_mat.albedo_texture = load("res://assets/mc_bridge/aethra_minecraft_atlas.png") as Texture2D
+        fluid_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
         fluid_mat.vertex_color_use_as_albedo = true
         fluid_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
         fluid_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -196,3 +211,40 @@ func build_mesh(build_collision: bool = false) -> void:
     collision_dirty = true
     if build_collision and collision_enabled:
         _rebuild_collision()
+
+
+func _tile_index(block_id: int) -> int:
+    match block_id:
+        BlockRegistry.SOIL: return 0
+        BlockRegistry.STONE: return 1
+        BlockRegistry.SAND: return 2
+        BlockRegistry.GRAVEL: return 3
+        BlockRegistry.LOG: return 4
+        BlockRegistry.PLANK: return 5
+        BlockRegistry.LEAVES: return 6
+        BlockRegistry.GLASS: return 7
+        BlockRegistry.SNOW: return 8
+        BlockRegistry.SANDSTONE, BlockRegistry.RED_SANDSTONE: return 9
+        BlockRegistry.BEDROCK: return 10
+        BlockRegistry.WATER: return 11
+        BlockRegistry.LAVA: return 12
+        BlockRegistry.MOSS: return 13
+        BlockRegistry.OBSIDIAN: return 14
+        BlockRegistry.FURNACE, BlockRegistry.CRAFTING: return 15
+        BlockRegistry.CHEST, BlockRegistry.DOOR: return 5
+        _:
+            return 63
+
+func _tile_uvs(tile_index: int) -> PackedVector2Array:
+    var tx := posmod(tile_index, 8)
+    var ty := tile_index / 8
+    var u0 := float(tx) / 8.0
+    var v0 := float(ty) / 8.0
+    var u1 := float(tx + 1) / 8.0
+    var v1 := float(ty + 1) / 8.0
+    return PackedVector2Array([
+        Vector2(u0, v0),
+        Vector2(u1, v0),
+        Vector2(u1, v1),
+        Vector2(u0, v1)
+    ])
