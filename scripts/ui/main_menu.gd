@@ -34,7 +34,6 @@ var notification_popup: PanelContainer
 var auth_overlay: PanelContainer
 var auth_user: LineEdit
 var auth_password: LineEdit
-var auth_server: LineEdit
 var auth_status: Label
 var auth_register_mode := false
 var character_index := 0
@@ -463,11 +462,8 @@ func _build_auth_gate() -> void:
     box.add_theme_constant_override("separation", 10)
     margin.add_child(box)
     _label(box, "تسجيل الدخول إلى AETHRA", 27, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
-    _label(box, "الحساب يحسن تجربة اللعب الجماعي، ويمكنك متابعة اللعب محليًا دون حساب.", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
-    auth_server = LineEdit.new()
-    auth_server.text = str(Settings.get_value("auth_server_url", "http://127.0.0.1:8090"))
-    auth_server.placeholder_text = "عنوان خدمة المصادقة"
-    box.add_child(auth_server)
+    _label(box, "أنشئ حسابًا حقيقيًا محفوظًا على هذا الجهاز، أو سجّل الدخول إلى حسابك الموجود.", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "الحسابات المحلية حقيقية ومحفوظة على هذا الجهاز.", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
     auth_user = LineEdit.new()
     auth_user.placeholder_text = "اسم المستخدم"
     box.add_child(auth_user)
@@ -511,10 +507,8 @@ func _submit_auth() -> void:
     if auth_node == null:
         auth_status.text = "الحالة: خدمة المصادقة غير متاحة في التطبيق."
         return
-    var auth_url := auth_server.text.strip_edges()
-    Settings.set_value("auth_server_url", auth_url)
-    auth_node.configure(auth_url)
-    auth_status.text = "الحالة: جارٍ الاتصال بالخدمة..."
+    auth_node.configure(str(Settings.get_value("auth_server_url", "")).strip_edges())
+    auth_status.text = "الحالة: جارٍ التحقق من الحساب..."
     auth_status.add_theme_color_override("font_color", YELLOW)
     var character := str(characters[character_index].id)
     if auth_register_mode:
