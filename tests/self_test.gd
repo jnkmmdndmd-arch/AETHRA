@@ -37,7 +37,7 @@ func _run() -> void:
         return false
     ))
     checks.append(_check("World bounds", func() -> bool:
-        return generator.block_at(0, 0, 0) == 17 and generator.block_at(0, 100, 0) == 0
+        return generator.block_at(0, 0, 0) == block_registry.BEDROCK and generator.block_at(0, generator.world_height, 0) == block_registry.AIR
     ))
     var voxel_script: GDScript = load("res://scripts/world/voxel_world.gd") as GDScript
     checks.append(_check("Voxel world parser", func() -> bool:
@@ -99,7 +99,7 @@ func _run() -> void:
             return false
         var manifest: Dictionary = compat.source_manifest()
         var blocks: Array = manifest.get("blocks", [])
-        return str(compat.SOURCE_VERSION) == "Minecraft Java 1.17.1" and blocks.size() == 64 and str(blocks[2]) == "stone"
+        return str(compat.SOURCE_VERSION) == "Minecraft Java 1.17.1" and blocks.size() == 65 and str(blocks[2]) == "stone"
     ))
     checks.append(_check("Minecraft atlas base64 integrity", func() -> bool:
         for path in [
