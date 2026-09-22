@@ -51,6 +51,26 @@ jobs:
           if($LASTEXITCODE -ne 0){throw "GDScript parser failed"}
           & $env:GODOT_PATH --headless --path . --script res://tests/self_test.gd | Tee-Object self-test.log
           if($LASTEXITCODE -ne 0){throw "Self-test failed"}
+      - name: Install SQLite headers for Go auth build
+        run: |
+          $vcpkgRoot = "$env:VCPKG_INSTALLATION_ROOT"
+          if([string]::IsNullOrWhiteSpace($vcpkgRoot) -or -not (Test-Path "$vcpkgRoot\vcpkg.exe")){
+            if(-not (Test-Path "$env:RUNNER_TEMP\vcpkg")){
+              git clone https://github.com/Microsoft/vcpkg.git "$env:RUNNER_TEMP\vcpkg"
+              & "$env:RUNNER_TEMP\vcpkg\bootstrap-vcpkg.bat"
+            }
+            $vcpkgRoot = "$env:RUNNER_TEMP\vcpkg"
+          }
+          & "$vcpkgRoot\vcpkg.exe" install sqlite3:x64-windows --triplet x64-windows
+          $sqliteRoot = "$vcpkgRoot\installed\x64-windows"
+          $sqliteHeader = Get-ChildItem "$sqliteRoot" -Recurse -Filter "sqlite3.h" | Select-Object -First 1
+          if(-not $sqliteHeader){throw "sqlite3.h was not found"}
+          $include = ((Split-Path -Parent $sqliteHeader.FullName) -replace "\\","/")
+          $rootUnix = ($sqliteRoot -replace "\\","/")
+          "CGO_CFLAGS=-I$include" | Out-File $env:GITHUB_ENV -Encoding ascii -Append
+          "CGO_LDFLAGS=-L$rootUnix/lib -lsqlite3" | Out-File $env:GITHUB_ENV -Encoding ascii -Append
+          "CPATH=$include" | Out-File $env:GITHUB_ENV -Encoding ascii -Append
+
       - name: Auth tests
         working-directory: server/auth-service
         run: |
