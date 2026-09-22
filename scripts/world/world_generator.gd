@@ -1,8 +1,10 @@
 extends RefCounted
 
 const CHUNK_SIZE := 16
-const WORLD_HEIGHT := 96
-const SEA_LEVEL := 34
+const DEFAULT_WORLD_HEIGHT := 96
+const MIN_WORLD_HEIGHT := 64
+const MAX_WORLD_HEIGHT := 256
+const SEA_LEVEL_RATIO := 0.35
 const VERSION := 1
 const AIR_ID := 0
 const SOIL_ID := 1
@@ -43,6 +45,8 @@ var caves: FastNoiseLite
 var ore: FastNoiseLite
 var structures_enabled := true
 var forced_biome := ""
+var world_height := DEFAULT_WORLD_HEIGHT
+var sea_level := 34
 
 func _init(world_seed: int) -> void:
     seed_value = world_seed
@@ -62,15 +66,17 @@ func _init(world_seed: int) -> void:
     ore.seed = seed_value ^ 0x7788AA11
     ore.frequency = 0.07
 
-func configure(enable_structures: bool = true, biome_override: String = "") -> void:
+func configure(enable_structures: bool = true, biome_override: String = "", height_value: int = DEFAULT_WORLD_HEIGHT) -> void:
     structures_enabled = enable_structures
     forced_biome = biome_override.to_lower()
+    world_height = clampi(height_value, MIN_WORLD_HEIGHT, MAX_WORLD_HEIGHT)
+    sea_level = maxi(16, int(world_height * SEA_LEVEL_RATIO))
 
 func terrain_height(x: int, z: int) -> int:
     var macro: float = continental.get_noise_2d(x, z)
     var detail_v: float = detail.get_noise_2d(x, z)
     var h: int = SEA_LEVEL + int(macro * 22.0 + detail_v * 7.0)
-    return clampi(h, 4, WORLD_HEIGHT - 8)
+    return clampi(h, 4, world_height - 8)
 
 func biome_at(x: int, z: int) -> String:
     if forced_biome in ["arid", "frost", "grove", "meadow"]:
@@ -117,7 +123,7 @@ func block_at(x: int, y: int, z: int) -> int:
 
 func generate_chunk(cx: int, cz: int) -> PackedByteArray:
     var data := PackedByteArray()
-    data.resize(CHUNK_SIZE * CHUNK_SIZE * WORLD_HEIGHT)
+    data.resize(CHUNK_SIZE * CHUNK_SIZE * world_height)
     var i := 0
     var base_x := cx * CHUNK_SIZE
     var base_z := cz * CHUNK_SIZE
@@ -132,7 +138,7 @@ func generate_chunk(cx: int, cz: int) -> PackedByteArray:
             var has_tree := structures_enabled and tree_key <= 4
             var tree_top := surface + 4 + posmod(wx * 13 + wz * 7, 3)
 
-            for y in WORLD_HEIGHT:
+            for y in world_height:
                 var id: int
                 if y == 0:
                     id = BEDROCK_ID
