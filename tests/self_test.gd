@@ -85,7 +85,10 @@ func _run() -> void:
         return load("res://scripts/ui/inventory_menu.gd") != null and FileAccess.file_exists("res://scripts/ui/inventory_menu.gd")
     ))
     checks.append(_check("Economy validation", func() -> bool:
-        return Economy.can_spend(0) and not Economy.can_spend(Economy.coins + 1)
+        var economy = get_root().get_node_or_null("Economy")
+        if economy == null:
+            return false
+        return bool(economy.can_spend(0)) and not bool(economy.can_spend(int(economy.coins) + 1))
     ))
     checks.append(_check("Minecraft 1.17.1 compatibility", func() -> bool:
         var manifest: Dictionary = MinecraftCompat.source_manifest()
