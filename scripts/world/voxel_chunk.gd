@@ -16,6 +16,7 @@ var collision_enabled := false
 var world_ref: Node = null
 var height := DEFAULT_HEIGHT
 var lod_level := 0
+var _minecraft_material: ShaderMaterial = null
 
 func setup(coord: Vector2i, data: PackedByteArray, owner_world: Node = null) -> void:
     chunk_coord = coord
@@ -102,6 +103,31 @@ func _face_index(axis: int, positive: bool) -> int:
 func _face_shade(face_index: int) -> float:
     return 0.72 + float(face_index) * 0.04
 
+func _get_minecraft_material() -> ShaderMaterial:
+    if _minecraft_material != null:
+        return _minecraft_material
+    var shader := Shader.new()
+    shader.code = """
+shader_type spatial;
+render_mode diffuse_burley;
+
+uniform sampler2D atlas_texture : source_color, filter_nearest;
+
+void fragment() {
+    float raw_id = floor(COLOR.r * 64.0);
+    float tile_x = mod(raw_id, 8.0);
+    float tile_y = floor(raw_id / 8.0);
+    vec2 atlas_uv = (vec2(tile_x, tile_y) + fract(UV)) / 8.0;
+    vec4 tex = texture(atlas_texture, atlas_uv);
+    ALBEDO = tex.rgb * max(COLOR.g, 0.20);
+    ROUGHNESS = 0.88;
+}
+"""
+    _minecraft_material = ShaderMaterial.new()
+    _minecraft_material.shader = shader
+    _minecraft_material.set_shader_parameter("atlas_texture", MinecraftCompat.get_atlas())
+    return _minecraft_material
+
 func _emission_factor(id: int) -> float:
     return clampf(float(BlockRegistry.get_block(id).get("light_level", 0)) / 15.0, 0.0, 1.0)
 
@@ -116,19 +142,26 @@ func _quad_ao(p: Vector3i, axis: int) -> float:
         if _is_opaque_solid(get_voxel(p + d)): occupied += 1
     return clampf(1.0 - float(occupied) * 0.045, 0.78, 1.05)
 
-func _append_quad(vertices: PackedVector3Array, normals: PackedVector3Array, colors: PackedColorArray, indices: PackedInt32Array, p: Vector3, u: Vector3, v: Vector3, normal: Vector3, color: Color, positive: bool) -> void:
+func _append_quad(vertices: PackedVector3Array, normals: PackedVector3Array, colors: PackedColorArray, uvs: PackedVector2Array, indices: PackedInt32Array, p: Vector3, u: Vector3, v: Vector3, normal: Vector3, shade: float, positive: bool, block_id: int) -> void:
     var start := vertices.size()
+    var uv_u := maxf(u.length(), 1.0)
+    var uv_v := maxf(v.length(), 1.0)
     if positive:
         vertices.append(p); vertices.append(p + u); vertices.append(p + u + v); vertices.append(p + v)
+        uvs.append(Vector2(0, 0)); uvs.append(Vector2(uv_u, 0)); uvs.append(Vector2(uv_u, uv_v)); uvs.append(Vector2(0, uv_v))
     else:
         vertices.append(p); vertices.append(p + v); vertices.append(p + u + v); vertices.append(p + u)
+        uvs.append(Vector2(0, 0)); uvs.append(Vector2(0, uv_v)); uvs.append(Vector2(uv_u, uv_v)); uvs.append(Vector2(uv_u, 0))
+    var encoded_id := (float(block_id) + 0.5) / 64.0
+    var encoded_color := Color(encoded_id, clampf(shade, 0.20, 1.5), 1.0, 1.0)
     for _i in 4:
-        normals.append(normal); colors.append(color)
+        normals.append(normal)
+        colors.append(encoded_color)
     indices.append_array(PackedInt32Array([start,start+1,start+2,start,start+2,start+3]))
 
 func _build_heightfield_lod() -> void:
     var step := 2
-    var vertices := PackedVector3Array(); var normals := PackedVector3Array(); var colors := PackedColorArray(); var indices := PackedInt32Array()
+    var vertices := PackedVector3Array(); var normals := PackedVector3Array(); var colors := PackedColorArray(); var uvs := PackedVector2Array(); var indices := PackedInt32Array()
     for z in range(0,SIZE,step):
         for x in range(0,SIZE,step):
             var top_y := 0; var top_id := BlockRegistry.AIR
@@ -140,23 +173,25 @@ func _build_heightfield_lod() -> void:
                             if yy >= top_y: top_y = yy; top_id = id
                             break
             if top_id == BlockRegistry.AIR: continue
-            var c: Color = BlockRegistry.get_block(top_id).get("color",Color.WHITE)
+            var encoded_id := (float(top_id) + 0.5) / 64.0
+            var encoded_color := Color(encoded_id, 0.95, 1.0, 1.0)
             var start := vertices.size(); var y := float(top_y+1)
             vertices.append(Vector3(x,y,z)); vertices.append(Vector3(x+step,y,z)); vertices.append(Vector3(x+step,y,z+step)); vertices.append(Vector3(x,y,z+step))
-            for _i in 4: normals.append(Vector3.UP); colors.append(c*0.95)
+            uvs.append(Vector2(0,0)); uvs.append(Vector2(step,0)); uvs.append(Vector2(step,step)); uvs.append(Vector2(0,step))
+            for _i in 4: normals.append(Vector3.UP); colors.append(encoded_color)
             indices.append_array(PackedInt32Array([start,start+1,start+2,start,start+2,start+3]))
-    var array := []; array.resize(Mesh.ARRAY_MAX); array[Mesh.ARRAY_VERTEX]=vertices; array[Mesh.ARRAY_NORMAL]=normals; array[Mesh.ARRAY_COLOR]=colors; array[Mesh.ARRAY_INDEX]=indices
+    var array := []; array.resize(Mesh.ARRAY_MAX); array[Mesh.ARRAY_VERTEX]=vertices; array[Mesh.ARRAY_NORMAL]=normals; array[Mesh.ARRAY_COLOR]=colors; array[Mesh.ARRAY_TEX_UV]=uvs; array[Mesh.ARRAY_INDEX]=indices
     var arr_mesh := ArrayMesh.new()
     if vertices.size()>0:
         arr_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,array)
-        var mat:=StandardMaterial3D.new(); mat.vertex_color_use_as_albedo=true; mat.roughness=0.9; arr_mesh.surface_set_material(0,mat)
+        arr_mesh.surface_set_material(0,_get_minecraft_material())
     mesh_instance.mesh=arr_mesh; fluid_mesh.mesh=ArrayMesh.new(); dirty=false; collision_dirty=true; _clear_collision()
 
 func build_mesh(build_collision: bool = false, requested_lod: int = 0) -> void:
     lod_level=clampi(requested_lod,0,1)
     if voxels.is_empty(): return
     if lod_level>0: _build_heightfield_lod(); return
-    var vertices:=PackedVector3Array(); var normals:=PackedVector3Array(); var colors:=PackedColorArray(); var indices:=PackedInt32Array()
+    var vertices:=PackedVector3Array(); var normals:=PackedVector3Array(); var colors:=PackedColorArray(); var uvs:=PackedVector2Array(); var indices:=PackedInt32Array()
     var fluid_vertices:=PackedVector3Array(); var fluid_normals:=PackedVector3Array(); var fluid_colors:=PackedColorArray(); var fluid_indices:=PackedInt32Array()
     for axis in 3:
         var dims:=[SIZE,SIZE,height]
@@ -190,8 +225,7 @@ func build_mesh(build_collision: bool = false, requested_lod: int = 0) -> void:
                     var u:=Vector3.ZERO; u[u_axis]=width; var v:=Vector3.ZERO; v[v_axis]=height_merge
                     var positive:=value>0; var block_id:=abs(value); var face_idx:=_face_index(axis,positive)
                     var shade:=_face_shade(face_idx)*_quad_ao(Vector3i(i,slice,j),axis)*(1.0+_emission_factor(block_id)*0.30)
-                    var base_color:Color=BlockRegistry.get_block(block_id).get("color",Color.WHITE)
-                    _append_quad(vertices,normals,colors,indices,p,u,v,FACE_NORMALS[face_idx],base_color*shade,positive)
+                    _append_quad(vertices,normals,colors,uvs,indices,p,u,v,FACE_NORMALS[face_idx],shade,positive,block_id)
                     i+=width
                 j+=1
     var solid_flags:=PackedByteArray(); var block_colors:Array[Color]=[]; solid_flags.resize(BlockRegistry.LAST_BLOCK+1); block_colors.resize(BlockRegistry.LAST_BLOCK+1)
@@ -215,13 +249,15 @@ func build_mesh(build_collision: bool = false, requested_lod: int = 0) -> void:
                             elif face_index!=1: fq.y*=0.88
                             fluid_vertices.append(base+fq); fluid_normals.append(FACE_NORMALS[face_index]); fluid_colors.append(block_color)
                         else:
-                            vertices.append(base+fq); normals.append(FACE_NORMALS[face_index]); colors.append(block_color*_face_shade(face_index))
+                            vertices.append(base+fq); normals.append(FACE_NORMALS[face_index]); colors.append(Color((float(id) + 0.5) / 64.0, _face_shade(face_index), 1.0, 1.0))
+                    if not is_fluid:
+                        uvs.append(Vector2(0,0)); uvs.append(Vector2(1,0)); uvs.append(Vector2(1,1)); uvs.append(Vector2(0,1))
                     if is_fluid: fluid_indices.append_array(PackedInt32Array([start,start+1,start+2,start,start+2,start+3]))
                     else: indices.append_array(PackedInt32Array([start,start+1,start+2,start,start+2,start+3]))
-    var array:=[]; array.resize(Mesh.ARRAY_MAX); array[Mesh.ARRAY_VERTEX]=vertices; array[Mesh.ARRAY_NORMAL]=normals; array[Mesh.ARRAY_COLOR]=colors; array[Mesh.ARRAY_INDEX]=indices
+    var array:=[]; array.resize(Mesh.ARRAY_MAX); array[Mesh.ARRAY_VERTEX]=vertices; array[Mesh.ARRAY_NORMAL]=normals; array[Mesh.ARRAY_COLOR]=colors; array[Mesh.ARRAY_TEX_UV]=uvs; array[Mesh.ARRAY_INDEX]=indices
     var arr_mesh:=ArrayMesh.new()
     if vertices.size()>0:
-        arr_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,array); var mat:=StandardMaterial3D.new(); mat.vertex_color_use_as_albedo=true; mat.roughness=0.88; arr_mesh.surface_set_material(0,mat)
+        arr_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,array); arr_mesh.surface_set_material(0,_get_minecraft_material())
     mesh_instance.mesh=arr_mesh
     var fluid_array:=[]; fluid_array.resize(Mesh.ARRAY_MAX); fluid_array[Mesh.ARRAY_VERTEX]=fluid_vertices; fluid_array[Mesh.ARRAY_NORMAL]=fluid_normals; fluid_array[Mesh.ARRAY_COLOR]=fluid_colors; fluid_array[Mesh.ARRAY_INDEX]=fluid_indices
     var fluid_arr:=ArrayMesh.new()
