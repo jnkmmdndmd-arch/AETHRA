@@ -12,7 +12,7 @@ var detection_range := 18.0
 var attack_range := 1.8
 var life_time := 0.0
 const MAX_LIFE_TIME := 900.0
-const HOSTILES := ["brute","spider","wraith","drake","wolf","sand_wyrm","stone_golem","marsh_lurker","scorpion","slime","bat","crystal_mite"]
+const HOSTILES := ["brute","spider","wraith","drake","wolf","sand_wyrm","stone_golem","marsh_lurker","scorpion","slime","bat","crystal_mite","creeper","zombie","skeleton","enderman","witch","guardian","blaze","ghast","endermite","silverfish","piglin","hoglin","ravager","wither","phantom"]
 const LOOT_TABLE := {"rabbit":[200,2],"chicken":[200,1],"boar":[200,2],"deer":[6,1],"wolf":[145,1],"brute":[12,1],"spider":[22,1],"drake":[13,1],"scorpion":[52,1],"crystal_mite":[59,1]}
 
 func setup(kind: String, origin: Vector3) -> void:
@@ -26,8 +26,11 @@ func _build_visual() -> void:
     var mesh := BoxMesh.new()
     mesh.size = _size_for_type()
     body.mesh = mesh
-    var mat := StandardMaterial3D.new()
-    mat.albedo_color = _color_for_type()
+    var mat: Material = MinecraftCompat.get_entity_material(creature_type)
+    if mat == null:
+        var fallback := StandardMaterial3D.new()
+        fallback.albedo_color = _color_for_type()
+        mat = fallback
     body.material_override = mat
     body.position.y = 0.65
     add_child(body)
@@ -52,7 +55,10 @@ func _size_for_type() -> Vector3:
         "rabbit", "firefly", "fennec", "lizard", "snake", "bat", "crystal_mite": return Vector3(0.7, 0.5, 1.0)
         "spider": return Vector3(1.5, 0.45, 1.5)
         "beetle", "moth", "scorpion", "bee", "butterfly", "dragonfly": return Vector3(0.9, 0.35, 1.2)
-        "brute", "drake", "sand_wyrm", "stone_golem", "marsh_lurker": return Vector3(1.5, 1.1, 2.1)
+        "brute", "drake", "sand_wyrm", "stone_golem", "marsh_lurker", "ravager", "wither": return Vector3(1.7, 1.2, 2.2)
+        "creeper", "zombie", "skeleton", "enderman", "witch", "piglin", "hoglin": return Vector3(1.0, 1.8, 1.0)
+        "guardian", "blaze", "ghast", "phantom": return Vector3(1.5, 1.4, 1.5)
+        "endermite", "silverfish": return Vector3(0.8, 0.45, 1.1)
         _: return Vector3(1.2, 0.8, 1.8)
 
 func _color_for_type() -> Color:
@@ -86,6 +92,20 @@ func _color_for_type() -> Color:
         "stone_golem": return Color("#7a7b78")
         "marsh_lurker": return Color("#466d5a")
         "crystal_mite": return Color("#8e83d1")
+        "creeper": return Color("#4d8d50")
+        "zombie": return Color("#5b8b72")
+        "skeleton": return Color("#c7c7c7")
+        "enderman": return Color("#2e213f")
+        "witch": return Color("#5b3c59")
+        "guardian": return Color("#6f9c9c")
+        "blaze": return Color("#e1a03a")
+        "ghast": return Color("#e8e8e8")
+        "endermite": return Color("#6c8fb3")
+        "silverfish": return Color("#7d7d7d")
+        "piglin", "hoglin": return Color("#a6654e")
+        "ravager": return Color("#666a62")
+        "wither": return Color("#303033")
+        "phantom": return Color("#4a5d7a")
         _: return Color("#cbb58a")
 
 func _physics_process(delta: float) -> void:
