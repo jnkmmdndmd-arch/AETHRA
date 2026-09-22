@@ -240,7 +240,7 @@ func request_player_attack(target_peer:int, origin:Vector3, forward:Vector3, sel
     if bound_world != null:
         var query:=PhysicsRayQueryParameters3D.create(attacker_pos+Vector3.UP*0.8,target_pos+Vector3.UP*0.8)
         query.collision_mask=1
-        var hit:=bound_world.get_world_3d().direct_space_state.intersect_ray(query)
+        var hit: Dictionary = bound_world.get_world_3d().direct_space_state.intersect_ray(query)
         if not hit.is_empty():
             var collider=hit.get("collider")
             if collider is Node and int(collider.get_multiplayer_authority()) != target_peer and not collider.is_in_group("players"):
