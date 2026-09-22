@@ -22,7 +22,7 @@ func _ready() -> void:
         var i := args.find("--seed")
         if i + 1 < args.size():
             world_seed = int(args[i + 1])
-    var saved := SaveDB.load_world("dedicated-world")
+    var saved: Dictionary = SaveDB.load_world("dedicated-world")
     if not saved.is_empty():
         var metadata: Dictionary = saved.get("metadata", {})
         world_seed = int(metadata.get("seed", world_seed))

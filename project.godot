@@ -1,5 +1,5 @@
 ; AETHRA: WILDBOUND
-; Original voxel sandbox game foundation"È›y¯ßy‘ Godot 4.7+
+; Original voxel sandbox game foundation"√©√ùy√∏¬ßy√î Godot 4.7+
 config_version=5
 
 [application]
@@ -58,3 +58,4 @@ AudioManager="*res://scripts/audio/audio_manager.gd"
 Economy="*res://scripts/core/economy.gd"
 ServerDirectory="*res://scripts/network/server_directory.gd"
 ServerModeration="*res://scripts/network/moderation.gd"
+MinecraftCompat="*res://scripts/integration/minecraft_compat.gd"

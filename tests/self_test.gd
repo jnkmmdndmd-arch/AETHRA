@@ -75,8 +75,8 @@ func _run() -> void:
     ))
     checks.append(_check("World height presets", func() -> bool:
         for value in [500,800,1000]:
-            var g=load("res://scripts/world/world_generator.gd").new(99)
-            g.configure(true,"",value)
+            var g: RefCounted = load("res://scripts/world/world_generator.gd").new(99)
+            g.configure(true, "", value)
             if g.world_height!=value or g.block_at(0,value,0)!=BlockRegistry.AIR:
                 return false
         return true
@@ -85,7 +85,11 @@ func _run() -> void:
         return load("res://scripts/ui/inventory_menu.gd") != null and FileAccess.file_exists("res://scripts/ui/inventory_menu.gd")
     ))
     checks.append(_check("Economy validation", func() -> bool:
-        return Economy.can_spend(0) and not Economy.can_spend(Economy.coins+1)
+        return Economy.can_spend(0) and not Economy.can_spend(Economy.coins + 1)
+    ))
+    checks.append(_check("Minecraft 1.17.1 compatibility", func() -> bool:
+        var manifest: Dictionary = MinecraftCompat.source_manifest()
+        return MinecraftCompat.SOURCE_VERSION == "Minecraft Java 1.17.1" and manifest.size() == 60 and str(manifest[BlockRegistry.STONE].get("source", "")) == "stone"
     ))
     checks.append(_check("Expanded crafting recipes", func() -> bool:
         return not recipe_registry.find_recipe("iron_sword").is_empty() and not recipe_registry.find_recipe("chest").is_empty()
