@@ -217,9 +217,7 @@ func _build_sidebar(parent: PanelContainer) -> void:
     user_row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     user_row.layout_direction = Control.LAYOUT_DIRECTION_RTL
     user.add_child(user_row)
-    var avatar = load("res://scripts/ui/avatar_renderer.gd").new()
-    avatar.avatar_index = AppState.avatar_id
-    avatar.custom_minimum_size = Vector2(38, 38)
+    var avatar := UIFactory.make_avatar(AppState.avatar_id, Vector2(38, 38))
     user_row.add_child(avatar)
     var user_info := VBoxContainer.new()
     user_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -282,10 +280,7 @@ func _build_social(parent: PanelContainer) -> void:
     profile_row.layout_direction = Control.LAYOUT_DIRECTION_RTL
     profile_row.add_theme_constant_override("separation", 9)
     profile.add_child(profile_row)
-    var profile_icon = load("res://scripts/ui/vector_icon.gd").new()
-    profile_icon.icon_name = "person"
-    profile_icon.icon_color = ACCENT_BRIGHT
-    profile_icon.custom_minimum_size = Vector2(30, 30)
+    var profile_icon := UIFactory.make_icon("person", ACCENT_BRIGHT, Vector2(30, 30))
     profile_row.add_child(profile_icon)
     var profile_text := VBoxContainer.new()
     profile_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -297,10 +292,7 @@ func _build_social(parent: PanelContainer) -> void:
     heading.layout_direction = Control.LAYOUT_DIRECTION_RTL
     heading.add_theme_constant_override("separation", 8)
     box.add_child(heading)
-    var heading_icon = load("res://scripts/ui/vector_icon.gd").new()
-    heading_icon.icon_name = "players"
-    heading_icon.icon_color = ACCENT_BRIGHT
-    heading_icon.custom_minimum_size = Vector2(24, 24)
+    var heading_icon := UIFactory.make_icon("players", ACCENT_BRIGHT, Vector2(24, 24))
     heading.add_child(heading_icon)
     var heading_text := VBoxContainer.new()
     heading_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -427,10 +419,7 @@ func _hero_panel() -> PanelContainer:
     credit_row.layout_direction = Control.LAYOUT_DIRECTION_RTL
     credit_row.add_theme_constant_override("separation", 7)
     developer_credit.add_child(credit_row)
-    var dev_icon = load("res://scripts/ui/vector_icon.gd").new()
-    dev_icon.icon_name = "badge"
-    dev_icon.icon_color = ACCENT_BRIGHT
-    dev_icon.custom_minimum_size = Vector2(24, 24)
+    var dev_icon := UIFactory.make_icon("badge", ACCENT_BRIGHT, Vector2(24, 24))
     credit_row.add_child(dev_icon)
     var credit_text := VBoxContainer.new()
     credit_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -796,9 +785,7 @@ func _page_profile() -> void:
     identity.add_theme_constant_override("separation", 14)
     root.add_child(identity)
 
-    var preview = load("res://scripts/ui/avatar_renderer.gd").new()
-    preview.avatar_index = AppState.avatar_id
-    preview.custom_minimum_size = Vector2(96, 96)
+    var preview := UIFactory.make_avatar(AppState.avatar_id, Vector2(96, 96))
     identity.add_child(preview)
 
     var info := VBoxContainer.new()
@@ -831,9 +818,7 @@ func _page_profile() -> void:
         button.toggle_mode = true
         button.button_pressed = index == AppState.avatar_id
         button.custom_minimum_size = Vector2(96, 108)
-        var avatar = load("res://scripts/ui/avatar_renderer.gd").new()
-        avatar.avatar_index = index
-        avatar.custom_minimum_size = Vector2(72, 72)
+        var avatar := UIFactory.make_avatar(index, Vector2(72, 72))
         button.add_child(avatar)
         var text := Label.new()
         text.text = "الصورة %02d" % [index + 1]
@@ -887,10 +872,7 @@ func _refresh_friends(players: Dictionary) -> void:
         inner.layout_direction = Control.LAYOUT_DIRECTION_RTL
         inner.add_theme_constant_override("separation", 8)
         row.add_child(inner)
-        var person_icon = load("res://scripts/ui/vector_icon.gd").new()
-        person_icon.icon_name = "person"
-        person_icon.icon_color = GREEN
-        person_icon.custom_minimum_size = Vector2(24, 24)
+        var person_icon := UIFactory.make_icon("person", GREEN, Vector2(24, 24))
         inner.add_child(person_icon)
         var box := VBoxContainer.new()
         box.layout_direction = Control.LAYOUT_DIRECTION_RTL
@@ -1244,10 +1226,7 @@ func _nav_button(icon_kind: String, text: String) -> Button:
     label.add_theme_color_override("font_color", TEXT)
     label.clip_text = true
     label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    var icon = load("res://scripts/ui/vector_icon.gd").new()
-    icon.icon_name = icon_kind
-    icon.icon_color = ACCENT_BRIGHT
-    icon.custom_minimum_size = Vector2(22, 22)
+    var icon := UIFactory.make_icon(icon_kind, ACCENT_BRIGHT, Vector2(22, 22))
     row.add_child(icon)
     row.add_child(label)
     b.add_child(row)
@@ -1288,10 +1267,7 @@ func _small_button(text: String, width: int) -> Button:
 
 func _small_icon_button(icon_kind: String, width: int) -> Button:
     var b := _button("", Vector2(width, 40))
-    var icon = load("res://scripts/ui/vector_icon.gd").new()
-    icon.icon_name = icon_kind
-    icon.icon_color = ACCENT_BRIGHT
-    icon.custom_minimum_size = Vector2(20, 20)
+    var icon := UIFactory.make_icon(icon_kind, ACCENT_BRIGHT, Vector2(20, 20))
     icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
     icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
     b.add_child(icon)
@@ -1306,10 +1282,7 @@ func _quick_card(parent: Control, icon: String, title: String, subtitle: String,
     box.alignment = BoxContainer.ALIGNMENT_CENTER
     box.layout_direction = Control.LAYOUT_DIRECTION_RTL
     card.add_child(box)
-    var icon_node = load("res://scripts/ui/vector_icon.gd").new()
-    icon_node.icon_name = icon
-    icon_node.icon_color = ACCENT_BRIGHT
-    icon_node.custom_minimum_size = Vector2(30, 30)
+    var icon_node := UIFactory.make_icon(icon, ACCENT_BRIGHT, Vector2(30, 30))
     icon_node.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
     box.add_child(icon_node)
     _label(box, title, 14, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
