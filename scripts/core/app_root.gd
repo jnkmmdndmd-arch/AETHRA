@@ -24,8 +24,16 @@ var performance_high_time := 0.0
 
 func _ready() -> void:
     randomize()
+    var args := OS.get_cmdline_user_args()
+    if DisplayServer.get_name() == "headless" or "--server" in args:
+        var dedicated_script := load("res://server/main_server.gd") as GDScript
+        if dedicated_script != null:
+            var dedicated := dedicated_script.new()
+            dedicated.name = "DedicatedServer"
+            add_child(dedicated)
+        return
     DisplayServer.window_set_title("AETHRA: Wildbound — عبدالله لازم")
-    get_window().min_size = Vector2i(1120, 680)
+    get_window().min_size = Vector2i(960, 540)
     _restore_window_state()
     _build_lighting()
     _apply_graphics_profile()
@@ -44,7 +52,7 @@ func _ensure_bootstrap_controls() -> void:
 func _restore_window_state() -> void:
     var width := int(Settings.get_value("window_width", 1366))
     var height := int(Settings.get_value("window_height", 768))
-    get_window().size = Vector2i(clampi(width, 1120, 3840), clampi(height, 680, 2160))
+    get_window().size = Vector2i(clampi(width, 960, 3840), clampi(height, 540, 2160))
     var mode := int(Settings.get_value("window_mode", 0))
     match mode:
         1: get_window().mode = Window.MODE_MAXIMIZED
@@ -314,6 +322,9 @@ func _start_world(seed_value: int, world_name: String, mode: String) -> void:
     if world.has_method("is_ready_for_spawn") and not world.is_ready_for_spawn():
         await world.world_ready
     var config := AppState.pending_world_config.duplicate(true)
+    if not config.has("world_height"):
+        var quality := str(Settings.get_value("graphics_quality", "low"))
+        config["world_height"] = {"low": 500, "medium": 600, "high": 800, "ultra": 1000}.get(quality, 500)
     AppState.world_settings = config.duplicate(true)
     if world.has_method("configure"):
         world.configure(config)
