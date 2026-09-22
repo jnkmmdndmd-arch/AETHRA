@@ -65,6 +65,7 @@ func _ready() -> void:
     _boot_log("auth_initialized")
     print("[BOOT] Auth service initialized (non-blocking)")
     _build_menu()
+    _boot_log("main_menu_built")
     print("[BOOT] Main menu constructed and visible")
     _build_remote_players_root()
     _wire_network_presence()
