@@ -33,6 +33,10 @@ var boot_failure_message := ""
 
 func _ready() -> void:
     boot_started_at = Time.get_ticks_msec()
+    var boot_file := FileAccess.open(BOOT_LOG_PATH, FileAccess.WRITE)
+    if boot_file != null:
+        boot_file.store_line("AETHRA boot log")
+        boot_file.close()
     _boot_log("boot_start")
     print("[BOOT] AETHRA: starting app root")
     randomize()
