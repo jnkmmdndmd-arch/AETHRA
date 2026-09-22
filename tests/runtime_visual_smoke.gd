@@ -33,7 +33,9 @@ func _run() -> void:
     if screenshot != null:
         screenshot.save_png("res://runtime-proof/runtime-menu-proof.png")
         print("[VISUAL_SMOKE] menu screenshot saved")
-    _copy_boot_log_and_validate()
+    if not _copy_boot_log_and_validate():
+        quit(1)
+        return
 
     menu_button = _find_button(app_root.menu, "ابدأ اللعب")
     if menu_button == null:
@@ -55,7 +57,9 @@ func _run() -> void:
                 if world_shot != null:
                     world_shot.save_png("res://runtime-proof/runtime-world-proof.png")
                     print("[VISUAL_SMOKE] world screenshot saved")
-                _copy_boot_log_and_validate()
+                if not _copy_boot_log_and_validate():
+                    quit(1)
+                    return
                 print("[VISUAL_SMOKE] SUCCESS: menu and world rendered")
                 quit(0)
                 return
@@ -72,7 +76,7 @@ func _find_button(node: Node, target_text: String) -> Button:
             return nested
     return null
 
-func _copy_boot_log_and_validate() -> void:
+func _copy_boot_log_and_validate() -> bool:
     var required := [
         "boot_start",
         "window_restored",
@@ -87,7 +91,7 @@ func _copy_boot_log_and_validate() -> void:
     var source := FileAccess.open("user://boot_log.txt", FileAccess.READ)
     if source == null:
         push_error("[VISUAL_SMOKE] FAIL: user://boot_log.txt does not exist.")
-        return
+        return false
     var text := source.get_as_text()
     source.close()
     var copy := FileAccess.open("res://runtime-proof/boot_log.txt", FileAccess.WRITE)
@@ -97,5 +101,6 @@ func _copy_boot_log_and_validate() -> void:
     for stage in required:
         if stage not in text:
             push_error("[VISUAL_SMOKE] FAIL: boot log missing stage: " + stage)
-            return
+            return false
     print("[VISUAL_SMOKE] boot log contains all required stages")
+    return true
