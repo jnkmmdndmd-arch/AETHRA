@@ -23,11 +23,17 @@ var performance_low_time := 0.0
 var performance_high_time := 0.0
 var java_engine_bridge
 var java_backend_info: Dictionary = {}
+const BOOT_LOG_PATH := "user://boot_log.txt"
+var boot_started_at := 0
+var boot_complete := false
+var boot_watchdog_reported := false
 var world_boot_elapsed := 0.0
 var world_boot_reported := false
 var boot_failure_message := ""
 
 func _ready() -> void:
+    boot_started_at = Time.get_ticks_msec()
+    _boot_log("boot_start")
     print("[BOOT] AETHRA: starting app root")
     randomize()
     var args := OS.get_cmdline_user_args()
@@ -41,23 +47,47 @@ func _ready() -> void:
     DisplayServer.window_set_title("AETHRA: Wildbound — عبدالله لازم")
     get_window().min_size = Vector2i(960, 540)
     _restore_window_state()
+    _boot_log("window_restored")
     _build_lighting()
+    _boot_log("lighting_built")
     print("[BOOT] WorldEnvironment + sunlight initialized")
     _apply_graphics_profile()
+    _boot_log("graphics_applied")
     if not Settings.settings_changed.is_connected(_apply_graphics_profile):
         Settings.settings_changed.connect(_apply_graphics_profile)
     _initialize_java_backend()
+    _boot_log("java_backend_checked")
     _build_auth()
+    _boot_log("auth_initialized")
     print("[BOOT] Auth service initialized (non-blocking)")
     _build_menu()
     print("[BOOT] Main menu constructed and visible")
     _build_remote_players_root()
     _wire_network_presence()
+    _boot_log("network_presence_ready")
     _ensure_bootstrap_controls()
+    boot_complete = true
+    _boot_log("boot_complete")
 
 func _ensure_bootstrap_controls() -> void:
     Settings.apply_input_map()
     AudioManager.apply_settings()
+
+func _boot_log(stage: String) -> void:
+    var elapsed := 0
+    if boot_started_at > 0:
+        elapsed = Time.get_ticks_msec() - boot_started_at
+    var line := "%dms %s" % [elapsed, stage]
+    print("[BOOTLOG] ", line)
+    var file := FileAccess.open(BOOT_LOG_PATH, FileAccess.READ_WRITE)
+    if file == null:
+        file = FileAccess.open(BOOT_LOG_PATH, FileAccess.WRITE)
+    if file == null:
+        push_error("[BOOTLOG] Unable to open " + BOOT_LOG_PATH)
+        return
+    file.seek_end()
+    file.store_line(line)
+    file.close()
 
 func _restore_window_state() -> void:
     var width := int(Settings.get_value("window_width", 1280))
@@ -531,6 +561,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
     _adaptive_resolution(delta)
+    if not boot_watchdog_reported and boot_complete and world == null and menu != null and not menu.visible:
+        if Time.get_ticks_msec() - boot_started_at >= 8000:
+            boot_watchdog_reported = true
+            _boot_log("watchdog_menu_invisible")
+            _show_boot_diagnostic()
     if world != null:
         world_boot_elapsed += delta
         if not world_boot_reported and world_boot_elapsed >= 2.5:
@@ -556,6 +591,33 @@ func _process(delta: float) -> void:
                 world.save_delta(),
                 _player_save()
             )
+
+func _show_boot_diagnostic() -> void:
+    if menu != null:
+        menu.show()
+        menu.modulate.a = 1.0
+    if menu_layer == null:
+        return
+    var layer := CanvasLayer.new()
+    layer.name = "BootDiagnostics"
+    layer.layer = 1000
+    add_child(layer)
+    var panel := ColorRect.new()
+    panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    panel.color = Color(0.015, 0.02, 0.035, 0.96)
+    layer.add_child(panel)
+    var label := Label.new()
+    label.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+    label.offset_left = -360
+    label.offset_top = -120
+    label.offset_right = 360
+    label.offset_bottom = 120
+    label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    label.add_theme_font_size_override("font_size", 22)
+    label.text = "AETHRA boot diagnostic\n\nالقائمة الرئيسية لم تصبح مرئية خلال 8 ثوانٍ.\nتحقق من user://boot_log.txt وملف Output."
+    layer.add_child(label)
 
 func _abort_world_boot(reason: String) -> void:
     boot_failure_message = reason
