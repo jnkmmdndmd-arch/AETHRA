@@ -152,7 +152,8 @@ func _append_quad(vertices: PackedVector3Array, normals: PackedVector3Array, col
     else:
         vertices.append(p); vertices.append(p + v); vertices.append(p + u + v); vertices.append(p + u)
         uvs.append(Vector2(0, 0)); uvs.append(Vector2(0, uv_v)); uvs.append(Vector2(uv_u, uv_v)); uvs.append(Vector2(uv_u, 0))
-    var encoded_id := (float(block_id) + 0.5) / 64.0
+    var encoded_tile: int = MinecraftCompat.get_block_tile(block_id)
+    var encoded_id: float = (float(encoded_tile) + 0.5) / 64.0
     var encoded_color := Color(encoded_id, clampf(shade, 0.20, 1.5), 1.0, 1.0)
     for _i in 4:
         normals.append(normal)
@@ -173,7 +174,8 @@ func _build_heightfield_lod() -> void:
                             if yy >= top_y: top_y = yy; top_id = id
                             break
             if top_id == BlockRegistry.AIR: continue
-            var encoded_id := (float(top_id) + 0.5) / 64.0
+            var encoded_tile: int = MinecraftCompat.get_block_tile(top_id)
+            var encoded_id: float = (float(encoded_tile) + 0.5) / 64.0
             var encoded_color := Color(encoded_id, 0.95, 1.0, 1.0)
             var start := vertices.size(); var y := float(top_y+1)
             vertices.append(Vector3(x,y,z)); vertices.append(Vector3(x+step,y,z)); vertices.append(Vector3(x+step,y,z+step)); vertices.append(Vector3(x,y,z+step))
@@ -249,7 +251,7 @@ func build_mesh(build_collision: bool = false, requested_lod: int = 0) -> void:
                             elif face_index!=1: fq.y*=0.88
                             fluid_vertices.append(base+fq); fluid_normals.append(FACE_NORMALS[face_index]); fluid_colors.append(block_color)
                         else:
-                            vertices.append(base+fq); normals.append(FACE_NORMALS[face_index]); colors.append(Color((float(id) + 0.5) / 64.0, _face_shade(face_index), 1.0, 1.0))
+                            vertices.append(base+fq); normals.append(FACE_NORMALS[face_index]); colors.append(Color((float(MinecraftCompat.get_block_tile(id)) + 0.5) / 64.0, _face_shade(face_index), 1.0, 1.0))
                     if not is_fluid:
                         uvs.append(Vector2(0,0)); uvs.append(Vector2(1,0)); uvs.append(Vector2(1,1)); uvs.append(Vector2(0,1))
                     if is_fluid: fluid_indices.append_array(PackedInt32Array([start,start+1,start+2,start,start+2,start+3]))
