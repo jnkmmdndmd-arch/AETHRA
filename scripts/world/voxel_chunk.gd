@@ -232,7 +232,7 @@ func build_mesh(build_collision: bool = false, requested_lod: int = 0) -> void:
                 j+=1
     var solid_flags:=PackedByteArray(); var block_colors:Array[Color]=[]; solid_flags.resize(BlockRegistry.LAST_BLOCK+1); block_colors.resize(BlockRegistry.LAST_BLOCK+1)
     for block_id in BlockRegistry.LAST_BLOCK+1:
-        var info:=BlockRegistry.get_block(block_id); solid_flags[block_id]=1 if bool(info.get("solid",false)) else 0; block_colors[block_id]=info.get("color",Color.WHITE)
+        var info: Dictionary = BlockRegistry.get_block(block_id); solid_flags[block_id]=1 if bool(info.get("solid",false)) else 0; block_colors[block_id]=info.get("color",Color.WHITE)
     for x in SIZE:
         for z in SIZE:
             for y in height:
