@@ -75,7 +75,7 @@ func configure(enable_structures: bool = true, biome_override: String = "", heig
 func terrain_height(x: int, z: int) -> int:
     var macro: float = continental.get_noise_2d(x, z)
     var detail_v: float = detail.get_noise_2d(x, z)
-    var h: int = SEA_LEVEL + int(macro * 22.0 + detail_v * 7.0)
+    var h: int = sea_level + int(macro * 22.0 + detail_v * 7.0)
     return clampi(h, 4, world_height - 8)
 
 func biome_at(x: int, z: int) -> String:
@@ -104,13 +104,13 @@ func block_at(x: int, y: int, z: int) -> int:
         return AIR_ID
 
     if y > surface:
-        if y <= SEA_LEVEL:
+        if y <= sea_level:
             return WATER_ID
         return _tree_block(x, y, z, surface) if structures_enabled else AIR_ID
 
     var biome: String = biome_at(x, z)
     if y == surface:
-        if surface <= SEA_LEVEL + 1:
+        if surface <= sea_level + 1:
             return SAND_ID
         if biome == "frost":
             return SNOW_ID
@@ -143,14 +143,14 @@ func generate_chunk(cx: int, cz: int) -> PackedByteArray:
                 if y == 0:
                     id = BEDROCK_ID
                 elif y > surface:
-                    if y <= SEA_LEVEL:
+                    if y <= sea_level:
                         id = WATER_ID
                     else:
                         id = _tree_block(wx, y, wz, surface) if structures_enabled else AIR_ID
                 elif y < surface - 3 and y > 4 and _is_cave(wx, y, wz):
                     id = AIR_ID
                 elif y == surface:
-                    if surface <= SEA_LEVEL + 1:
+                    if surface <= sea_level + 1:
                         id = SAND_ID
                     elif biome == "frost":
                         id = SNOW_ID
