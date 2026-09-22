@@ -62,7 +62,6 @@ func _build_body() -> void:
     head.add_child(camera)
 
 func _build_skin_mesh() -> ArrayMesh:
-    const S := 0.075
     var vertices: Array = []
     var normals: Array = []
     var uvs: Array = []
@@ -70,7 +69,7 @@ func _build_skin_mesh() -> ArrayMesh:
 
     _append_skin_box(vertices, normals, uvs, indices,
         Vector3(-0.30, 1.80, -0.30), Vector3(0.30, 2.40, 0.30),
-        [Rect2(8, 0, 8, 8), Rect2(16, 0, 8, 8), Rect2(0, 8, 8, 8), Rect2(8, 8, 8, 8), Rect2(16, 8, 8, 8), Rect2(24, 8, 8, 8)], S)
+        [Rect2(8, 0, 8, 8), Rect2(16, 0, 8, 8), Rect2(0, 8, 8, 8), Rect2(8, 8, 8, 8), Rect2(16, 8, 8, 8), Rect2(24, 8, 8, 8)])
     _append_skin_box(vertices, normals, uvs, indices,
         Vector3(-0.30, 0.90, -0.19), Vector3(0.30, 1.80, 0.19),
         [Rect2(20, 16, 8, 4), Rect2(28, 16, 8, 4), Rect2(16, 20, 4, 12), Rect2(20, 20, 8, 12), Rect2(28, 20, 4, 12), Rect2(32, 20, 8, 12)], S)
@@ -97,7 +96,7 @@ func _build_skin_mesh() -> ArrayMesh:
     mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
     return mesh
 
-func _append_skin_box(vertices: Array, normals: Array, uvs: Array, indices: Array, minp: Vector3, maxp: Vector3, regions: Array, scale: float) -> void:
+func _append_skin_box(vertices: Array, normals: Array, uvs: Array, indices: Array, minp: Vector3, maxp: Vector3, regions: Array) -> void:
     var faces := [
         [Vector3(minp.x, minp.y, maxp.z), Vector3(maxp.x, minp.y, maxp.z), Vector3(maxp.x, maxp.y, maxp.z), Vector3(minp.x, maxp.y, maxp.z), Vector3.FORWARD],
         [Vector3(maxp.x, minp.y, minp.z), Vector3(minp.x, minp.y, minp.z), Vector3(minp.x, maxp.y, minp.z), Vector3(maxp.x, maxp.y, minp.z), Vector3.BACK],
