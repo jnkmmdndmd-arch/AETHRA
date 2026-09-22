@@ -72,7 +72,7 @@ func _build_skin_mesh() -> ArrayMesh:
         [Rect2(8, 0, 8, 8), Rect2(16, 0, 8, 8), Rect2(0, 8, 8, 8), Rect2(8, 8, 8, 8), Rect2(16, 8, 8, 8), Rect2(24, 8, 8, 8)])
     _append_skin_box(vertices, normals, uvs, indices,
         Vector3(-0.30, 0.90, -0.19), Vector3(0.30, 1.80, 0.19),
-        [Rect2(20, 16, 8, 4), Rect2(28, 16, 8, 4), Rect2(16, 20, 4, 12), Rect2(20, 20, 8, 12), Rect2(28, 20, 4, 12), Rect2(32, 20, 8, 12)], S)
+        [Rect2(20, 16, 8, 4), Rect2(28, 16, 8, 4), Rect2(16, 20, 4, 12), Rect2(20, 20, 8, 12), Rect2(28, 20, 4, 12), Rect2(32, 20, 8, 12)])
     _append_skin_box(vertices, normals, uvs, indices,
         Vector3(-0.60, 0.90, -0.15), Vector3(-0.30, 1.80, 0.15),
         [Rect2(44, 16, 4, 4), Rect2(48, 16, 4, 4), Rect2(40, 20, 4, 12), Rect2(44, 20, 4, 12), Rect2(48, 20, 4, 12), Rect2(52, 20, 4, 12)], S)
