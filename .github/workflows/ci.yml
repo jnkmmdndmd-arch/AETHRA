@@ -135,6 +135,28 @@ jobs:
           Get-Content $stdout, $stderr -ErrorAction SilentlyContinue
           if ($process.ExitCode -ne 0) { throw "Godot smoke test failed with exit code $($process.ExitCode)." }
 
+      - name: Run graphical runtime smoke test
+        shell: pwsh
+        timeout-minutes: 3
+        run: |
+          $godot = (Get-Command godot -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty Source)
+          if (-not $godot) { $godot = (Get-ChildItem "$env:RUNNER_TEMP\godot-4.7.2" -Recurse -Filter "Godot*.exe" | Select-Object -First 1 -ExpandProperty FullName) }
+          if (-not $godot) { throw "Godot 4.7.2 executable path not resolved for graphical runtime smoke test." }
+          if (Test-Path "runtime-proof") { Remove-Item -Recurse -Force "runtime-proof" }
+          $stdout = Join-Path $env:RUNNER_TEMP "godot-visual.stdout.log"
+          $stderr = Join-Path $env:RUNNER_TEMP "godot-visual.stderr.log"
+          $args = @("--path", ".", "--resolution", "1280x720", "--rendering-method", "gl_compatibility", "--script", "res://tests/runtime_visual_smoke.gd")
+          $process = Start-Process -FilePath $godot -ArgumentList $args -NoNewWindow -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          if (-not $process.WaitForExit(90000)) {
+            Stop-Process -Id $process.Id -Force
+            Get-Content $stdout, $stderr -ErrorAction SilentlyContinue
+            throw "Graphical runtime smoke test exceeded 90 seconds."
+          }
+          Get-Content $stdout, $stderr -ErrorAction SilentlyContinue
+          if ($process.ExitCode -ne 0) { throw "Graphical runtime smoke test failed with exit code $($process.ExitCode)." }
+          if (-not (Test-Path "runtime-proof/runtime-menu-proof.png")) { throw "Menu proof screenshot was not produced." }
+          if (-not (Test-Path "runtime-proof/runtime-world-proof.png")) { throw "World proof screenshot was not produced." }
+
       - name: Install SQLite headers and library
         shell: pwsh
         run: |
@@ -215,7 +237,8 @@ jobs:
             "Multiplayer result: NOT RUN YET",
             "Errors found: none at build/import/self-test layer in this workflow run",
             "Fixes performed: current source validated and exported from the checked-out commit",
-            "Remaining blockers: runtime checks are still pending"
+            "Remaining blockers: runtime checks are still pending",
+            "Graphical runtime smoke: PASS - menu and world screenshots produced by Godot"
           )
           Set-Content -Path "WINDOWS-RUNTIME-VERIFICATION.md" -Value $lines -Encoding utf8
 
@@ -277,3 +300,5 @@ jobs:
             build/AETHRA-Wildbound.exe
             build/AETHRA-Wildbound.sha256
             WINDOWS-RUNTIME-VERIFICATION.md
+            runtime-proof/runtime-menu-proof.png
+            runtime-proof/runtime-world-proof.png
