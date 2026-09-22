@@ -204,7 +204,6 @@ func _build_sidebar(parent: PanelContainer) -> void:
         ["worlds", "world", "العوالم"],
         ["store", "store", "المتجر"],
         ["settings", "settings", "الإعدادات"],
-        ["developer", "developer", "أدوات المطور"],
     ]
     for item in items:
         var b := _nav_button(item[1], item[2])
