@@ -33,31 +33,43 @@ func save_world(world_id: String, metadata: Dictionary, blocks: Dictionary, play
         save_mutex.unlock()
         return ERR_BUSY
     save_in_progress = true
-    defer _finish_save()
+
+    var result: Error = OK
     var dir_path := world_path(world_id)
     DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(dir_path))
-    var payload := {"format_version": FORMAT_VERSION, "metadata": metadata, "blocks": blocks, "player": player_state, "saved_at": Time.get_datetime_string_from_system(true)}
+    var payload := {
+        "format_version": FORMAT_VERSION,
+        "metadata": metadata,
+        "blocks": blocks,
+        "player": player_state,
+        "saved_at": Time.get_datetime_string_from_system(true)
+    }
     var tmp := dir_path + ".tmp"
     var file := FileAccess.open(tmp, FileAccess.WRITE)
     if file == null:
-        return FileAccess.get_open_error()
-    file.store_string(JSON.stringify(payload))
-    file.flush()
-    var write_error:=file.get_error()
-    file.close()
-    if write_error!=OK:
-        DirAccess.remove_absolute(ProjectSettings.globalize_path(tmp))
-        return write_error
-    var final_path := ProjectSettings.globalize_path(dir_path + "/world.json")
-    var previous := ProjectSettings.globalize_path(dir_path + "/world.prev.json")
-    if FileAccess.file_exists(final_path):
-        if FileAccess.file_exists(previous):
-            DirAccess.remove_absolute(previous)
-        DirAccess.rename_absolute(final_path, previous)
-    var err := DirAccess.rename_absolute(ProjectSettings.globalize_path(tmp), final_path)
-    if err != OK and FileAccess.file_exists(previous) and not FileAccess.file_exists(final_path):
-        DirAccess.rename_absolute(previous, final_path)
-    return err
+        result = FileAccess.get_open_error()
+    else:
+        file.store_string(JSON.stringify(payload))
+        file.flush()
+        var write_error: Error = file.get_error()
+        file.close()
+        if write_error != OK:
+            DirAccess.remove_absolute(ProjectSettings.globalize_path(tmp))
+            result = write_error
+
+    if result == OK:
+        var final_path := ProjectSettings.globalize_path(dir_path + "/world.json")
+        var previous := ProjectSettings.globalize_path(dir_path + "/world.prev.json")
+        if FileAccess.file_exists(final_path):
+            if FileAccess.file_exists(previous):
+                DirAccess.remove_absolute(previous)
+            DirAccess.rename_absolute(final_path, previous)
+        result = DirAccess.rename_absolute(ProjectSettings.globalize_path(tmp), final_path)
+        if result != OK and FileAccess.file_exists(previous) and not FileAccess.file_exists(final_path):
+            DirAccess.rename_absolute(previous, final_path)
+
+    _finish_save()
+    return result
 
 func _finish_save() -> void:
     save_in_progress=false
