@@ -21,7 +21,7 @@ func _run() -> void:
         push_error("[VISUAL_SMOKE] FAIL: main menu node was not created.")
         quit(1)
         return
-    var alpha := float(app_root.menu.modulate.a)
+    var alpha: float = float(app_root.menu.modulate.a)
     print("[VISUAL_SMOKE] menu visible=", app_root.menu.visible, " alpha=", alpha)
     if not app_root.menu.visible or alpha < 0.99:
         push_error("[VISUAL_SMOKE] FAIL: main menu is not visibly rendered.")
@@ -33,6 +33,7 @@ func _run() -> void:
     if screenshot != null:
         screenshot.save_png("res://runtime-proof/runtime-menu-proof.png")
         print("[VISUAL_SMOKE] menu screenshot saved")
+    _copy_boot_log_and_validate()
 
     menu_button = _find_button(app_root.menu, "ابدأ اللعب")
     if menu_button == null:
@@ -54,6 +55,7 @@ func _run() -> void:
                 if world_shot != null:
                     world_shot.save_png("res://runtime-proof/runtime-world-proof.png")
                     print("[VISUAL_SMOKE] world screenshot saved")
+                _copy_boot_log_and_validate()
                 print("[VISUAL_SMOKE] SUCCESS: menu and world rendered")
                 quit(0)
                 return
@@ -69,3 +71,31 @@ func _find_button(node: Node, target_text: String) -> Button:
         if nested != null:
             return nested
     return null
+
+func _copy_boot_log_and_validate() -> void:
+    var required := [
+        "boot_start",
+        "window_restored",
+        "lighting_built",
+        "graphics_applied",
+        "java_backend_checked",
+        "auth_initialized",
+        "main_menu_built",
+        "network_presence_ready",
+        "boot_complete"
+    ]
+    var source := FileAccess.open("user://boot_log.txt", FileAccess.READ)
+    if source == null:
+        push_error("[VISUAL_SMOKE] FAIL: user://boot_log.txt does not exist.")
+        return
+    var text := source.get_as_text()
+    source.close()
+    var copy := FileAccess.open("res://runtime-proof/boot_log.txt", FileAccess.WRITE)
+    if copy != null:
+        copy.store_string(text)
+        copy.close()
+    for stage in required:
+        if stage not in text:
+            push_error("[VISUAL_SMOKE] FAIL: boot log missing stage: " + stage)
+            return
+    print("[VISUAL_SMOKE] boot log contains all required stages")
