@@ -120,7 +120,7 @@ func get_item_tile(item_id: int) -> int:
         ItemRegistry.WOOD_AXE: 57, ItemRegistry.STONE_AXE: 58, ItemRegistry.IRON_AXE: 59,
         ItemRegistry.WOOD_SHOVEL: 61, ItemRegistry.STONE_SHOVEL: 62, ItemRegistry.IRON_SHOVEL: 63,
         ItemRegistry.WOOD_SWORD: 64, ItemRegistry.STONE_SWORD: 65, ItemRegistry.IRON_SWORD: 66,
-        ItemRegistry.AETHER_SWORD: 28, ItemRegistry.BOW: 48, ItemRegistry.ARROW: 39,
+        ItemRegistry.AETHER_SWORD: 28, ItemRegistry.BOW: 50, ItemRegistry.ARROW: 39,
         ItemRegistry.SHEARS: 43, ItemRegistry.BUCKET: 40, ItemRegistry.LANTERN: 22,
         ItemRegistry.ROPE: 34, ItemRegistry.HAMMER: 37, ItemRegistry.HOE: 61,
         ItemRegistry.COMPASS: 46, ItemRegistry.MAP: 48
