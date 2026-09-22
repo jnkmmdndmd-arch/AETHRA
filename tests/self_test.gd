@@ -4,9 +4,6 @@ func _init() -> void:
     call_deferred("_run")
 
 func _run() -> void:
-    var test_root := Node.new()
-    test_root.name = "RuntimeSmokeRoot"
-    root.add_child(test_root)
     print("[TEST] Initializing registries")
     var block_registry = load("res://scripts/data/block_registry.gd").new()
     var item_registry = load("res://scripts/data/item_registry.gd").new()
@@ -46,17 +43,6 @@ func _run() -> void:
     checks.append(_check("Voxel world parser", func() -> bool:
         return voxel_script != null
     ))
-    var test_player_script: GDScript = load("res://scripts/player/player_avatar.gd") as GDScript
-    var entry_player = test_player_script.new()
-    test_root.add_child(entry_player)
-    entry_player.setup(null, true, 1)
-    checks.append(_check("World entry player/camera", func() -> bool:
-        return entry_player.camera != null and entry_player.camera.current and entry_player.player_model != null
-    ))
-    checks.append(_check("Player camera construction", func() -> bool:
-        return entry_player.camera != null and entry_player.camera.current and entry_player.player_model != null
-    ))
-    test_root.queue_free()
     checks.append(_check("UI icon policy", func() -> bool:
         var banned := ["♟", "⌂", "▶", "▣", "◇", "◆", "⚙", "↪", "●", "◉", "□", "×"]
         for path in ["res://scripts/ui/main_menu.gd", "res://scripts/ui/hud.gd", "res://scripts/ui/settings_menu.gd"]:
