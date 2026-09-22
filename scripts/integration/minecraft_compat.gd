@@ -1,103 +1,189 @@
 extends Node
 
 const SOURCE_VERSION := "Minecraft Java 1.17.1"
-const ATLAS_COLUMNS := 8
-const ATLAS_ROWS := 8
-const SOURCE_TEXTURES: PackedStringArray = PackedStringArray(["air","dirt","stone","sand","gravel","clay","oak_log","oak_leaves","oak_planks","glass","lantern","copper_ore","iron_ore","amethyst_block","bricks","water_still","lava_still","bedrock","crafting_table_side","furnace_side","oak_planks","oak_door_top","torch","redstone_block","redstone_torch","piston_side","observer_front","hopper_outside","snow","sandstone","red_sand","red_sandstone","cactus_side","dead_bush","acacia_log","acacia_leaves","jungle_log","jungle_leaves","dandelion","cornflower","red_mushroom","vine","ice","packed_ice","obsidian","basalt_side","deepslate","poppy","sweet_berry_bush_stage3","lily_pad","grass","snow","coal_ore","gold_ore","emerald_ore","diamond_ore","glowstone","cut_sandstone","moss_block","amethyst_block"])
-const SOURCE_PALETTE: PackedColorArray = PackedColorArray([
-    Color("#000000"),Color("#000000"),Color("#000000"),
-    Color("#896142"),Color("#79553a"),Color("#876042"),
-    Color("#747474"),Color("#797979"),Color("#878787"),
-    Color("#ded4a8"),Color("#d3bf90"),Color("#d7c99c"),
-    Color("#908c8a"),Color("#817f7f"),Color("#817f7f"),
-    Color("#9da5b2"),Color("#a1a7b1"),Color("#acaebd"),
-    Color("#695230"),Color("#785d36"),Color("#554328"),
-    Color("#5c5e5c"),Color("#000000"),Color("#343234"),
-    Color("#836a3c"),Color("#836a3c"),Color("#a78450"),
-    Color("#94a8ac"),Color("#808080"),Color("#a8b5b4"),
-    Color("#000000"),Color("#000000"),Color("#825640"),
-    Color("#7f7f7f"),Color("#797979"),Color("#797979"),
-    Color("#747474"),Color("#8f8f8f"),Color("#ab9789"),
-    Color("#7858b5"),Color("#6b4aa7"),Color("#7858b5"),
-    Color("#936255"),Color("#a27568"),Color("#a27568"),
-    Color("#cccccc"),Color("#e9e9e9"),Color("#a9a9a9"),
-    Color("#d66118"),Color("#d2510e"),Color("#d3540d"),
-    Color("#333333"),Color("#4b4b4b"),Color("#636363"),
-    Color("#40321c"),Color("#5d4d2d"),Color("#a78450"),
-    Color("#6a6969"),Color("#a5a5a5"),Color("#717070"),
-    Color("#836a3c"),Color("#836a3c"),Color("#a78450"),
-    Color("#86693c"),Color("#4b3a20"),Color("#4b3a20"),
-    Color("#000000"),Color("#7f7f4b"),Color("#000000"),
-    Color("#c51c08"),Color("#730c00"),Color("#b01c08"),
-    Color("#000000"),Color("#7f7f4b"),Color("#000000"),
-    Color("#877c6c"),Color("#535151"),Color("#817462"),
-    Color("#363636"),Color("#959595"),Color("#565656"),
-    Color("#545353"),Color("#444345"),Color("#515050"),
-    Color("#ffffff"),Color("#f7fefe"),Color("#f7fefe"),
-    Color("#cdb983"),Color("#d6c996"),Color("#ded6a9"),
-    Color("#c26a25"),Color("#af5b18"),Color("#b86320"),
-    Color("#a85715"),Color("#b8611b"),Color("#c56b23"),
-    Color("#293e13"),Color("#5b8a2c"),Color("#4e7825"),
-    Color("#000000"),Color("#946428"),Color("#000000"),
-    Color("#625b53"),Color("#6b645a"),Color("#59544b"),
-    Color("#7a7878"),Color("#9e9e9e"),Color("#4f4f4f"),
-    Color("#483a14"),Color("#544219"),Color("#59461a"),
-    Color("#000000"),Color("#fee144"),Color("#000000"),
-    Color("#ffffff"),Color("#96b491"),Color("#ffffff"),
-    Color("#000000"),Color("#7f1515"),Color("#000000"),
-    Color("#2a2a2a"),Color("#000000"),Color("#6b6b6b"),
-    Color("#89b0fd"),Color("#99befe"),Color("#8cb3fd"),
-    Color("#7ca5f4"),Color("#92b9fe"),Color("#85adf8"),
-    Color("#0b0713"),Color("#0b0713"),Color("#08060e"),
-    Color("#3a3b48"),Color("#555355"),Color("#353840"),
-    Color("#505053"),Color("#656565"),Color("#47474a"),
-    Color("#000000"),Color("#3a1101"),Color("#000000"),
-    Color("#340f10"),Color("#484030"),Color("#340f10"),
-    Color("#2e2e2e"),Color("#a3a3a3"),Color("#2e2e2e"),
-    Color("#000000"),Color("#000000"),Color("#000000"),
-    Color("#ffffff"),Color("#f7fefe"),Color("#f7fefe"),
-    Color("#747474"),Color("#757575"),Color("#797979"),
-    Color("#af8841"),Color("#909090"),Color("#7f7f7f"),
-    Color("#747474"),Color("#4ba261"),Color("#3f7d4b"),
-    Color("#878787"),Color("#58a1a4"),Color("#7f7f7f"),
-    Color("#6f4522"),Color("#b99f80"),Color("#e3b064"),
-    Color("#ded4a8"),Color("#dad2a3"),Color("#e3deb7"),
-    Color("#687932"),Color("#6a8230"),Color("#42552d"),
-    Color("#7858b5"),Color("#6b4aa7"),Color("#7858b5"),
-    Color("#8c73dc"),Color("#7a62c4"),Color("#9a84ea")
+const BLOCK_ATLAS_PATH := "res://assets/minecraft/atlas/minecraft_blocks_1_17_1.webp.b64"
+const ENTITY_ATLAS_PATH := "res://assets/minecraft/atlas/minecraft_entities_1_17_1.webp.b64"
+const ITEM_ATLAS_PATH := "res://assets/minecraft/atlas/minecraft_items_1_17_1.webp.b64"
+
+const BLOCK_COLUMNS := 8
+const BLOCK_ROWS := 8
+const ENTITY_COLUMNS := 8
+const ENTITY_ROWS := 4
+const ITEM_COLUMNS := 8
+const ITEM_ROWS := 9
+
+const BLOCK_TEXTURES: PackedStringArray = PackedStringArray([
+    "air","dirt","stone","sand","gravel","clay","oak_log","oak_leaves","oak_planks","glass",
+    "lantern","copper_ore","iron_ore","amethyst_block","bricks","water_still","lava_still","bedrock",
+    "crafting_table_side","furnace_side","chest","oak_door_top","torch","redstone_block","redstone_torch",
+    "piston_side","observer_front","hopper_outside","snow","sandstone","red_sand","red_sandstone","cactus_side",
+    "dead_bush","acacia_log","acacia_leaves","jungle_log","jungle_leaves","dandelion","cornflower","red_mushroom",
+    "vine","ice","packed_ice","obsidian","basalt_side","deepslate","poppy","sweet_berry_bush_stage3",
+    "lily_pad","grass_block_side","snow","coal_ore","gold_ore","emerald_ore","diamond_ore","glowstone",
+    "cut_sandstone","moss_block","amethyst_block","cobblestone","mossy_cobblestone","stone_bricks","netherrack","nether_bricks"
 ])
 
-var _atlas: Texture2D = null
+const ENTITY_TEXTURES: PackedStringArray = PackedStringArray([
+    "cow/cow","pig","sheep/sheep","chicken","horse/horse_brown","wolf/wolf","cat/tabby","fox/fox",
+    "goat/goat","bee/bee","creeper/creeper","zombie/zombie","skeleton/skeleton","enderman/enderman","slime/slime",
+    "witch","iron_golem/iron_golem","guardian","blaze","ghast/ghast","endermite","silverfish","piglin/piglin","hoglin/hoglin",
+    "axolotl/axolotl_wild","bat","spider","villager/villager","zombie_villager/zombie_villager","ravager","wither/wither","phantom"
+])
+
+const ITEM_TEXTURES: PackedStringArray = PackedStringArray([
+    "apple","bread","carrot","potato","baked_potato","beetroot","melon_slice","pumpkin_pie",
+    "cookie","cake","beef","cooked_beef","chicken","cooked_chicken","porkchop","cooked_porkchop",
+    "mutton","cooked_mutton","rabbit","cooked_rabbit","cod","cooked_cod","salmon","cooked_salmon",
+    "coal","charcoal","iron_ingot","gold_ingot","diamond","emerald","copper_ingot","quartz",
+    "amethyst_shard","stick","string","feather","leather","flint","bone","arrow","bucket","water_bucket",
+    "lava_bucket","shears","fishing_rod","flint_and_steel","compass_00","clock_00","map","empty_armor_slot_shield",
+    "bow","crossbow_standby","wooden_pickaxe","stone_pickaxe","iron_pickaxe","diamond_pickaxe","netherite_pickaxe",
+    "wooden_axe","stone_axe","iron_axe","diamond_axe","wooden_shovel","stone_shovel","iron_shovel","wooden_sword",
+    "stone_sword","iron_sword"
+])
+
+const ENTITY_TILE_BY_TYPE := {
+    "goat": 8, "wolf": 5, "fox": 7, "rabbit": 3, "horse": 4, "chicken": 3, "camel": 4,
+    "vulture": 25, "fennec": 7, "lizard": 24, "snake": 24, "scorpion": 26, "bee": 9,
+    "butterfly": 9, "dragonfly": 25, "firefly": 9, "beetle": 21, "moth": 9, "spider": 26,
+    "slime": 14, "wraith": 13, "brute": 29, "drake": 31, "sand_wyrm": 19, "stone_golem": 16,
+    "marsh_lurker": 17, "bat": 25, "crystal_mite": 20,
+    "cow": 0, "pig": 1, "sheep": 2, "creeper": 10, "zombie": 11, "skeleton": 12,
+    "enderman": 13, "witch": 15, "iron_golem": 16, "guardian": 17, "blaze": 18, "ghast": 19,
+    "endermite": 20, "silverfish": 21, "piglin": 22, "hoglin": 23, "axolotl": 24, "villager": 27,
+    "zombie_villager": 28, "ravager": 29, "wither": 30, "phantom": 31, "cat": 6
+}
+
+var _block_atlas: Texture2D = null
+var _entity_atlas: Texture2D = null
+var _item_atlas: Texture2D = null
+var _item_icon_cache: Dictionary = {}
+var _entity_material_cache: Dictionary = {}
 
 func _ready() -> void:
-    _atlas = _build_atlas()
+    _block_atlas = _load_b64_texture(BLOCK_ATLAS_PATH)
+    _entity_atlas = _load_b64_texture(ENTITY_ATLAS_PATH)
+    _item_atlas = _load_b64_texture(ITEM_ATLAS_PATH)
 
-func get_atlas() -> Texture2D:
-    if _atlas == null:
-        _atlas = _build_atlas()
-    return _atlas
-
-func source_texture_path(block_id: int) -> String:
-    var idx := clampi(block_id, 0, SOURCE_TEXTURES.size() - 1)
-    return "assets/minecraft/textures/block/" + SOURCE_TEXTURES[idx] + ".png"
-
-func source_manifest() -> Dictionary:
-    var out: Dictionary = {}
-    for i in SOURCE_TEXTURES.size():
-        out[i] = {"source": SOURCE_TEXTURES[i], "path": source_texture_path(i), "tile": i}
-    return out
-
-func _build_atlas() -> Texture2D:
-    var image := Image.create(ATLAS_COLUMNS * 16, ATLAS_ROWS * 16, false, Image.FORMAT_RGBA8)
-    for block_id in 60:
-        var base := block_id * 3
-        var tx := (block_id % ATLAS_COLUMNS) * 16
-        var ty := (block_id / ATLAS_COLUMNS) * 16
-        for y in 16:
-            for x in 16:
-                var cell := ((x / 4) + (y / 4) * 3 + block_id) % 3
-                var shade := 0.86 + float(((x + y + block_id * 2) % 5) - 2) * 0.045
-                var c := SOURCE_PALETTE[base + cell] * shade
-                image.set_pixel(tx + x, ty + y, Color(c.r, c.g, c.b, 1.0))
+func _load_b64_texture(path: String) -> Texture2D:
+    if not FileAccess.file_exists(path):
+        push_warning("Minecraft compatibility asset missing: " + path)
+        return null
+    var file := FileAccess.open(path, FileAccess.READ)
+    if file == null:
+        push_warning("Unable to open Minecraft compatibility asset: " + path)
+        return null
+    var encoded := file.get_as_text().replace("\n", "").replace("\r", "").strip_edges()
+    file.close()
+    if encoded.is_empty():
+        return null
+    var raw: PackedByteArray = Marshalls.base64_to_raw(encoded)
+    if raw.is_empty():
+        push_warning("Minecraft compatibility asset decoded to empty data: " + path)
+        return null
+    var image := Image.new()
+    var error: Error = image.load_webp_from_buffer(raw)
+    if error != OK:
+        push_warning("Minecraft compatibility asset failed to decode: " + path)
+        return null
     image.generate_mipmaps()
     return ImageTexture.create_from_image(image)
+
+func get_atlas() -> Texture2D:
+    if _block_atlas == null:
+        _block_atlas = _load_b64_texture(BLOCK_ATLAS_PATH)
+    return _block_atlas
+
+func get_entity_atlas() -> Texture2D:
+    if _entity_atlas == null:
+        _entity_atlas = _load_b64_texture(ENTITY_ATLAS_PATH)
+    return _entity_atlas
+
+func get_item_atlas() -> Texture2D:
+    if _item_atlas == null:
+        _item_atlas = _load_b64_texture(ITEM_ATLAS_PATH)
+    return _item_atlas
+
+func get_block_tile(block_id: int) -> int:
+    return clampi(block_id, 0, BLOCK_TEXTURES.size() - 1)
+
+func get_entity_tile(creature_type: String) -> int:
+    var key := creature_type.to_lower()
+    return clampi(int(ENTITY_TILE_BY_TYPE.get(key, 0)), 0, ENTITY_TEXTURES.size() - 1)
+
+func get_item_tile(item_id: int) -> int:
+    var mapping := {
+        ItemRegistry.HEAL_FOOD: 0,
+        ItemRegistry.WOOD_PICK: 52, ItemRegistry.STONE_PICK: 53, ItemRegistry.IRON_PICK: 54,
+        ItemRegistry.WOOD_AXE: 57, ItemRegistry.STONE_AXE: 58, ItemRegistry.IRON_AXE: 59,
+        ItemRegistry.WOOD_SHOVEL: 61, ItemRegistry.STONE_SHOVEL: 62, ItemRegistry.IRON_SHOVEL: 63,
+        ItemRegistry.WOOD_SWORD: 64, ItemRegistry.STONE_SWORD: 65, ItemRegistry.IRON_SWORD: 66,
+        ItemRegistry.AETHER_SWORD: 28, ItemRegistry.BOW: 48, ItemRegistry.ARROW: 39,
+        ItemRegistry.SHEARS: 43, ItemRegistry.BUCKET: 40, ItemRegistry.LANTERN: 22,
+        ItemRegistry.ROPE: 34, ItemRegistry.HAMMER: 37, ItemRegistry.HOE: 61,
+        ItemRegistry.COMPASS: 46, ItemRegistry.MAP: 48
+    }
+    return clampi(int(mapping.get(item_id, 0)), 0, ITEM_TEXTURES.size() - 1)
+
+func get_item_icon(item_id: int) -> Texture2D:
+    var cache_key := str(item_id)
+    if _item_icon_cache.has(cache_key):
+        return _item_icon_cache[cache_key]
+    var atlas := get_item_atlas()
+    if atlas == null:
+        return null
+    var texture := AtlasTexture.new()
+    texture.atlas = atlas
+    var tile := get_item_tile(item_id)
+    var x := tile % ITEM_COLUMNS
+    var y := tile / ITEM_COLUMNS
+    texture.region = Rect2(x * 16, y * 16, 16, 16)
+    _item_icon_cache[cache_key] = texture
+    return texture
+
+func get_block_icon(block_id: int) -> Texture2D:
+    var atlas := get_atlas()
+    if atlas == null:
+        return null
+    var texture := AtlasTexture.new()
+    texture.atlas = atlas
+    var tile := get_block_tile(block_id)
+    texture.region = Rect2((tile % BLOCK_COLUMNS) * 16, (tile / BLOCK_COLUMNS) * 16, 16, 16)
+    return texture
+
+func get_entity_material(creature_type: String) -> Material:
+    var key := creature_type.to_lower()
+    if _entity_material_cache.has(key):
+        return _entity_material_cache[key]
+    var atlas := get_entity_atlas()
+    if atlas == null:
+        return null
+    var shader := Shader.new()
+    shader.code = """
+shader_type spatial;
+render_mode diffuse_burley;
+uniform sampler2D atlas_texture : source_color, filter_nearest;
+uniform float tile_index = 0.0;
+void fragment() {
+    vec2 tile = vec2(mod(tile_index, 8.0), floor(tile_index / 8.0));
+    vec2 atlas_uv = (tile + fract(UV)) / vec2(8.0, 4.0);
+    vec4 tex = texture(atlas_texture, atlas_uv);
+    ALBEDO = tex.rgb;
+    ALPHA = tex.a;
+    ROUGHNESS = 0.90;
+}
+"""
+    var material := ShaderMaterial.new()
+    material.shader = shader
+    material.set_shader_parameter("atlas_texture", atlas)
+    material.set_shader_parameter("tile_index", float(get_entity_tile(key)))
+    _entity_material_cache[key] = material
+    return material
+
+func source_manifest() -> Dictionary:
+    return {
+        "source": SOURCE_VERSION,
+        "blocks": BLOCK_TEXTURES.duplicate(),
+        "items": ITEM_TEXTURES.duplicate(),
+        "entities": ENTITY_TEXTURES.duplicate()
+    }
