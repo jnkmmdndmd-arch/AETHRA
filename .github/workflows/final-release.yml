@@ -62,6 +62,15 @@ jobs:
           if($LASTEXITCODE -ne 0){throw "Windows export failed"}
           if(-not (Test-Path "build\AETHRA-Wildbound.exe")){throw "Final EXE missing"}
           if((Get-Item "build\AETHRA-Wildbound.exe").Length -lt 1000000){throw "Final EXE unexpectedly small"}
+      - name: Build Windows installer
+        run: |
+          choco install innosetup --yes --no-progress
+          $iscc = Get-ChildItem "C:\Program Files (x86)\Inno Setup" -Filter "ISCC.exe" -Recurse | Select-Object -First 1 -ExpandProperty FullName
+          if(-not $iscc){throw "Inno Setup compiler not found"}
+          & $iscc "installer.iss" | Tee-Object installer.log
+          if($LASTEXITCODE -ne 0){throw "Inno Setup compilation failed"}
+          if(-not (Test-Path "build\AETHRA-Wildbound-Setup.exe")){throw "Installer missing"}
+
       - name: Final EXE startup smoke
         run: |
           $p=Start-Process ".\build\AETHRA-Wildbound.exe" -PassThru
@@ -71,14 +80,17 @@ jobs:
       - name: Hashes
         run: |
           $game=(Get-FileHash "build\AETHRA-Wildbound.exe" -Algorithm SHA256).Hash.ToLowerInvariant()
-          @("AETHRA FINAL WINDOWS EXE","Game SHA256: $game","Startup smoke: PASS") | Set-Content FINAL-WINDOWS-VERIFICATION.md
+          $setup=(Get-FileHash "build\AETHRA-Wildbound-Setup.exe" -Algorithm SHA256).Hash.ToLowerInvariant()
+          @("AETHRA FINAL WINDOWS RELEASE","Game SHA256: $game","Installer SHA256: $setup","Startup smoke: PASS") | Set-Content FINAL-WINDOWS-VERIFICATION.md
       - uses: actions/upload-artifact@v4
         with:
           name: AETHRA-Wildbound-FINAL-Windows-x64
           if-no-files-found: error
           path: |
             build/AETHRA-Wildbound.exe
+            build/AETHRA-Wildbound-Setup.exe
             FINAL-WINDOWS-VERIFICATION.md
+            installer.log
             editor.log
             parse.log
             self-test.log
