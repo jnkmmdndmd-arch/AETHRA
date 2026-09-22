@@ -84,8 +84,47 @@ func _load_b64_texture(path: String) -> Texture2D:
     var image := Image.new()
     var error: Error = image.load_webp_from_buffer(raw)
     if error != OK:
-        push_warning("Minecraft compatibility asset failed to decode: " + path)
-        return null
+        push_warning("Minecraft compatibility asset failed to decode, using generated compatibility fallback: " + path)
+        return _build_fallback_texture(path)
+    image.generate_mipmaps()
+    return ImageTexture.create_from_image(image)
+
+func _build_fallback_texture(path: String) -> Texture2D:
+    var width := 128
+    var height := 128
+    if "entities" in path:
+        width = ENTITY_COLUMNS * 64
+        height = ENTITY_ROWS * 64
+    elif "items" in path:
+        width = ITEM_COLUMNS * 16
+        height = ITEM_ROWS * 16
+    var image := Image.create(width, height, false, Image.FORMAT_RGBA8)
+    image.fill(Color(0.02, 0.02, 0.03, 1.0))
+    if "blocks" in path:
+        for tile in BLOCK_TEXTURES.size():
+            var color := Color(0.25, 0.25, 0.25, 1.0)
+            var registry_info = BlockRegistry.get_block(tile)
+            color = registry_info.get("color", color)
+            var tx := (tile % BLOCK_COLUMNS) * 16
+            var ty := (tile / BLOCK_COLUMNS) * 16
+            for y in 16:
+                for x in 16:
+                    var shade := 0.88 + float((x + y + tile) % 4) * 0.04
+                    image.set_pixel(tx + x, ty + y, Color(color.r * shade, color.g * shade, color.b * shade, 1.0))
+    elif "items" in path:
+        for tile in ITEM_TEXTURES.size():
+            var tx := (tile % ITEM_COLUMNS) * 16
+            var ty := (tile / ITEM_COLUMNS) * 16
+            var hue := float(tile % 12) / 12.0
+            var color := Color.from_hsv(hue, 0.55, 0.92, 1.0)
+            image.fill_rect(Rect2i(tx + 2, ty + 2, 12, 12), color)
+    else:
+        for tile in ENTITY_TEXTURES.size():
+            var tx := (tile % ENTITY_COLUMNS) * 64
+            var ty := (tile / ENTITY_COLUMNS) * 64
+            var hue := float(tile % 16) / 16.0
+            var color := Color.from_hsv(hue, 0.45, 0.82, 1.0)
+            image.fill_rect(Rect2i(tx + 8, ty + 8, 48, 48), color)
     image.generate_mipmaps()
     return ImageTexture.create_from_image(image)
 
