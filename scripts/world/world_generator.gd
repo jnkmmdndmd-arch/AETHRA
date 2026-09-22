@@ -94,7 +94,7 @@ func biome_at(x: int, z: int) -> String:
 func block_at(x: int, y: int, z: int) -> int:
     if y < 0:
         return BEDROCK_ID
-    if y >= WORLD_HEIGHT:
+    if y >= world_height:
         return AIR_ID
     if y == 0:
         return BEDROCK_ID
