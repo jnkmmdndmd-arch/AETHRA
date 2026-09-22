@@ -28,7 +28,7 @@ func setup(coord: Vector2i, data: PackedByteArray, owner_world: Node = null) -> 
     chunk_coord = coord
     voxels = data
     world_ref = owner_world
-    height = maxi(1, data.size() / (SIZE * SIZE))
+    height = maxi(1, int(data.size() / (SIZE * SIZE)))
     mesh_instance = MeshInstance3D.new()
     add_child(mesh_instance)
     collision_body = StaticBody3D.new()
