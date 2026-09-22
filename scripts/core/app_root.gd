@@ -28,7 +28,7 @@ func _ready() -> void:
     if DisplayServer.get_name() == "headless" or "--server" in args:
         var dedicated_script := load("res://server/main_server.gd") as GDScript
         if dedicated_script != null:
-            var dedicated := dedicated_script.new()
+            var dedicated: Node = dedicated_script.new()
             dedicated.name = "DedicatedServer"
             add_child(dedicated)
         return
