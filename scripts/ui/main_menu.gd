@@ -156,14 +156,13 @@ func _layout_auth_overlay() -> void:
     if auth_overlay == null or not is_instance_valid(auth_overlay):
         return
     var viewport_size := get_viewport_rect().size
-    var panel_size := Vector2(
-        minf(620.0, viewport_size.x - 64.0),
-        minf(520.0, viewport_size.y - 64.0)
-    )
-    auth_overlay.size = Vector2(
-        minf(560.0, maxf(500.0, viewport_size.x - 80.0)),
-        minf(460.0, maxf(400.0, viewport_size.y - 80.0))
-    )
+    var available := Vector2(maxf(320.0, viewport_size.x - 48.0), maxf(320.0, viewport_size.y - 48.0))
+    var target := Vector2(620.0, 520.0)
+    target.x = minf(target.x, available.x)
+    target.y = minf(target.y, available.y)
+    target.x = maxf(target.x, minf(available.x, 440.0))
+    target.y = maxf(target.y, minf(available.y, 380.0))
+    auth_overlay.size = target
     auth_overlay.position = (viewport_size - auth_overlay.size) * 0.5
 
 func _build_sidebar(parent: PanelContainer) -> void:
@@ -191,6 +190,7 @@ func _build_sidebar(parent: PanelContainer) -> void:
     _label(logo, "AETHRA", 32, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
     _label(logo, "WILDBOUND", 15, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
     _label(logo, "بقاء فوكسيلي أصلي", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(logo, "المطور: عبدالله لازم", 9, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
 
     var sep := HSeparator.new()
     sep.modulate.a = 0.25
