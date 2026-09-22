@@ -43,11 +43,6 @@ func _run() -> void:
     checks.append(_check("Voxel world parser", func() -> bool:
         return voxel_script != null
     ))
-    var console_script: GDScript = load("res://scripts/tools/dev_console.gd") as GDScript
-    checks.append(_check("Developer console parser", func() -> bool:
-        return console_script != null
-    ))
-
     checks.append(_check("UI icon policy", func() -> bool:
         var banned := ["♟", "⌂", "▶", "▣", "◇", "◆", "⚙", "↪", "●", "◉", "□", "×"]
         for path in ["res://scripts/ui/main_menu.gd", "res://scripts/ui/hud.gd", "res://scripts/ui/settings_menu.gd"]:

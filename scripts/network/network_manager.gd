@@ -79,9 +79,13 @@ func request_join(profile: Dictionary) -> void:
     var token := str(profile.get("token", ""))
     if token.is_empty():
         return
-    if auth_secret.is_empty():
-        return
-    var token_identity := _decode_token(token)
+    var token_identity: Dictionary = {}
+    if token.begins_with("local:"):
+        token_identity = _validate_local_session_token(token)
+    else:
+        if auth_secret.is_empty():
+            return
+        token_identity = _decode_token(token)
     if token_identity.is_empty():
         return
     var player_name := str(token_identity.get("username", profile.get("name", "Player")))
@@ -251,6 +255,34 @@ func receive_presence(players: Dictionary) -> void:
     remote_players = players.duplicate(true)
     player_presence_changed.emit(remote_players)
 
+func _validate_local_session_token(token: String) -> Dictionary:
+    var parts := token.split(":")
+    if parts.size() != 4 or parts[0] != "local" or parts[1].strip_edges().is_empty():
+        return {}
+    var path := "user://aethra_accounts.json"
+    if not FileAccess.file_exists(path):
+        return {}
+    var file := FileAccess.open(path, FileAccess.READ)
+    if file == null:
+        return {}
+    var parsed = JSON.parse_string(file.get_as_text())
+    file.close()
+    if not (parsed is Dictionary):
+        return {}
+    var key := parts[1].to_lower()
+    if not parsed.has(key):
+        return {}
+    var account: Dictionary = parsed[key]
+    if str(account.get("session_token", "")) != token:
+        return {}
+    return {
+        "user_id": "local-" + key,
+        "username": str(account.get("username", parts[1])),
+        "character": str(account.get("character", "ranger")),
+        "avatar_id": clampi(int(account.get("avatar_id", 0)), 0, 29),
+        "expires_at": 0
+    }
+
 func _verify_token(token: String) -> bool:
     var parts := token.split(".")
     if parts.size() != 2:
@@ -278,7 +310,7 @@ func hash_equals(a: String, b: String) -> bool:
     return same == 0
 
 func _validate_block_change(peer_id: int, pos: Vector3i, new_id: int, held_item_id: int) -> bool:
-    if pos.y < 0 or pos.y >= 96:
+    if pos.y < 0 or (bound_world != null and bound_world.has_method("get_world_height") and pos.y >= int(bound_world.get_world_height())):
         return false
     if new_id < BlockRegistry.AIR or new_id > BlockRegistry.LAST_BLOCK:
         return false

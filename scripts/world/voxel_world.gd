@@ -8,12 +8,16 @@ const CHUNK_SIZE := 16
 const LOAD_PER_FRAME := 1
 const INITIAL_RADIUS := 1
 const COLLISION_RADIUS := 2
+const DEFAULT_WORLD_HEIGHT := 96
+const MIN_WORLD_HEIGHT := 64
+const MAX_WORLD_HEIGHT := 256
 
 var world_seed: int = 0
 var generator: RefCounted
 var chunks: Dictionary = {}
 var chunk_queue: Array[Vector2i] = []
 var pending: Dictionary = {}
+var generation_threads: Dictionary = {}
 var build_queue: Array[Vector2i] = []
 var build_pending: Dictionary = {}
 var changed_blocks: Dictionary = {}
@@ -22,30 +26,50 @@ var stream_center := Vector3.ZERO
 var last_stream_chunk := Vector2i(999999, 999999)
 var stream_tick := 0
 var world_settings: Dictionary = {}
+var world_height := DEFAULT_WORLD_HEIGHT
 var spawn_ready := false
 var ready_emitted := false
 
 func initialize(seed_value: int) -> void:
     world_seed = seed_value
+    world_height = clampi(int(world_settings.get("world_height", DEFAULT_WORLD_HEIGHT)), MIN_WORLD_HEIGHT, MAX_WORLD_HEIGHT)
     generator = load("res://scripts/world/world_generator.gd").new(world_seed)
     if generator.has_method("configure"):
-        generator.configure(true)
+        generator.configure(
+            bool(world_settings.get("structures", true)),
+            str(world_settings.get("world_type", "")),
+            world_height
+        )
     _resolve_spawn_position()
+    stream_center = spawn_position
+    var spawn_coord := world_to_chunk(spawn_position)
+    if not chunks.has(spawn_coord) and not pending.has(spawn_coord):
+        pending[spawn_coord] = true
+        var spawn_data: PackedByteArray = generator.generate_chunk(spawn_coord.x, spawn_coord.y)
+        _apply_chunk(spawn_coord, spawn_data)
+        var spawn_chunk: Node3D = chunks.get(spawn_coord) as Node3D
+        if spawn_chunk != null and is_instance_valid(spawn_chunk):
+            spawn_chunk.call("set_collision_enabled", true)
+            spawn_chunk.call("build_mesh", true)
+            ready_emitted = true
+            world_ready.emit()
     for x in range(-INITIAL_RADIUS, INITIAL_RADIUS + 1):
         for z in range(-INITIAL_RADIUS, INITIAL_RADIUS + 1):
             queue_chunk(Vector2i(x, z))
+    chunk_queue.erase(spawn_coord)
     _sort_chunk_queue()
 
 func _process(_delta: float) -> void:
+    _poll_generation_threads()
     _stream_chunks()
 
-    var load_budget := LOAD_PER_FRAME
+    var load_budget := 0 if generation_threads.size() >= 1 else LOAD_PER_FRAME
     while load_budget > 0 and not chunk_queue.is_empty():
         var coord: Vector2i = chunk_queue.pop_front()
         if chunks.has(coord) or pending.has(coord):
             continue
         pending[coord] = true
-        _generate_chunk(coord)
+        _generate_chunk_async(coord)
         load_budget -= 1
 
     var build_budget := 1
@@ -73,8 +97,8 @@ func _process(_delta: float) -> void:
 func _resolve_spawn_position() -> void:
     if generator == null:
         return
-    var ground_y := 40
-    for scan_y in range(90, 0, -1):
+    var ground_y := 32
+    for scan_y in range(maxi(8, world_height - 4), 0, -1):
         var ground := int(generator.block_at(0, scan_y, 0))
         var above := int(generator.block_at(0, scan_y + 1, 0))
         if BlockRegistry.is_solid(ground) and above == BlockRegistry.AIR:
@@ -86,14 +110,19 @@ func _resolve_spawn_position() -> void:
 
 func configure(settings: Dictionary) -> void:
     world_settings = settings.duplicate(true)
+    world_height = clampi(int(world_settings.get("world_height", DEFAULT_WORLD_HEIGHT)), MIN_WORLD_HEIGHT, MAX_WORLD_HEIGHT)
     if generator != null and generator.has_method("configure"):
         generator.configure(
             bool(world_settings.get("structures", true)),
-            str(world_settings.get("world_type", ""))
+            str(world_settings.get("world_type", "")),
+            world_height
         )
 
 func is_ready_for_spawn() -> bool:
     return ready_emitted
+
+func get_world_height() -> int:
+    return world_height
 
 func get_biome_at(x: int, z: int) -> String:
     if generator == null:
@@ -182,6 +211,37 @@ func _queue_build(coord: Vector2i) -> void:
         build_pending[coord] = true
         build_queue.append(coord)
 
+func _generate_chunk_async(coord: Vector2i) -> void:
+    var thread := Thread.new()
+    var err := thread.start(Callable(self, "_generate_chunk_worker").bind(coord))
+    if err != OK:
+        pending.erase(coord)
+        var fallback: PackedByteArray = generator.generate_chunk(coord.x, coord.y)
+        call_deferred("_apply_chunk", coord, fallback)
+        return
+    generation_threads[coord] = thread
+
+func _generate_chunk_worker(coord: Vector2i) -> PackedByteArray:
+    if generator == null:
+        return PackedByteArray()
+    return generator.generate_chunk(coord.x, coord.y)
+
+func _poll_generation_threads() -> void:
+    var completed: Array[Vector2i] = []
+    for key in generation_threads:
+        var coord: Vector2i = key
+        var thread: Thread = generation_threads[key]
+        if thread.is_alive():
+            continue
+        var data: Variant = thread.wait_to_finish()
+        completed.append(coord)
+        if data is PackedByteArray and not data.is_empty():
+            call_deferred("_apply_chunk", coord, data)
+        else:
+            pending.erase(coord)
+    for coord in completed:
+        generation_threads.erase(coord)
+
 func _generate_chunk(coord: Vector2i) -> void:
     var data: PackedByteArray = generator.generate_chunk(coord.x, coord.y)
     call_deferred("_apply_chunk", coord, data)
@@ -217,7 +277,7 @@ func world_to_local(pos: Vector3i) -> Vector3i:
     return Vector3i(posmod(pos.x, CHUNK_SIZE), pos.y, posmod(pos.z, CHUNK_SIZE))
 
 func get_block(pos: Vector3i) -> int:
-    if pos.y < 0 or pos.y >= 96:
+    if pos.y < 0 or pos.y >= world_height:
         return BlockRegistry.AIR
     if changed_blocks.has(pos):
         return int(changed_blocks[pos])
@@ -229,7 +289,7 @@ func get_block(pos: Vector3i) -> int:
     return int(chunk.call("get_voxel", world_to_local(pos)))
 
 func set_block(pos: Vector3i, id: int) -> bool:
-    if pos.y < 0 or pos.y >= 96:
+    if pos.y < 0 or pos.y >= world_height:
         return false
     var old := get_block(pos)
     if old == id:
@@ -277,3 +337,10 @@ func load_delta(data: Dictionary) -> void:
         if is_instance_valid(chunk):
             _apply_changed_to_chunk(chunk, coord)
             _queue_build(coord)
+
+
+func _exit_tree() -> void:
+    for key in generation_threads:
+        var thread: Thread = generation_threads[key]
+        thread.wait_to_finish()
+    generation_threads.clear()

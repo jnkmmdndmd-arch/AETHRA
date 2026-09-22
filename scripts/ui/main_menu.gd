@@ -34,7 +34,6 @@ var notification_popup: PanelContainer
 var auth_overlay: PanelContainer
 var auth_user: LineEdit
 var auth_password: LineEdit
-var auth_server: LineEdit
 var auth_status: Label
 var auth_register_mode := false
 var character_index := 0
@@ -156,14 +155,9 @@ func _layout_auth_overlay() -> void:
     if auth_overlay == null or not is_instance_valid(auth_overlay):
         return
     var viewport_size := get_viewport_rect().size
-    var panel_size := Vector2(
-        minf(620.0, viewport_size.x - 64.0),
-        minf(520.0, viewport_size.y - 64.0)
-    )
-    auth_overlay.size = Vector2(
-        minf(560.0, maxf(500.0, viewport_size.x - 80.0)),
-        minf(460.0, maxf(400.0, viewport_size.y - 80.0))
-    )
+    var width := minf(620.0, maxf(360.0, viewport_size.x - 48.0))
+    var height := minf(500.0, maxf(330.0, viewport_size.y - 48.0))
+    auth_overlay.size = Vector2(width, height)
     auth_overlay.position = (viewport_size - auth_overlay.size) * 0.5
 
 func _build_sidebar(parent: PanelContainer) -> void:
@@ -191,6 +185,7 @@ func _build_sidebar(parent: PanelContainer) -> void:
     _label(logo, "AETHRA", 32, ACCENT_BRIGHT, HORIZONTAL_ALIGNMENT_CENTER)
     _label(logo, "WILDBOUND", 15, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
     _label(logo, "بقاء فوكسيلي أصلي", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(logo, "المطور: عبدالله لازم", 9, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
 
     var sep := HSeparator.new()
     sep.modulate.a = 0.25
@@ -204,7 +199,6 @@ func _build_sidebar(parent: PanelContainer) -> void:
         ["worlds", "world", "العوالم"],
         ["store", "store", "المتجر"],
         ["settings", "settings", "الإعدادات"],
-        ["developer", "developer", "أدوات المطور"],
     ]
     for item in items:
         var b := _nav_button(item[1], item[2])
@@ -354,7 +348,6 @@ func _show_page(page: String) -> void:
         "servers": _page_servers()
         "worlds": _page_worlds()
         "store": _page_store()
-        "developer": _page_developer()
         "profile": _page_profile()
     _update_nav_state()
 
@@ -450,46 +443,68 @@ func _hero_panel() -> PanelContainer:
 func _build_auth_gate() -> void:
     if AppState.is_authenticated:
         return
-    auth_overlay = _panel(Color(0.01, 0.02, 0.045, 0.96), 26, Color(0.25, 0.75, 1.0, 0.48))
+    auth_overlay = _panel(Color(0.01, 0.02, 0.045, 0.97), 24, Color(0.25, 0.75, 1.0, 0.48))
     auth_overlay.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
     add_child(auth_overlay)
     _layout_auth_overlay()
     var margin := MarginContainer.new()
     margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    margin.add_theme_constant_override("margin_left", 34)
-    margin.add_theme_constant_override("margin_top", 30)
-    margin.add_theme_constant_override("margin_right", 34)
-    margin.add_theme_constant_override("margin_bottom", 30)
+    margin.add_theme_constant_override("margin_left", 28)
+    margin.add_theme_constant_override("margin_top", 22)
+    margin.add_theme_constant_override("margin_right", 28)
+    margin.add_theme_constant_override("margin_bottom", 22)
     auth_overlay.add_child(margin)
+
+    var scroll := ScrollContainer.new()
+    scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    margin.add_child(scroll)
+
     var box := VBoxContainer.new()
-    box.add_theme_constant_override("separation", 10)
-    margin.add_child(box)
-    _label(box, "تسجيل الدخول إلى AETHRA", 27, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
-    _label(box, "الحساب يحسن تجربة اللعب الجماعي، ويمكنك متابعة اللعب محليًا دون حساب.", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
-    auth_server = LineEdit.new()
-    auth_server.text = str(Settings.get_value("auth_server_url", "http://127.0.0.1:8090"))
-    auth_server.placeholder_text = "عنوان خدمة المصادقة"
-    box.add_child(auth_server)
+    box.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    box.add_theme_constant_override("separation", 8)
+    scroll.add_child(box)
+
+    _label(box, "تسجيل الدخول إلى AETHRA", 25, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "أنشئ حسابًا حقيقيًا محفوظًا على هذا الجهاز، أو سجّل الدخول إلى حسابك الموجود.", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, "الحساب المحلي لا يستخدم بيانات وهمية.", 9, Color(0.65,0.78,0.9,0.9), HORIZONTAL_ALIGNMENT_CENTER)
+
     auth_user = LineEdit.new()
-    auth_user.placeholder_text = "اسم المستخدم"
+    auth_user.placeholder_text = "اسم المستخدم (3-24: حروف/أرقام/_)"
+    auth_user.custom_minimum_size = Vector2(0, 42)
+    auth_user.layout_direction = Control.LAYOUT_DIRECTION_LTR
     box.add_child(auth_user)
+
     auth_password = LineEdit.new()
-    auth_password.placeholder_text = "كلمة المرور"
+    auth_password.placeholder_text = "كلمة المرور (8 أحرف على الأقل)"
     auth_password.secret = true
+    auth_password.custom_minimum_size = Vector2(0, 42)
+    auth_password.layout_direction = Control.LAYOUT_DIRECTION_LTR
     box.add_child(auth_password)
+
     var character_select := OptionButton.new()
     character_select.name = "CharacterSelect"
+    character_select.custom_minimum_size = Vector2(0, 40)
     for character in characters:
         character_select.add_item(str(character.ar))
     character_select.select(character_index)
-    character_select.item_selected.connect(func(index): character_index = index; AppState.character_id = str(characters[index].id))
+    character_select.item_selected.connect(func(index):
+        character_index = index
+        AppState.character_id = str(characters[index].id)
+    )
     box.add_child(character_select)
+
     var row := HBoxContainer.new()
+    row.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    row.alignment = BoxContainer.ALIGNMENT_CENTER
     row.add_theme_constant_override("separation", 8)
     box.add_child(row)
+
     var submit := _primary_button("تسجيل الدخول", Vector2(190, 46))
     submit.pressed.connect(_submit_auth)
     row.add_child(submit)
+
     var toggle := _button("إنشاء حساب", Vector2(150, 46))
     toggle.pressed.connect(func():
         auth_register_mode = not auth_register_mode
@@ -497,11 +512,16 @@ func _build_auth_gate() -> void:
         toggle.text = "لدي حساب" if auth_register_mode else "إنشاء حساب"
     )
     row.add_child(toggle)
+
     var offline := _button("متابعة دون حساب", Vector2(180, 42))
-    offline.pressed.connect(func(): auth_overlay.queue_free(); auth_overlay = null)
+    offline.pressed.connect(func():
+        if auth_overlay and is_instance_valid(auth_overlay):
+            auth_overlay.queue_free()
+        auth_overlay = null
+    )
     box.add_child(offline)
+
     auth_status = _label(box, "الحالة: في انتظار إدخال بياناتك", 10, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
-    _label(box, "الهوية والحالة الشبكية لا تُعتبر متصلة إلا بعد نجاح الخدمة الفعلية.", 9, Color(0.65,0.78,0.9,0.75), HORIZONTAL_ALIGNMENT_CENTER)
 
 func _submit_auth() -> void:
     if auth_user.text.strip_edges().is_empty() or auth_password.text.length() < 8:
@@ -513,10 +533,8 @@ func _submit_auth() -> void:
     if auth_node == null:
         auth_status.text = "الحالة: خدمة المصادقة غير متاحة في التطبيق."
         return
-    var auth_url := auth_server.text.strip_edges()
-    Settings.set_value("auth_server_url", auth_url)
-    auth_node.configure(auth_url)
-    auth_status.text = "الحالة: جارٍ الاتصال بالخدمة..."
+    auth_node.configure(str(Settings.get_value("auth_server_url", "")).strip_edges())
+    auth_status.text = "الحالة: جارٍ التحقق من الحساب..."
     auth_status.add_theme_color_override("font_color", YELLOW)
     var character := str(characters[character_index].id)
     if auth_register_mode:
@@ -793,7 +811,7 @@ func _page_profile() -> void:
     var name_field := LineEdit.new()
     name_field.text = AppState.get_display_name()
     name_field.placeholder_text = "اسم العرض"
-    name_field.editable = not AppState.is_authenticated
+    name_field.editable = AppState.auth_token.begins_with("local:") or not AppState.is_authenticated
     name_field.custom_minimum_size = Vector2(0, 40)
     name_field.layout_direction = Control.LAYOUT_DIRECTION_RTL
     root.add_child(name_field)
@@ -836,43 +854,20 @@ func _page_profile() -> void:
 
     var save := _primary_button("حفظ الملف الشخصي", Vector2(220, 46))
     save.pressed.connect(func():
-        AppState.save_profile(name_field.text, AppState.avatar_id)
+        var safe_name := name_field.text.strip_edges()
+        if AppState.auth_token.begins_with("local:"):
+            var root_node := get_parent()
+            var auth_node = root_node.get("auth") if root_node != null else null
+            if auth_node != null and auth_node.has_method("update_profile"):
+                auth_node.update_profile(AppState.auth_token, safe_name, AppState.avatar_id)
+            else:
+                AppState.save_profile(safe_name, AppState.avatar_id)
+        else:
+            AppState.save_profile(safe_name, AppState.avatar_id)
         _show_page("profile")
     )
     root.add_child(save)
     
-func _page_developer() -> void:
-    _section_title(content, "أدوات المطور", "مقاييس تشغيل فعلية فقط")
-    var grid := GridContainer.new()
-    grid.columns = 2
-    grid.add_theme_constant_override("h_separation", 10)
-    grid.add_theme_constant_override("v_separation", 10)
-    content.add_child(grid)
-    _metric(grid, "FPS", str(Engine.get_frames_per_second()))
-    _metric(grid, "الذاكرة", "%0.2f MB" % (Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0))
-    _metric(grid, "لاعبو الشبكة", str(multiplayer.get_peers().size()))
-    _metric(grid, "العوالم المحفوظة", str(SaveDB.list_worlds().size()))
-    _metric(grid, "عقد المشهد", str(get_tree().get_node_count()))
-    _metric(grid, "الاتصال", "متصل" if multiplayer.multiplayer_peer != null else "غير متصل")
-    var console := _button("فتح وحدة المطور (F8)", Vector2(270, 44))
-    console.pressed.connect(func():
-        var root := get_parent()
-        if root and root.has_method("toggle_developer_console"):
-            root.toggle_developer_console()
-    )
-    content.add_child(console)
-
-func _metric(parent: Control, title: String, value: String) -> void:
-    var card := _panel(PANEL_2, 14, Color(0.22, 0.7, 1.0, 0.12))
-    card.custom_minimum_size = Vector2(0, 92)
-    parent.add_child(card)
-    var box := VBoxContainer.new()
-    box.alignment = BoxContainer.ALIGNMENT_CENTER
-    card.add_child(box)
-    _label(box, title, 11, MUTED)
-    var value_label := _label(box, value, 24, ACCENT_BRIGHT)
-    value_label.name = "MetricValue"
-
 func _refresh_friends(players: Dictionary) -> void:
     if friends_box == null:
         return

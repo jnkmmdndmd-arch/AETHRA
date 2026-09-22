@@ -14,10 +14,10 @@ const DEFAULTS := {
     "render_distance": 4,
     "simulation_distance": 3,
     "first_person": true,
-    "window_width": 1366,
-    "window_height": 768,
+    "window_width": 1280,
+    "window_height": 720,
     "window_mode": 0,
-    "auth_server_url": "http://127.0.0.1:8090",
+    "auth_server_url": "",
 }
 const DEFAULT_CONTROLS := {
     "move_forward": "W",
@@ -61,6 +61,8 @@ func load_settings() -> void:
             for key in DEFAULT_CONTROLS:
                 if data["controls"].has(key):
                     controls[key] = str(data["controls"][key])
+    if str(values.get("auth_server_url", "")).strip_edges() == "http://127.0.0.1:8090":
+        values["auth_server_url"] = ""
 
 func save_settings() -> void:
     var file := FileAccess.open(PATH, FileAccess.WRITE)
