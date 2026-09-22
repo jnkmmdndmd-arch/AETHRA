@@ -193,28 +193,28 @@ func build_mesh(build_collision: bool = false, requested_lod: int = 0) -> void:
     if lod_level>0: _build_heightfield_lod(); return
     var vertices:=PackedVector3Array(); var normals:=PackedVector3Array(); var colors:=PackedColorArray(); var uvs:=PackedVector2Array(); var indices:=PackedInt32Array()
     var fluid_vertices:=PackedVector3Array(); var fluid_normals:=PackedVector3Array(); var fluid_colors:=PackedColorArray(); var fluid_indices:=PackedInt32Array()
-    for axis in 3:
-        var dims:=[SIZE,SIZE,height]
-        var u_axis:=(axis+1)%3; var v_axis:=(axis+2)%3
+    for axis in range(3):
+        var dims: Array[int] = [SIZE, SIZE, height]
+        var u_axis: int = (axis + 1) % 3; var v_axis: int = (axis + 2) % 3
         for slice in range(-1,dims[axis]):
-            var mask:=[]; mask.resize(dims[u_axis]*dims[v_axis])
+            var mask: Array[int] = []; mask.resize(dims[u_axis] * dims[v_axis])
             for j in dims[v_axis]:
                 for i in dims[u_axis]:
-                    var pos:=Vector3i.ZERO; pos[axis]=slice; pos[u_axis]=i; pos[v_axis]=j
-                    var a:=get_voxel(pos); var b:=get_voxel(pos + (Vector3i.RIGHT if axis==0 else Vector3i.UP if axis==1 else Vector3i.FORWARD))
-                    var value:=0
+                    var pos: Vector3i = Vector3i.ZERO; pos[axis] = slice; pos[u_axis] = i; pos[v_axis] = j
+                    var a: int = get_voxel(pos); var b: int = get_voxel(pos + (Vector3i.RIGHT if axis == 0 else Vector3i.UP if axis == 1 else Vector3i.FORWARD))
+                    var value: int = 0
                     if _is_opaque_solid(a) and not _is_opaque_solid(b): value=a
                     elif _is_opaque_solid(b) and not _is_opaque_solid(a): value=-b
                     mask[i+j*dims[u_axis]]=value
-            var j:=0
-            while j<dims[v_axis]:
-                var i:=0
+            var j: int = 0
+            while j < dims[v_axis]:
+                var i: int = 0
                 while i<dims[u_axis]:
                     var value:=int(mask[i+j*dims[u_axis]])
                     if value==0: i+=1; continue
-                    var width:=1
+                    var width: int = 1
                     while i+width<dims[u_axis] and int(mask[i+width+j*dims[u_axis]])==value: width+=1
-                    var height_merge:=1; var can_grow:=true
+                    var height_merge: int = 1; var can_grow: bool = true
                     while j+height_merge<dims[v_axis] and can_grow:
                         for k in width:
                             if int(mask[i+k+(j+height_merge)*dims[u_axis]])!=value: can_grow=false; break
@@ -254,13 +254,13 @@ func build_mesh(build_collision: bool = false, requested_lod: int = 0) -> void:
                         uvs.append(Vector2(0,0)); uvs.append(Vector2(1,0)); uvs.append(Vector2(1,1)); uvs.append(Vector2(0,1))
                     if is_fluid: fluid_indices.append_array(PackedInt32Array([start,start+1,start+2,start,start+2,start+3]))
                     else: indices.append_array(PackedInt32Array([start,start+1,start+2,start,start+2,start+3]))
-    var array:=[]; array.resize(Mesh.ARRAY_MAX); array[Mesh.ARRAY_VERTEX]=vertices; array[Mesh.ARRAY_NORMAL]=normals; array[Mesh.ARRAY_COLOR]=colors; array[Mesh.ARRAY_TEX_UV]=uvs; array[Mesh.ARRAY_INDEX]=indices
-    var arr_mesh:=ArrayMesh.new()
+    var array: Array = []; array.resize(Mesh.ARRAY_MAX); array[Mesh.ARRAY_VERTEX]=vertices; array[Mesh.ARRAY_NORMAL]=normals; array[Mesh.ARRAY_COLOR]=colors; array[Mesh.ARRAY_TEX_UV]=uvs; array[Mesh.ARRAY_INDEX]=indices
+    var arr_mesh: ArrayMesh = ArrayMesh.new()
     if vertices.size()>0:
         arr_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,array); arr_mesh.surface_set_material(0,_get_minecraft_material())
     mesh_instance.mesh=arr_mesh
-    var fluid_array:=[]; fluid_array.resize(Mesh.ARRAY_MAX); fluid_array[Mesh.ARRAY_VERTEX]=fluid_vertices; fluid_array[Mesh.ARRAY_NORMAL]=fluid_normals; fluid_array[Mesh.ARRAY_COLOR]=fluid_colors; fluid_array[Mesh.ARRAY_INDEX]=fluid_indices
-    var fluid_arr:=ArrayMesh.new()
+    var fluid_array: Array = []; fluid_array.resize(Mesh.ARRAY_MAX); fluid_array[Mesh.ARRAY_VERTEX]=fluid_vertices; fluid_array[Mesh.ARRAY_NORMAL]=fluid_normals; fluid_array[Mesh.ARRAY_COLOR]=fluid_colors; fluid_array[Mesh.ARRAY_INDEX]=fluid_indices
+    var fluid_arr: ArrayMesh = ArrayMesh.new()
     if fluid_vertices.size()>0:
         fluid_arr.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,fluid_array); var fluid_mat:=StandardMaterial3D.new(); fluid_mat.vertex_color_use_as_albedo=true; fluid_mat.transparency=BaseMaterial3D.TRANSPARENCY_ALPHA; fluid_mat.shading_mode=BaseMaterial3D.SHADING_MODE_UNSHADED; fluid_mat.albedo_color=Color(1,1,1,0.62); fluid_arr.surface_set_material(0,fluid_mat)
     fluid_mesh.mesh=fluid_arr; dirty=false; collision_dirty=true
