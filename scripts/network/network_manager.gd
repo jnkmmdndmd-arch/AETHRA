@@ -251,6 +251,34 @@ func receive_presence(players: Dictionary) -> void:
     remote_players = players.duplicate(true)
     player_presence_changed.emit(remote_players)
 
+func _validate_local_session_token(token: String) -> Dictionary:
+    var parts := token.split(":")
+    if parts.size() != 3 or parts[0] != "local" or parts[1].strip_edges().is_empty():
+        return {}
+    var path := "user://aethra_accounts.json"
+    if not FileAccess.file_exists(path):
+        return {}
+    var file := FileAccess.open(path, FileAccess.READ)
+    if file == null:
+        return {}
+    var parsed = JSON.parse_string(file.get_as_text())
+    file.close()
+    if not (parsed is Dictionary):
+        return {}
+    var key := parts[1].to_lower()
+    if not parsed.has(key):
+        return {}
+    var account: Dictionary = parsed[key]
+    if str(account.get("session_token", "")) != token:
+        return {}
+    return {
+        "user_id": "local-" + key,
+        "username": str(account.get("username", parts[1])),
+        "character": str(account.get("character", "ranger")),
+        "avatar_id": clampi(int(account.get("avatar_id", 0)), 0, 29),
+        "expires_at": 0
+    }
+
 func _verify_token(token: String) -> bool:
     var parts := token.split(".")
     if parts.size() != 2:
