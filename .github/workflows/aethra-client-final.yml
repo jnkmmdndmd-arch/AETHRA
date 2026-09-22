@@ -85,21 +85,10 @@ jobs:
           }
           Stop-Process -Id $p.Id -Force
 
-      - name: Build installer
-        shell: pwsh
-        run: |
-          choco install innosetup --yes --no-progress
-          $iscc = Get-ChildItem "C:\Program Files (x86)\Inno Setup" -Recurse -Filter "ISCC.exe" | Select-Object -First 1 -ExpandProperty FullName
-          if (-not $iscc) { throw "Inno Setup compiler not found" }
-          & $iscc "installer.iss" 2>&1 | Tee-Object installer.log
-          if ($LASTEXITCODE -ne 0) { throw "Installer build failed" }
-          if (-not (Test-Path "build\AETHRA-Wildbound-Setup.exe")) { throw "Installer missing" }
-
       - name: Hash release
         shell: pwsh
         run: |
           $game = (Get-FileHash "build\AETHRA-Wildbound.exe" -Algorithm SHA256).Hash.ToLowerInvariant()
-          $setup = (Get-FileHash "build\AETHRA-Wildbound-Setup.exe" -Algorithm SHA256).Hash.ToLowerInvariant()
           @(
             "AETHRA: Wildbound FINAL CLIENT",
             "Commit: $env:GITHUB_SHA",
@@ -109,9 +98,7 @@ jobs:
             "Game self-test: PASS",
             "Windows EXE export: PASS",
             "Windows startup smoke: PASS",
-            "Installer build: PASS",
-            "EXE SHA256: $game",
-            "Installer SHA256: $setup"
+            "EXE SHA256: $game"
           ) | Set-Content "FINAL-CLIENT-VERIFICATION.md"
 
       - uses: actions/upload-artifact@v4
@@ -120,10 +107,8 @@ jobs:
           if-no-files-found: error
           path: |
             build/AETHRA-Wildbound.exe
-            build/AETHRA-Wildbound-Setup.exe
             FINAL-CLIENT-VERIFICATION.md
             editor.log
             parse.log
             self-test.log
             export.log
-            installer.log
