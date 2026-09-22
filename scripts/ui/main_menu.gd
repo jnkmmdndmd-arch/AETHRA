@@ -777,7 +777,7 @@ func _page_store() -> void:
         _label(box, str(offer.get("name","Item")), 16, TEXT)
         _label(box, "%d × بسعر %d" % [int(offer.get("amount",1)),int(offer.get("price",0))], 11, MUTED)
         var buy:=_primary_button("شراء", Vector2(120,36))
-        buy.pressed.connect(func(id:=int(offer.get("item_id",0)), amount:=int(offer.get("amount",1)), price:=int(offer.get("price",0))):
+        buy.pressed.connect(func(id: int = int(offer.get("item_id",0)), amount: int = int(offer.get("amount",1)), price: int = int(offer.get("price",0))) -> void:
             var ok:=Economy.purchase(id,amount,price)
             _show_page("store") if not ok else _show_page("store")
         )
@@ -842,7 +842,7 @@ func _page_profile() -> void:
         text.layout_direction = Control.LAYOUT_DIRECTION_RTL
         text.mouse_filter = Control.MOUSE_FILTER_IGNORE
         button.add_child(text)
-        button.pressed.connect(func(selected_index := index):
+        button.pressed.connect(func(selected_index: int = index) -> void:
             AppState.avatar_id = selected_index
             for peer in avatar_buttons:
                 peer.button_pressed = false
