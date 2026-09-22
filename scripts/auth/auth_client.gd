@@ -107,7 +107,7 @@ func _request(path: String, method: HTTPClient.Method, headers: PackedStringArra
     if err != OK:
         _remove_request(request)
         if _is_local_endpoint() and operation in ["login", "register"]:
-            var payload := JSON.parse_string(body)
+            var payload: Variant = JSON.parse_string(body)
             _local_dispatch(operation, payload if payload is Dictionary else {})
         else:
             failure.emit("تعذر إرسال طلب الحساب.")
@@ -121,7 +121,7 @@ func _on_request_completed(request: HTTPRequest, operation: String, session_toke
     _remove_request(request)
     if result != HTTPRequest.RESULT_SUCCESS:
         if _is_local_endpoint() and operation in ["login", "register"]:
-            var fallback := JSON.parse_string(request_body)
+            var fallback: Variant = JSON.parse_string(request_body)
             _local_dispatch(operation, fallback if fallback is Dictionary else {})
             return
         failure.emit("خدمة الحساب غير متاحة.")
