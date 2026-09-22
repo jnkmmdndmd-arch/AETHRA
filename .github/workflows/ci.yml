@@ -302,3 +302,4 @@ jobs:
             WINDOWS-RUNTIME-VERIFICATION.md
             runtime-proof/runtime-menu-proof.png
             runtime-proof/runtime-world-proof.png
+            runtime-proof/boot_log.txt
