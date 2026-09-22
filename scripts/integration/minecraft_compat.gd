@@ -63,7 +63,8 @@ const SOURCE_PALETTE: PackedColorArray = PackedColorArray([
     Color("#6f4522"),Color("#b99f80"),Color("#e3b064"),
     Color("#ded4a8"),Color("#dad2a3"),Color("#e3deb7"),
     Color("#687932"),Color("#6a8230"),Color("#42552d"),
-    Color("#7858b5"),Color("#6b4aa7"),Color("#7858b5")
+    Color("#7858b5"),Color("#6b4aa7"),Color("#7858b5"),
+    Color("#8c73dc"),Color("#7a62c4"),Color("#9a84ea")
 ])
 
 var _atlas: Texture2D = null
