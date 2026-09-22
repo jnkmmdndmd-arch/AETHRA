@@ -36,7 +36,7 @@ func _build_body() -> void:
     player_model = MeshInstance3D.new()
     player_model.name = "AethraMinecraftStyleBody"
     player_model.mesh = _build_skin_mesh()
-    var skin := load("res://assets/mc_bridge/aethra_steve.png") as Texture2D
+    var skin := load("res://assets/mc_bridge/aethra_steve.svg") as Texture2D
     var material := StandardMaterial3D.new()
     material.albedo_texture = skin
     material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
