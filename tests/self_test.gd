@@ -89,7 +89,8 @@ func _run() -> void:
     ))
     checks.append(_check("Minecraft 1.17.1 compatibility", func() -> bool:
         var manifest: Dictionary = MinecraftCompat.source_manifest()
-        return MinecraftCompat.SOURCE_VERSION == "Minecraft Java 1.17.1" and manifest.size() == 60 and str(manifest[BlockRegistry.STONE].get("source", "")) == "stone"
+        var blocks: Array = manifest.get("blocks", [])
+        return MinecraftCompat.SOURCE_VERSION == "Minecraft Java 1.17.1" and blocks.size() == 64 and str(blocks[2]) == "stone"
     ))
     checks.append(_check("Expanded crafting recipes", func() -> bool:
         return not recipe_registry.find_recipe("iron_sword").is_empty() and not recipe_registry.find_recipe("chest").is_empty()
@@ -101,14 +102,10 @@ func _run() -> void:
         return ItemRegistry.MINECRAFT_ITEM_IDS.size() == 44 and ItemRegistry.get_item(ItemRegistry.MC_DIAMOND).get("name", "") == "Diamond"
     ))
     checks.append(_check("Minecraft crafting content", func() -> bool:
-        return not recipe_registry.find_recipe("minecraft_bow").is_empty()
-            and not recipe_registry.find_recipe("minecraft_shield").is_empty()
-            and not recipe_registry.find_recipe("minecraft_arrow").is_empty()
+        return (not recipe_registry.find_recipe("minecraft_bow").is_empty() and not recipe_registry.find_recipe("minecraft_shield").is_empty() and not recipe_registry.find_recipe("minecraft_arrow").is_empty())
     ))
     checks.append(_check("Minecraft texture mapping", func() -> bool:
-        return MinecraftCompat.get_block_tile(BlockRegistry.STONE) == 2
-            and MinecraftCompat.get_item_tile(ItemRegistry.MC_DIAMOND) == 28
-            and MinecraftCompat.get_entity_tile("creeper") == 10
+        return (MinecraftCompat.get_block_tile(BlockRegistry.STONE) == 2 and MinecraftCompat.get_item_tile(ItemRegistry.MC_DIAMOND) == 28 and MinecraftCompat.get_entity_tile("creeper") == 10)
     ))
     for result in checks:
         print("[TEST] %s: %s" % [result[0], "PASS" if result[1] else "FAIL"])
