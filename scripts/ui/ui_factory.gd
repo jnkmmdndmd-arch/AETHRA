@@ -9,10 +9,8 @@ static func make_icon(kind: String, color: Color = Color("#78ddff"), minimum_siz
         return fallback
     var icon: Control = script.new()
     icon.custom_minimum_size = minimum_size
-    if "icon_name" in icon:
-        icon.icon_name = kind
-    if "icon_color" in icon:
-        icon.icon_color = color
+    icon.icon_name = kind
+    icon.icon_color = color
     return icon
 
 static func make_avatar(index: int = 0, minimum_size: Vector2 = Vector2(38, 38)) -> Control:
@@ -24,6 +22,5 @@ static func make_avatar(index: int = 0, minimum_size: Vector2 = Vector2(38, 38))
         return fallback
     var avatar: Control = script.new()
     avatar.custom_minimum_size = minimum_size
-    if "avatar_index" in avatar:
-        avatar.avatar_index = clampi(index, 0, 29)
+    avatar.avatar_index = clampi(index, 0, 29)
     return avatar
