@@ -23,11 +23,13 @@ The useful compatible surface is integrated through a native Godot compatibility
 - scripts/integration/minecraft_compat.gd
 - registered as the MinecraftCompat autoload
 - source version fixed to Minecraft Java 1.17.1
-- 60 AETHRA block IDs receive a Minecraft 1.17.1 source-texture mapping
-- a generated 8x8, 16-pixel tile atlas is produced from sampled 1.17.1 texture colors
+- 60 AETHRA block IDs receive direct Minecraft 1.17.1 source-texture mappings
+- a real 8x8, 16-pixel block atlas is loaded from Minecraft 1.17.1 texture data
 - voxel solid faces use the atlas through a Godot spatial shader
 - greedy-meshed faces preserve repeated tile UVs
 - LOD terrain uses the same atlas material
+- 44 Minecraft 1.17.1 item definitions are registered in AETHRA and exposed to inventory/creative UI.
+- Minecraft-style recipes, food consumption, and a Minecraft creature roster are wired into existing AETHRA systems.
 - fluids continue to use the dedicated fluid material
 
 This is an adaptation layer, not a byte-for-byte redistribution of the Minecraft client.
