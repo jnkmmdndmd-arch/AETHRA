@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+<rect width="128" height="128" fill="#ffffff"/>
+<g>
+<rect x="0" y="0" width="16" height="16" fill="#694a2d"/><rect x="16" y="0" width="16" height="16" fill="#696969"/><rect x="32" y="0" width="16" height="16" fill="#d2b973"/><rect x="48" y="0" width="16" height="16" fill="#917d6e"/><rect x="64" y="0" width="16" height="16" fill="#78502d"/><rect x="80" y="0" width="16" height="16" fill="#b4915f"/><rect x="96" y="0" width="16" height="16" fill="#377d46"/><rect x="112" y="0" width="16" height="16" fill="#afdafa"/>
+<rect x="0" y="16" width="16" height="16" fill="#ebf0fa"/><rect x="16" y="16" width="16" height="16" fill="#cdb07d"/><rect x="32" y="16" width="16" height="16" fill="#373737"/><rect x="48" y="16" width="16" height="16" fill="#4691dc"/><rect x="64" y="16" width="16" height="16" fill="#dc5a37"/><rect x="80" y="16" width="16" height="16" fill="#5d9555"/><rect x="96" y="16" width="16" height="16" fill="#231f2d"/><rect x="112" y="16" width="16" height="16" fill="#98785a"/>
+</g>
+<g opacity=".18" stroke="#000"><path d="M0 4h128M0 8h128M0 12h128M0 20h128M0 24h128M0 28h128"/></g>
+</svg>
