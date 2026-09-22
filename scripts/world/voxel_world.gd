@@ -8,6 +8,9 @@ const CHUNK_SIZE := 16
 const LOAD_PER_FRAME := 1
 const INITIAL_RADIUS := 1
 const COLLISION_RADIUS := 2
+const DEFAULT_WORLD_HEIGHT := 96
+const MIN_WORLD_HEIGHT := 64
+const MAX_WORLD_HEIGHT := 256
 
 var world_seed: int = 0
 var generator: RefCounted
@@ -23,17 +26,19 @@ var stream_center := Vector3.ZERO
 var last_stream_chunk := Vector2i(999999, 999999)
 var stream_tick := 0
 var world_settings: Dictionary = {}
+var world_height := DEFAULT_WORLD_HEIGHT
 var spawn_ready := false
 var ready_emitted := false
 
 func initialize(seed_value: int) -> void:
     world_seed = seed_value
+    world_height = clampi(int(world_settings.get("world_height", DEFAULT_WORLD_HEIGHT)), MIN_WORLD_HEIGHT, MAX_WORLD_HEIGHT)
     generator = load("res://scripts/world/world_generator.gd").new(world_seed)
     if generator.has_method("configure"):
         generator.configure(
             bool(world_settings.get("structures", true)),
             str(world_settings.get("world_type", "")),
-            int(world_settings.get("world_height", DEFAULT_WORLD_HEIGHT))
+            world_height
         )
     _resolve_spawn_position()
     stream_center = spawn_position
@@ -92,8 +97,8 @@ func _process(_delta: float) -> void:
 func _resolve_spawn_position() -> void:
     if generator == null:
         return
-    var ground_y := 40
-    for scan_y in range(90, 0, -1):
+    var ground_y := 32
+    for scan_y in range(maxi(8, world_height - 4), 0, -1):
         var ground := int(generator.block_at(0, scan_y, 0))
         var above := int(generator.block_at(0, scan_y + 1, 0))
         if BlockRegistry.is_solid(ground) and above == BlockRegistry.AIR:
@@ -105,10 +110,12 @@ func _resolve_spawn_position() -> void:
 
 func configure(settings: Dictionary) -> void:
     world_settings = settings.duplicate(true)
+    world_height = clampi(int(world_settings.get("world_height", DEFAULT_WORLD_HEIGHT)), MIN_WORLD_HEIGHT, MAX_WORLD_HEIGHT)
     if generator != null and generator.has_method("configure"):
         generator.configure(
             bool(world_settings.get("structures", true)),
-            str(world_settings.get("world_type", ""))
+            str(world_settings.get("world_type", "")),
+            world_height
         )
 
 func is_ready_for_spawn() -> bool:
