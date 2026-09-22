@@ -28,7 +28,8 @@ func _run() -> void:
         quit(1)
         return
 
-    var screenshot := get_viewport().get_texture().get_image()
+    var viewport: Viewport = root.get_viewport()
+    var screenshot: Image = viewport.get_texture().get_image()
     if screenshot != null:
         screenshot.save_png("res://runtime-proof/runtime-menu-proof.png")
         print("[VISUAL_SMOKE] menu screenshot saved")
@@ -46,10 +47,10 @@ func _run() -> void:
         await create_timer(0.25).timeout
         if app_root.world != null and app_root.player != null:
             var rendered := int(app_root.world.get_rendered_chunk_count()) if app_root.world.has_method("get_rendered_chunk_count") else 0
-            var camera_ok := app_root.player.camera != null and app_root.player.camera.current
+            var camera_ok: bool = app_root.player.camera != null and app_root.player.camera.current
             print("[VISUAL_SMOKE] world=", app_root.world != null, " player=", app_root.player != null, " rendered_chunks=", rendered, " camera=", camera_ok)
             if rendered > 0 and camera_ok:
-                var world_shot := get_viewport().get_texture().get_image()
+                var world_shot: Image = viewport.get_texture().get_image()
                 if world_shot != null:
                     world_shot.save_png("res://runtime-proof/runtime-world-proof.png")
                     print("[VISUAL_SMOKE] world screenshot saved")
