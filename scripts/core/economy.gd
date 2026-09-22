@@ -103,7 +103,7 @@ func consume_stash_into_inventory(inventory) -> void:
     for key in stash:
         var item_id := int(key)
         var amount := int(stash[key])
-        var left := inventory.add_item(item_id, amount)
+        var left: int = inventory.add_item(item_id, amount)
         if left > 0:
             remaining[item_id] = left
     stash = remaining
