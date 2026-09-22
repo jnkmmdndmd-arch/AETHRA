@@ -23,7 +23,6 @@ var performance_low_time := 0.0
 var performance_high_time := 0.0
 var java_engine_bridge
 var java_backend_info: Dictionary = {}
-var menu_layer: CanvasLayer
 var world_boot_elapsed := 0.0
 var world_boot_reported := false
 var boot_failure_message := ""
