@@ -3,7 +3,7 @@ extends Node3D
 const SIZE := 16
 const DEFAULT_HEIGHT := 96
 const FACE_DIRS: Array[Vector3i] = [Vector3i.UP, Vector3i.DOWN, Vector3i.LEFT, Vector3i.RIGHT, Vector3i.FORWARD, Vector3i.BACK]
-const FACE_VERTS: Array[PackedVector3Array] = [
+var FACE_VERTS: Array[PackedVector3Array] = [
     PackedVector3Array([Vector3(0,1,0), Vector3(1,1,0), Vector3(1,1,1), Vector3(0,1,1)]),
     PackedVector3Array([Vector3(0,0,1), Vector3(1,0,1), Vector3(1,0,0), Vector3(0,0,0)]),
     PackedVector3Array([Vector3(0,0,0), Vector3(0,0,1), Vector3(0,1,1), Vector3(0,1,0)]),
@@ -51,7 +51,7 @@ func get_voxel(local: Vector3i) -> int:
     return int(voxels[index_of(local)])
 
 func set_voxel(local: Vector3i, id: int) -> void:
-    if local.x < 0 or local.x >= SIZE or local.z < 0 or local.z >= SIZE or local.y < 0 or local.y >= HEIGHT:
+    if local.x < 0 or local.x >= SIZE or local.z < 0 or local.z >= SIZE or local.y < 0 or local.y >= height:
         return
     voxels[index_of(local)] = id
     dirty = true
