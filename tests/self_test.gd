@@ -46,15 +46,10 @@ func _run() -> void:
     checks.append(_check("Voxel world parser", func() -> bool:
         return voxel_script != null
     ))
-    var entry_world = voxel_script.new()
-    test_root.add_child(entry_world)
-    if entry_world.has_method("configure"):
-        entry_world.configure({"world_height": 96, "render_distance": 2, "structures": false, "creatures": false, "weather": false})
-    entry_world.initialize(1234)
     var test_player_script: GDScript = load("res://scripts/player/player_avatar.gd") as GDScript
     var entry_player = test_player_script.new()
     test_root.add_child(entry_player)
-    entry_player.setup(entry_world, true, 1)
+    entry_player.setup(null, true, 1)
     checks.append(_check("World entry player/camera", func() -> bool:
         return entry_player.camera != null and entry_player.camera.current and entry_player.player_model != null
     ))
