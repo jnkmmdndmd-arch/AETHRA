@@ -12,7 +12,7 @@ const ENTITY_ROWS := 4
 const ITEM_COLUMNS := 8
 const ITEM_ROWS := 9
 
-const BLOCK_TEXTURES: PackedStringArray = PackedStringArray([
+var BLOCK_TEXTURES: PackedStringArray = PackedStringArray([
     "air","dirt","stone","sand","gravel","clay","oak_log","oak_leaves","oak_planks","glass",
     "lantern","copper_ore","iron_ore","amethyst_block","bricks","water_still","lava_still","bedrock",
     "crafting_table_side","furnace_side","chest","oak_door_top","torch","redstone_block","redstone_torch",
@@ -23,14 +23,14 @@ const BLOCK_TEXTURES: PackedStringArray = PackedStringArray([
     "cut_sandstone","moss_block","amethyst_block","cobblestone","mossy_cobblestone","stone_bricks","netherrack","nether_bricks"
 ])
 
-const ENTITY_TEXTURES: PackedStringArray = PackedStringArray([
+var ENTITY_TEXTURES: PackedStringArray = PackedStringArray([
     "cow/cow","pig","sheep/sheep","chicken","horse/horse_brown","wolf/wolf","cat/tabby","fox/fox",
     "goat/goat","bee/bee","creeper/creeper","zombie/zombie","skeleton/skeleton","enderman/enderman","slime/slime",
     "witch","iron_golem/iron_golem","guardian","blaze","ghast/ghast","endermite","silverfish","piglin/piglin","hoglin/hoglin",
     "axolotl/axolotl_wild","bat","spider","villager/villager","zombie_villager/zombie_villager","ravager","wither/wither","phantom"
 ])
 
-const ITEM_TEXTURES: PackedStringArray = PackedStringArray([
+var ITEM_TEXTURES: PackedStringArray = PackedStringArray([
     "apple","bread","carrot","potato","baked_potato","beetroot","melon_slice","pumpkin_pie",
     "cookie","cake","beef","cooked_beef","chicken","cooked_chicken","porkchop","cooked_porkchop",
     "mutton","cooked_mutton","rabbit","cooked_rabbit","cod","cooked_cod","salmon","cooked_salmon",
