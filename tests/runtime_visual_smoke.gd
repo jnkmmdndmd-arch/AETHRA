@@ -7,6 +7,7 @@ func _init() -> void:
     call_deferred("_run")
 
 func _run() -> void:
+    DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://runtime-proof"))
     print("[VISUAL_SMOKE] Launching main.tscn")
     app_root = load("res://scenes/main.tscn").instantiate() as Node3D
     if app_root == null:
@@ -29,7 +30,7 @@ func _run() -> void:
 
     var screenshot := get_viewport().get_texture().get_image()
     if screenshot != null:
-        screenshot.save_png("res://build/runtime-menu-proof.png")
+        screenshot.save_png("res://runtime-proof/runtime-menu-proof.png")
         print("[VISUAL_SMOKE] menu screenshot saved")
 
     menu_button = _find_button(app_root.menu, "ابدأ اللعب")
@@ -50,7 +51,7 @@ func _run() -> void:
             if rendered > 0 and camera_ok:
                 var world_shot := get_viewport().get_texture().get_image()
                 if world_shot != null:
-                    world_shot.save_png("res://build/runtime-world-proof.png")
+                    world_shot.save_png("res://runtime-proof/runtime-world-proof.png")
                     print("[VISUAL_SMOKE] world screenshot saved")
                 print("[VISUAL_SMOKE] SUCCESS: menu and world rendered")
                 quit(0)
