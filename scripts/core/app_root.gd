@@ -318,7 +318,7 @@ func _start_world(seed_value: int, world_name: String, mode: String) -> void:
     var config := AppState.pending_world_config.duplicate(true)
     if not config.has("world_height"):
         var quality := str(Settings.get_value("graphics_quality", "low"))
-        config["world_height"] = {"low": 192, "medium": 256, "high": 384, "ultra": 512}.get(quality, 192)
+        config["world_height"] = {"low": 96, "medium": 128, "high": 192, "ultra": 256}.get(quality, 96)
     AppState.world_settings = config.duplicate(true)
     world = load("res://scripts/world/voxel_world.gd").new()
     add_child(world)
