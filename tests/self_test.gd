@@ -65,19 +65,19 @@ func _run() -> void:
     ))
     var inventory = load("res://scripts/gameplay/inventory.gd").new()
     checks.append(_check("Inventory validation", func() -> bool:
-        return inventory.add_item(BlockRegistry.WATER, 1) == 0 and inventory.add_item(BlockRegistry.STONE, -1) == 0 and inventory.count_item(BlockRegistry.WATER) == 0
+        return inventory.add_item(block_registry.WATER, 1) == 0 and inventory.add_item(block_registry.STONE, -1) == 0 and inventory.count_item(block_registry.WATER) == 0
     ))
-    inventory.add_item(BlockRegistry.LOG, 2)
+    inventory.add_item(block_registry.LOG, 2)
     checks.append(_check("Crafting transaction", func() -> bool:
         var crafting = load("res://scripts/gameplay/crafting.gd").new()
         var crafted: bool = crafting.craft(inventory, "wood_pick")
-        return not crafted and inventory.count_item(BlockRegistry.LOG) == 2
+        return not crafted and inventory.count_item(block_registry.LOG) == 2
     ))
     checks.append(_check("World height presets", func() -> bool:
         for value in [500,800,1000]:
             var g: RefCounted = load("res://scripts/world/world_generator.gd").new(99)
             g.configure(true, "", value)
-            if g.world_height!=value or g.block_at(0,value,0)!=BlockRegistry.AIR:
+            if g.world_height!=value or g.block_at(0,value,0)!=block_registry.AIR:
                 return false
         return true
     ))
@@ -128,16 +128,22 @@ func _run() -> void:
         var compat: Node = script.new() as Node
         if compat == null:
             return false
-        return compat._load_b64_texture(compat.BLOCK_ATLAS_PATH) != null and compat._load_b64_texture(compat.ENTITY_ATLAS_PATH) != null and compat._load_b64_texture(compat.ITEM_ATLAS_PATH) != null
+        return compat.get_atlas() != null and compat.get_entity_atlas() != null and compat.get_item_atlas() != null
     ))
     checks.append(_check("Minecraft item catalog", func() -> bool:
-        return ItemRegistry.MINECRAFT_ITEM_IDS.size() == 44 and ItemRegistry.get_item(ItemRegistry.MC_DIAMOND).get("name", "") == "Diamond"
+        return item_registry.MINECRAFT_ITEM_IDS.size() == 44 and str(item_registry.get_item(item_registry.MC_DIAMOND).get("name", "")) == "Diamond"
     ))
     checks.append(_check("Minecraft crafting content", func() -> bool:
         return (not recipe_registry.find_recipe("minecraft_bow").is_empty() and not recipe_registry.find_recipe("minecraft_shield").is_empty() and not recipe_registry.find_recipe("minecraft_arrow").is_empty())
     ))
     checks.append(_check("Minecraft texture mapping", func() -> bool:
-        return (MinecraftCompat.get_block_tile(BlockRegistry.STONE) == 2 and MinecraftCompat.get_item_tile(ItemRegistry.MC_DIAMOND) == 28 and MinecraftCompat.get_entity_tile("creeper") == 10)
+        var compat_script: GDScript = load("res://scripts/integration/minecraft_compat.gd") as GDScript
+        if compat_script == null:
+            return false
+        var compat: Node = compat_script.new() as Node
+        if compat == null:
+            return false
+        return int(compat.get_block_tile(block_registry.STONE)) == 2 and int(compat.get_item_tile(item_registry.MC_DIAMOND)) == 28 and int(compat.get_entity_tile("creeper")) == 10
     ))
     for result in checks:
         print("[TEST] %s: %s" % [result[0], "PASS" if result[1] else "FAIL"])
