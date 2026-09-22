@@ -195,7 +195,7 @@ func _build_crosshair() -> void:
 func _layout_responsive() -> void:
     if ui_root == null:
         return
-    var viewport_size := get_viewport_rect().size
+    var viewport_size: Vector2 = get_viewport().get_visible_rect().size
 
     var stat_width := minf(360.0, maxf(260.0, viewport_size.x * 0.26))
     stats.size = Vector2(stat_width, 74)
