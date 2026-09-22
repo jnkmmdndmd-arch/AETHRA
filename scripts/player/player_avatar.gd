@@ -55,6 +55,7 @@ func _build_body() -> void:
 
     head = Node3D.new()
     head.position.y = 2.02
+    head.rotation.x = deg_to_rad(-8.0)
     add_child(head)
     camera = Camera3D.new()
     camera.current = is_local
