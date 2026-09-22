@@ -1,3 +1,4 @@
+class_name UIFactory
 extends RefCounted
 
 static func make_icon(kind: String, color: Color = Color("#78ddff"), minimum_size: Vector2 = Vector2(24, 24)) -> Control:
