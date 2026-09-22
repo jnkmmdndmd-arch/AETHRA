@@ -177,7 +177,7 @@ func build_mesh(build_collision: bool = false) -> void:
     if vertices.size() > 0:
         arr_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, array)
         var mat := StandardMaterial3D.new()
-        mat.albedo_texture = load("res://assets/mc_bridge/aethra_minecraft_atlas.png") as Texture2D
+        mat.albedo_texture = load("res://assets/mc_bridge/aethra_minecraft_atlas.svg") as Texture2D
         mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
         mat.vertex_color_use_as_albedo = true
         mat.cull_mode = BaseMaterial3D.CULL_DISABLED
@@ -198,7 +198,7 @@ func build_mesh(build_collision: bool = false) -> void:
     if fluid_vertices.size() > 0:
         fluid_arr.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, fluid_array)
         var fluid_mat := StandardMaterial3D.new()
-        fluid_mat.albedo_texture = load("res://assets/mc_bridge/aethra_minecraft_atlas.png") as Texture2D
+        fluid_mat.albedo_texture = load("res://assets/mc_bridge/aethra_minecraft_atlas.svg") as Texture2D
         fluid_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
         fluid_mat.vertex_color_use_as_albedo = true
         fluid_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
