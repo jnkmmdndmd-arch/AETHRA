@@ -36,11 +36,11 @@ jobs:
           $ext="$root\templates_extract"
           New-Item -ItemType Directory -Force $ext | Out-Null
           Expand-Archive -Force $zip $ext
-          $candidate=Get-ChildItem $ext -File -Recurse | Where-Object { $_.Name -match "^windows_release.*x86_64.*\.exe$" } | Select-Object -First 1
-          if(-not $candidate){$candidate=Get-ChildItem $ext -File -Recurse | Where-Object { $_.Name -match "windows.*release.*x86_64" } | Select-Object -First 1}
-          if(-not $candidate){throw "Windows x86_64 export template not found"}
-          Copy-Item -Force $candidate.FullName (Join-Path $dst "windows_release.x86_64.exe")
-          if(-not (Test-Path (Join-Path $dst "windows_release.x86_64.exe"))){throw "Canonical Windows template missing"}
+          $templates=Get-ChildItem $ext -File -Recurse | Where-Object { $_.Name -match "^windows_(debug|release)_x86_64.*\.exe$" }
+          if($templates.Count -lt 2){throw "Windows x86_64 debug/release export templates not found"}
+          foreach($template in $templates){ Copy-Item -Force $template.FullName (Join-Path $dst $template.Name) }
+          if(-not (Test-Path (Join-Path $dst "windows_release_x86_64.exe"))){throw "Windows release template missing"}
+          if(-not (Test-Path (Join-Path $dst "windows_debug_x86_64.exe"))){throw "Windows debug template missing"}
       - name: Godot editor validation
         run: |
           & $env:GODOT_PATH --headless --editor --quit --path . | Tee-Object editor.log
