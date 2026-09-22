@@ -29,7 +29,10 @@ func build(parent:Node, inventory_ref, crafting_ref)->void:
 func _build_slots()->void:
     for child in slots_box.get_children(): child.queue_free()
     for i in inventory.SLOTS:
-        var b:=Button.new(); b.custom_minimum_size=Vector2(108,68); b.pressed.connect(func(index=i): inventory.select_slot(index); refresh()); slots_box.add_child(b)
+        var b := Button.new()
+        b.custom_minimum_size = Vector2(108, 68)
+        b.pressed.connect(func(index: int = i) -> void: inventory.select_slot(index); refresh())
+        slots_box.add_child(b)
 
 func _build_creative_palette()->void:
     for child in creative_box.get_children(): child.queue_free()
@@ -40,12 +43,20 @@ func _build_creative_palette()->void:
     for item_id in range(1,BlockRegistry.LAST_BLOCK+1):
         if item_id in [BlockRegistry.WATER,BlockRegistry.LAVA,BlockRegistry.BEDROCK]: continue
         var block:=BlockRegistry.get_block(item_id)
-        var button:=Button.new(); button.text=str(block.get("name","Block")); button.custom_minimum_size=Vector2(90,34)
-        button.pressed.connect(func(id: int = item_id): inventory.add_item(id, inventory._stack_size_for(id)); refresh())
+        var button := Button.new()
+        button.text = str(block.get("name", "Block"))
+        button.custom_minimum_size = Vector2(90, 34)
+        button.icon = MinecraftCompat.get_block_icon(item_id)
+        button.tooltip_text = "Minecraft 1.17.1 • " + str(block.get("name", "Block"))
+        button.pressed.connect(func(id: int = item_id) -> void: inventory.add_item(id, inventory._stack_size_for(id)); refresh())
         grid.add_child(button)
-    for item_id in [ItemRegistry.HEAL_FOOD,ItemRegistry.WOOD_PICK,ItemRegistry.STONE_PICK,ItemRegistry.IRON_PICK,ItemRegistry.WOOD_AXE,ItemRegistry.STONE_AXE,ItemRegistry.IRON_AXE,ItemRegistry.WOOD_SWORD,ItemRegistry.STONE_SWORD,ItemRegistry.IRON_SWORD,ItemRegistry.AETHER_SWORD,ItemRegistry.BOW,ItemRegistry.ARROW]:
+    for item_id in ItemRegistry.MINECRAFT_ITEM_IDS + [ItemRegistry.HEAL_FOOD,ItemRegistry.WOOD_PICK,ItemRegistry.STONE_PICK,ItemRegistry.IRON_PICK,ItemRegistry.WOOD_AXE,ItemRegistry.STONE_AXE,ItemRegistry.IRON_AXE,ItemRegistry.WOOD_SWORD,ItemRegistry.STONE_SWORD,ItemRegistry.IRON_SWORD,ItemRegistry.AETHER_SWORD,ItemRegistry.BOW,ItemRegistry.ARROW]:
         var item:=ItemRegistry.get_item(item_id)
-        var button:=Button.new(); button.text=str(item.get("name","Item")); button.custom_minimum_size=Vector2(90,34)
+        var button := Button.new()
+        button.text = str(item.get("name", "Item"))
+        button.custom_minimum_size = Vector2(90, 34)
+        button.icon = MinecraftCompat.get_item_icon(item_id)
+        button.tooltip_text = "AETHRA"
         button.pressed.connect(func(id: int = item_id) -> void: inventory.add_item(id, inventory._stack_size_for(id)); refresh())
         grid.add_child(button)
 
@@ -53,19 +64,33 @@ func _build_recipes()->void:
     for child in recipe_box.get_children():
         if child is Button: child.queue_free()
     for recipe in RecipeRegistry.recipes:
-        var b:=Button.new(); b.text=str(recipe.id); b.custom_minimum_size=Vector2(250,40); b.pressed.connect(func(recipe_id=str(recipe.id)): _craft(recipe_id)); recipe_box.add_child(b)
+        var b := Button.new()
+        b.text = str(recipe.id)
+        b.custom_minimum_size = Vector2(250, 40)
+        b.pressed.connect(func(recipe_id: String = str(recipe.id)) -> void: _craft(recipe_id))
+        recipe_box.add_child(b)
 
 func _craft(recipe_id:String)->void:
     var ok:bool=crafting.craft(inventory,recipe_id); status_label.text="تم التصنيع" if ok else "المواد أو السعة غير كافية"; refresh()
 
 func refresh()->void:
     if inventory==null or slots_box==null: return
-    for i in mini(inventory.slots.size(),slots_box.get_child_count()):
-        var b:=slots_box.get_child(i) as Button; var s:Dictionary=inventory.slots[i]; var id:=int(s.get("item",0)); var count:=int(s.get("count",0)); var name: String="فارغ"
-        if id!=0 and count>0:
-            name=str(ItemRegistry.get_item(id).get("name","Item"))
-            if id>0 and id<=BlockRegistry.LAST_BLOCK and str(ItemRegistry.get_item(id).get("category","none"))=="none": name=str(BlockRegistry.get_block(id).get("name","Block"))
-        b.text="%d\n%s x%d" % [i+1,name,count]; b.button_pressed=i==inventory.selected
+    for i in mini(inventory.slots.size(), slots_box.get_child_count()):
+        var b := slots_box.get_child(i) as Button
+        var s: Dictionary = inventory.slots[i]
+        var id: int = int(s.get("item", 0))
+        var count: int = int(s.get("count", 0))
+        var name: String = "فارغ"
+        b.icon = null
+        if id != 0 and count > 0:
+            name = str(ItemRegistry.get_item(id).get("name", "Item"))
+            if id > 0 and id <= BlockRegistry.LAST_BLOCK and str(ItemRegistry.get_item(id).get("category", "none")) == "none":
+                name = str(BlockRegistry.get_block(id).get("name", "Block"))
+                b.icon = MinecraftCompat.get_block_icon(id)
+            else:
+                b.icon = MinecraftCompat.get_item_icon(id)
+        b.text = "%d\n%s x%d" % [i + 1, name, count]
+        b.button_pressed = i == inventory.selected
 
 func _process(_delta:float)->void:
     if visible: refresh()
