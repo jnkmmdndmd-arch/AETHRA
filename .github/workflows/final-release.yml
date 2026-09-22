@@ -6,6 +6,9 @@ on:
       - fix/aethra-ui-auth-performance
   pull_request:
     branches:
+      - fix/aethra-ui-auth-performance
+  pull_request:
+    branches:
       - main
 jobs:
   release:
