@@ -998,3 +998,370 @@ func _search(query: String) -> void:
     for world in SaveDB.list_worlds():
         var meta: Dictionary = world.get("metadata", {})
         var name := str(meta.get("name", ""))
+        if q in name.to_lower():
+            found += 1
+            var b := _button("عالم: %s" % name, Vector2(0, 38))
+            search_results.add_child(b)
+            var id := str(world.get("id", ""))
+            b.pressed.connect(func(): _close_search_popup(); _resume_world(id))
+    for server in ServerDirectory.recent():
+        var searchable := (str(server.get("name", "")) + " " + str(server.get("address", ""))).to_lower()
+        if q in searchable:
+            found += 1
+            var sb := _button("خادم: %s" % str(server.get("name", "Server")), Vector2(0, 38))
+            search_results.add_child(sb)
+            var addr := str(server.get("address", ""))
+            sb.pressed.connect(func(): _close_search_popup(); _join_remote(addr))
+    for id in NetworkManager.remote_players:
+        var profile: Dictionary = NetworkManager.remote_players[id]
+        var name := str(profile.get("name", ""))
+        if q in name.to_lower():
+            found += 1
+            _label(search_results, "لاعب: %s - متصل" % name, 11, GREEN)
+    if found == 0:
+        _label(search_results, "لا توجد نتائج مطابقة من البيانات المتوفرة حاليًا.", 11, MUTED)
+
+func _toggle_notifications() -> void:
+    if notification_popup:
+        notification_popup.queue_free()
+        notification_popup = null
+        return
+    notification_popup = _panel(PANEL, 16, Color(0.22, 0.7, 1.0, 0.22))
+    notification_popup.custom_minimum_size = Vector2(360, 180)
+    notification_popup.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+    notification_popup.position = Vector2(-380, 90)
+    add_child(notification_popup)
+    var box := VBoxContainer.new()
+    notification_popup.add_child(box)
+    _label(box, "الإشعارات", 18, TEXT)
+    _label(box, "لا توجد إشعارات غير مقروءة محفوظة في الخدمة الحالية.", 11, MUTED)
+
+func _close_search_popup() -> void:
+    if search_popup:
+        search_popup.queue_free()
+        search_popup = null
+
+func _join_dialog() -> void:
+    var dialog := AcceptDialog.new()
+    dialog.title = "الانضمام إلى سيرفر"
+    var box := VBoxContainer.new()
+    var address := LineEdit.new()
+    address.placeholder_text = "عنوان السيرفر أو النطاق"
+    address.text = "127.0.0.1"
+    box.add_child(address)
+    dialog.add_child(box)
+    add_child(dialog)
+    dialog.confirmed.connect(func(): _join_remote(address.text))
+    dialog.popup_centered(Vector2i(520, 190))
+
+func _join_remote(address: String) -> void:
+    var normalized := address.strip_edges()
+    if normalized.is_empty():
+        return
+    if not ":" in normalized:
+        normalized += ":%d" % NetworkManager.DEFAULT_PORT
+    join_multiplayer.emit(normalized)
+
+func _add_server_dialog() -> void:
+    var dialog := AcceptDialog.new()
+    dialog.title = "إضافة سيرفر"
+    var box := VBoxContainer.new()
+    var name := LineEdit.new()
+    name.placeholder_text = "اسم السيرفر"
+    box.add_child(name)
+    var address := LineEdit.new()
+    address.placeholder_text = "127.0.0.1:31001"
+    box.add_child(address)
+    dialog.add_child(box)
+    add_child(dialog)
+    dialog.confirmed.connect(func():
+        var n := name.text.strip_edges()
+        var a := address.text.strip_edges()
+        if not a.is_empty():
+            ServerDirectory.add_favorite(a, n if not n.is_empty() else "مفضلة")
+            _show_page("servers")
+    )
+    dialog.popup_centered(Vector2i(540, 220))
+
+func _probe_server(address: String, label: Label) -> void:
+    # ENet servers do not expose an HTTP/TCP status port in the current client.
+    # Never mislabel a server as online using an incompatible transport probe.
+    label.text = "محفوظ محليًا - الحالة عبر الاتصال المباشر"
+    label.add_theme_color_override("font_color", MUTED)
+
+func _resume_world(world_id: String) -> void:
+    var data := SaveDB.load_world(world_id)
+    if data.is_empty():
+        return
+    var meta: Dictionary = data.get("metadata", {})
+    AppState.pending_world_config = {
+        "name": str(meta.get("name", "World")),
+        "seed": int(meta.get("seed", 7777)),
+        "mode": str(meta.get("mode", "survival")),
+        "difficulty": str(meta.get("difficulty", "normal")),
+        "privacy": str(meta.get("privacy", "private")),
+        "resume_id": world_id,
+    }
+    play_singleplayer.emit()
+
+func _world_actions(world_id: String, world_name: String) -> void:
+    var popup := PopupMenu.new()
+    popup.add_item("تشغيل", 1)
+    popup.add_item("إعادة تسمية", 2)
+    popup.add_item("نسخة", 3)
+    popup.add_item("نسخ احتياطي", 4)
+    popup.add_item("حذف", 5)
+    add_child(popup)
+    popup.id_pressed.connect(func(id):
+        popup.queue_free()
+        match id:
+            1: _resume_world(world_id)
+            2: _rename_world_dialog(world_id, world_name)
+            3: _duplicate_world_dialog(world_id, world_name)
+            4: _backup_world(world_id)
+            5: _confirm_delete_world(world_id)
+    )
+    popup.popup_centered(Vector2i(220, 220))
+
+func _rename_world_dialog(world_id: String, old_name: String) -> void:
+    var dialog := AcceptDialog.new()
+    dialog.title = "إعادة تسمية العالم"
+    var input := LineEdit.new()
+    input.text = old_name
+    dialog.add_child(input)
+    add_child(dialog)
+    dialog.confirmed.connect(func():
+        var name := input.text.strip_edges()
+        if not name.is_empty():
+            SaveDB.rename_world(world_id, name)
+            _show_page("worlds")
+    )
+    dialog.popup_centered(Vector2i(460, 180))
+
+func _duplicate_world_dialog(world_id: String, old_name: String) -> void:
+    var dialog := AcceptDialog.new()
+    dialog.title = "نسخ العالم"
+    var input := LineEdit.new()
+    input.placeholder_text = "اسم النسخة"
+    input.text = "%s Copy" % old_name
+    dialog.add_child(input)
+    add_child(dialog)
+    dialog.confirmed.connect(func():
+        var name := input.text.strip_edges()
+        SaveDB.duplicate_world(world_id, name)
+        _show_page("worlds")
+    )
+    dialog.popup_centered(Vector2i(460, 180))
+
+func _backup_world(world_id: String) -> void:
+    var path := SaveDB.backup_world(world_id)
+    var dialog := AcceptDialog.new()
+    dialog.title = "النسخ الاحتياطي"
+    dialog.dialog_text = "تم إنشاء النسخة الاحتياطية." if not path.is_empty() else "فشل إنشاء النسخة الاحتياطية."
+    add_child(dialog)
+    dialog.popup_centered()
+
+func _confirm_delete_world(world_id: String) -> void:
+    var dialog := ConfirmationDialog.new()
+    dialog.title = "حذف العالم"
+    dialog.dialog_text = "سيتم حذف العالم من التخزين المحلي. هذا الإجراء لا يمكن التراجع عنه."
+    add_child(dialog)
+    dialog.confirmed.connect(func():
+        SaveDB.delete_world(world_id)
+        _show_page("worlds")
+    )
+    dialog.popup_centered()
+
+func _logout() -> void:
+    var root := get_parent()
+    var auth_node = root.get("auth") if root != null else null
+    if auth_node != null and auth_node.has_method("logout") and not AppState.auth_token.is_empty():
+        auth_node.logout(AppState.auth_token)
+    AppState.set_session("Guest", "")
+    AppState.clear_saved_session()
+    _show_page("home")
+
+func _request_close() -> void:
+    var root := get_parent()
+    if root != null and root.has_method("request_close"):
+        root.request_close()
+    else:
+        get_tree().quit()
+
+func _toggle_window_mode() -> void:
+    var mode := DisplayServer.window_get_mode()
+    DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if mode == DisplayServer.WINDOW_MODE_MAXIMIZED else DisplayServer.WINDOW_MODE_MAXIMIZED)
+
+func _animate_intro() -> void:
+    modulate.a = 0.0
+    var tween := create_tween()
+    tween.tween_property(self, "modulate:a", 1.0, 0.55).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+func _panel(color: Color, radius: int, border: Color) -> PanelContainer:
+    var panel := PanelContainer.new()
+    panel.add_theme_stylebox_override("panel", _style(color, radius, border))
+    return panel
+
+func _style(color: Color, radius: int, border: Color) -> StyleBoxFlat:
+    var s := StyleBoxFlat.new()
+    s.bg_color = color
+    s.corner_radius_top_left = radius
+    s.corner_radius_top_right = radius
+    s.corner_radius_bottom_left = radius
+    s.corner_radius_bottom_right = radius
+    s.border_width_left = 1
+    s.border_width_right = 1
+    s.border_width_top = 1
+    s.border_width_bottom = 1
+    s.border_color = border
+    s.content_margin_left = 10
+    s.content_margin_right = 10
+    s.content_margin_top = 10
+    s.content_margin_bottom = 10
+    return s
+
+func _label(parent: Control, text: String, size: int, color: Color, align := HORIZONTAL_ALIGNMENT_RIGHT) -> Label:
+    var l := Label.new()
+    l.text = text
+    var is_arabic := _contains_arabic(text)
+    l.text_direction = Control.TEXT_DIRECTION_RTL if is_arabic else Control.TEXT_DIRECTION_LTR
+    l.layout_direction = Control.LAYOUT_DIRECTION_RTL if is_arabic else Control.LAYOUT_DIRECTION_LTR
+    l.horizontal_alignment = align
+    l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    l.add_theme_font_size_override("font_size", size)
+    l.add_theme_color_override("font_color", color)
+    l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    parent.add_child(l)
+    return l
+
+func _contains_arabic(value: String) -> bool:
+    for i in value.length():
+        var code := value.unicode_at(i)
+        if (code >= 0x0600 and code <= 0x06FF) or (code >= 0x0750 and code <= 0x077F) or (code >= 0x08A0 and code <= 0x08FF):
+            return true
+    return false
+
+func _nav_button(icon_kind: String, text: String) -> Button:
+    var b := Button.new()
+    b.custom_minimum_size = Vector2(0, 38)
+    var row := HBoxContainer.new()
+    row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    row.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    row.alignment = BoxContainer.ALIGNMENT_END
+    row.add_theme_constant_override("separation", 8)
+    row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var label := Label.new()
+    label.text = text
+    label.text_direction = Control.TEXT_DIRECTION_RTL
+    label.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+    label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    label.add_theme_font_size_override("font_size", 12)
+    label.add_theme_color_override("font_color", TEXT)
+    label.clip_text = true
+    label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    var icon = load("res://scripts/ui/vector_icon.gd").new()
+    icon.icon_name = icon_kind
+    icon.icon_color = ACCENT_BRIGHT
+    icon.custom_minimum_size = Vector2(22, 22)
+    row.add_child(icon)
+    row.add_child(label)
+    b.add_child(row)
+    b.alignment = HORIZONTAL_ALIGNMENT_RIGHT
+    b.add_theme_font_size_override("font_size", 13)
+    var normal := _style(Color(0.02,0.04,0.08,0.66), 12, Color(0.18,0.36,0.55,0.20))
+    var hover := _style(Color(0.03,0.10,0.18,0.88), 12, Color(0.22,0.67,1.0,0.55))
+    var pressed := _style(Color(0.02,0.14,0.25,0.95), 12, ACCENT)
+    b.add_theme_stylebox_override("normal", normal)
+    b.add_theme_stylebox_override("hover", hover)
+    b.add_theme_stylebox_override("pressed", pressed)
+    b.add_theme_stylebox_override("disabled", pressed)
+    return b
+
+func _button(text: String, size: Vector2) -> Button:
+    var b := Button.new()
+    b.text = text
+    b.custom_minimum_size = size
+    b.add_theme_font_size_override("font_size", 12)
+    b.add_theme_stylebox_override("normal", _style(Color(0.03,0.07,0.12,0.82), 10, Color(0.24,0.52,0.78,0.25)))
+    b.add_theme_stylebox_override("hover", _style(Color(0.04,0.12,0.20,0.94), 10, Color(0.25,0.72,1.0,0.6)))
+    b.add_theme_stylebox_override("pressed", _style(Color(0.03,0.16,0.26,0.98), 10, ACCENT))
+    return b
+
+func _primary_button(text: String, size: Vector2) -> Button:
+    var b := Button.new()
+    b.text = text
+    b.custom_minimum_size = size
+    b.add_theme_font_size_override("font_size", 15)
+    b.add_theme_color_override("font_color", Color.WHITE)
+    b.add_theme_stylebox_override("normal", _style(Color(0.02,0.34,0.72,0.92), 14, Color(0.35,0.85,1.0,0.9)))
+    b.add_theme_stylebox_override("hover", _style(Color(0.02,0.46,0.92,0.97), 14, ACCENT_BRIGHT))
+    b.add_theme_stylebox_override("pressed", _style(Color(0.02,0.22,0.52,1.0), 14, ACCENT_BRIGHT))
+    return b
+
+func _small_button(text: String, width: int) -> Button:
+    return _button(text, Vector2(width, 40))
+
+func _small_icon_button(icon_kind: String, width: int) -> Button:
+    var b := _button("", Vector2(width, 40))
+    var icon = load("res://scripts/ui/vector_icon.gd").new()
+    icon.icon_name = icon_kind
+    icon.icon_color = ACCENT_BRIGHT
+    icon.custom_minimum_size = Vector2(20, 20)
+    icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+    icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+    b.add_child(icon)
+    return b
+
+func _quick_card(parent: Control, icon: String, title: String, subtitle: String, action: Callable) -> PanelContainer:
+    var card := _panel(PANEL_2, 16, Color(0.22,0.7,1.0,0.16))
+    card.custom_minimum_size = Vector2(0, 104)
+    card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    parent.add_child(card)
+    var box := VBoxContainer.new()
+    box.alignment = BoxContainer.ALIGNMENT_CENTER
+    box.layout_direction = Control.LAYOUT_DIRECTION_RTL
+    card.add_child(box)
+    var icon_node = load("res://scripts/ui/vector_icon.gd").new()
+    icon_node.icon_name = icon
+    icon_node.icon_color = ACCENT_BRIGHT
+    icon_node.custom_minimum_size = Vector2(30, 30)
+    icon_node.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+    box.add_child(icon_node)
+    _label(box, title, 14, TEXT, HORIZONTAL_ALIGNMENT_CENTER)
+    _label(box, subtitle, 9, MUTED, HORIZONTAL_ALIGNMENT_CENTER)
+    card.gui_input.connect(func(event):
+        if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+            action.call()
+    )
+    card.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+    return card
+
+func _section_title(parent: Control, title: String, subtitle: String) -> void:
+    _label(parent, title, 22, TEXT)
+    _label(parent, subtitle, 10, MUTED)
+
+
+func _mode_label(mode: String) -> String:
+    match mode:
+        "survival": return "بقاء"
+        "creative": return "إبداعي"
+        "adventure": return "مغامرة"
+        "peaceful": return "سلمي"
+        "easy": return "سهل"
+        "normal": return "عادي"
+        "hard": return "صعب"
+        _: return mode
+
+func _character_label(character: String) -> String:
+    match character:
+        "ranger": return "المستكشف"
+        "engineer": return "المهندس"
+        "shadow": return "الظل"
+        "grove": return "حارس الغابة"
+        _: return character
+
+func _find_child_label(node_name: String) -> Label:
+    return find_child(node_name, true, false) as Label
