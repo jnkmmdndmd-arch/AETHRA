@@ -55,7 +55,7 @@ func _on_request_completed(result:int,response_code:int,_headers:PackedStringArr
     if not (data is Array): return
     for row in data:
         if row is Dictionary and str(row.get("address", ""))!="":
-            var normalized:=row.duplicate(true)
+            var normalized: Dictionary = row.duplicate(true)
             normalized["source"]="global"
             discovered[str(row.get("address"))]=normalized
     servers_changed.emit(all_servers())
