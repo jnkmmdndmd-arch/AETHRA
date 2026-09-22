@@ -172,9 +172,9 @@ func _use_selected_item() -> void:
     if death_lock:
         return
     var slot:Dictionary = inventory.slots[inventory.selected]
-    var item_id:=int(slot.get("item",ItemRegistry.EMPTY))
-    if item_id==ItemRegistry.HEAL_FOOD and inventory.count_item(item_id)>0:
-        if survival.consume_food(item_id) and inventory.remove_item(item_id,1):
+    var item_id: int = int(slot.get("item", ItemRegistry.EMPTY))
+    if survival.is_food(item_id) and inventory.count_item(item_id) > 0:
+        if survival.consume_food(item_id) and inventory.remove_item(item_id, 1):
             AudioManager.play("ui_click", -5.0)
 
 func respawn_at(world_position:Vector3) -> void:
