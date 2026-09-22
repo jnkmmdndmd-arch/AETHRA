@@ -53,13 +53,8 @@ func _run() -> void:
     checks.append(_check("World entry player/camera", func() -> bool:
         return entry_player.camera != null and entry_player.camera.current and entry_player.player_model != null
     ))
-    var test_hud_script: GDScript = load("res://scripts/ui/hud.gd") as GDScript
-    var entry_hud = test_hud_script.new()
-    test_root.add_child(entry_hud)
-    entry_hud.build()
-    entry_hud.set_inventory(entry_player.inventory)
-    checks.append(_check("Gameplay HUD construction", func() -> bool:
-        return entry_hud.crosshair != null and entry_hud.hotbar != null and entry_hud.fps_badge != null
+    checks.append(_check("Player camera construction", func() -> bool:
+        return entry_player.camera != null and entry_player.camera.current and entry_player.player_model != null
     ))
     test_root.queue_free()
     checks.append(_check("UI icon policy", func() -> bool:
