@@ -1,0 +1,126 @@
+name: AETHRA Final Client Release
+
+on:
+  push:
+    branches:
+      - fix/aethra-ui-auth-performance
+  workflow_dispatch:
+
+concurrency:
+  group: aethra-final-client-release
+  cancel-in-progress: true
+
+jobs:
+  build-client:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Godot 4.7.2
+        shell: pwsh
+        run: |
+          $root = "$env:RUNNER_TEMP\godot"
+          New-Item -ItemType Directory -Force $root | Out-Null
+          $zip = "$root\Godot.zip"
+          Invoke-WebRequest "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_win64.exe.zip" -OutFile $zip
+          Expand-Archive -Force $zip $root
+          $godot = Get-ChildItem $root -Recurse -Filter "Godot_v4.7.2-stable_win64.exe" | Select-Object -First 1
+          if (-not $godot) { throw "Godot 4.7.2 editor not found" }
+          "GODOT_PATH=$($godot.FullName)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          & $godot.FullName --version
+
+      - name: Install Windows export template
+        shell: pwsh
+        run: |
+          $root = "$env:RUNNER_TEMP\godot"
+          $zip = "$root\templates.tpz"
+          $ext = "$root\templates_extract"
+          $dst = "$env:APPDATA\Godot\export_templates\4.7.2.stable"
+          New-Item -ItemType Directory -Force $dst, $ext | Out-Null
+          Invoke-WebRequest "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz" -OutFile $zip
+          Expand-Archive -Force $zip $ext
+          $candidate = Get-ChildItem $ext -Recurse -File | Where-Object { $_.Name -match "^windows_release.*x86_64.*\.exe$" } | Select-Object -First 1
+          if (-not $candidate) { $candidate = Get-ChildItem $ext -Recurse -File | Where-Object { $_.Name -match "windows.*release.*x86_64" } | Select-Object -First 1 }
+          if (-not $candidate) { throw "Windows x86_64 export template not found" }
+          Copy-Item $candidate.FullName (Join-Path $dst "windows_release.x86_64.exe") -Force
+
+      - name: Godot editor validation
+        shell: pwsh
+        run: |
+          & $env:GODOT_PATH --headless --editor --quit --path . 2>&1 | Tee-Object editor.log
+          if ($LASTEXITCODE -ne 0) { throw "Godot editor validation failed" }
+
+      - name: GDScript parse gate
+        shell: pwsh
+        run: |
+          & $env:GODOT_PATH --headless --path . --script res://tests/parse_all_scripts.gd 2>&1 | Tee-Object parse.log
+          if ($LASTEXITCODE -ne 0) { throw "GDScript parse gate failed" }
+
+      - name: Game self-test
+        shell: pwsh
+        run: |
+          & $env:GODOT_PATH --headless --path . --script res://tests/self_test.gd 2>&1 | Tee-Object self-test.log
+          if ($LASTEXITCODE -ne 0) { throw "Game self-test failed" }
+
+      - name: Export final EXE
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force build | Out-Null
+          & $env:GODOT_PATH --headless --path . --export-release "Windows Desktop" "build\AETHRA-Wildbound.exe" 2>&1 | Tee-Object export.log
+          if ($LASTEXITCODE -ne 0) { throw "Windows export failed" }
+          if (-not (Test-Path "build\AETHRA-Wildbound.exe")) { throw "EXE missing" }
+          if ((Get-Item "build\AETHRA-Wildbound.exe").Length -lt 1000000) { throw "EXE unexpectedly small" }
+
+      - name: Windows startup smoke
+        shell: pwsh
+        run: |
+          $p = Start-Process ".\build\AETHRA-Wildbound.exe" -PassThru
+          Start-Sleep 10
+          if ($p.HasExited) {
+            throw "AETHRA-Wildbound.exe exited during startup (code $($p.ExitCode))"
+          }
+          Stop-Process -Id $p.Id -Force
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          choco install innosetup --yes --no-progress
+          $iscc = Get-ChildItem "C:\Program Files (x86)\Inno Setup" -Recurse -Filter "ISCC.exe" | Select-Object -First 1 -ExpandProperty FullName
+          if (-not $iscc) { throw "Inno Setup compiler not found" }
+          & $iscc "installer.iss" 2>&1 | Tee-Object installer.log
+          if ($LASTEXITCODE -ne 0) { throw "Installer build failed" }
+          if (-not (Test-Path "build\AETHRA-Wildbound-Setup.exe")) { throw "Installer missing" }
+
+      - name: Hash release
+        shell: pwsh
+        run: |
+          $game = (Get-FileHash "build\AETHRA-Wildbound.exe" -Algorithm SHA256).Hash.ToLowerInvariant()
+          $setup = (Get-FileHash "build\AETHRA-Wildbound-Setup.exe" -Algorithm SHA256).Hash.ToLowerInvariant()
+          @(
+            "AETHRA: Wildbound FINAL CLIENT",
+            "Commit: $env:GITHUB_SHA",
+            "Godot: 4.7.2",
+            "Editor validation: PASS",
+            "GDScript parse: PASS",
+            "Game self-test: PASS",
+            "Windows EXE export: PASS",
+            "Windows startup smoke: PASS",
+            "Installer build: PASS",
+            "EXE SHA256: $game",
+            "Installer SHA256: $setup"
+          ) | Set-Content "FINAL-CLIENT-VERIFICATION.md"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AETHRA-Wildbound-FINAL-CLIENT-Windows-x64
+          if-no-files-found: error
+          path: |
+            build/AETHRA-Wildbound.exe
+            build/AETHRA-Wildbound-Setup.exe
+            FINAL-CLIENT-VERIFICATION.md
+            editor.log
+            parse.log
+            self-test.log
+            export.log
+            installer.log
