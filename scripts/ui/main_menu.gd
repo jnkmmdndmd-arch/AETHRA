@@ -775,7 +775,7 @@ func _page_store() -> void:
         var card:=_panel(PANEL_2, 14, Color(0.15,0.20,0.28,0.94)); card.custom_minimum_size=Vector2(280,110); grid.add_child(card)
         var box:=VBoxContainer.new(); box.add_theme_constant_override("separation",6); card.add_child(box)
         _label(box, str(offer.get("name","Item")), 16, TEXT)
-        _label(box, "%d × بسعر %d" % [int(offer.get("amount",1)),int(offer.get("price",0))], 11, MUTED)
+        _label(box, "%d x بسعر %d" % [int(offer.get("amount",1)),int(offer.get("price",0))], 11, MUTED)
         var buy:=_primary_button("شراء", Vector2(120,36))
         buy.pressed.connect(func(id: int = int(offer.get("item_id",0)), amount: int = int(offer.get("amount",1)), price: int = int(offer.get("price",0))) -> void:
             var ok:=Economy.purchase(id,amount,price)
