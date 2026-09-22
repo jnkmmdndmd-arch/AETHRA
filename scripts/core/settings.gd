@@ -18,6 +18,8 @@ const DEFAULTS := {
     "window_height": 720,
     "window_mode": 0,
     "auth_server_url": "",
+    "java_source_project_path": "",
+    "minecraft_runtime_path": "",
 }
 const DEFAULT_CONTROLS := {
     "move_forward": "W",
