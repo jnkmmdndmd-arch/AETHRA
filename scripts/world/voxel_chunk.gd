@@ -126,7 +126,6 @@ func build_mesh(build_collision: bool = false) -> void:
                 var id: int = int(voxels[index_of(Vector3i(x,y,z))])
                 if id == BlockRegistry.AIR:
                     continue
-                var block_color: Color = block_colors[id] if id < block_colors.size() else Color.WHITE
                 var base := Vector3(x, y, z)
                 var is_fluid := id == BlockRegistry.WATER or id == BlockRegistry.LAVA
                 for face_index in 6:
