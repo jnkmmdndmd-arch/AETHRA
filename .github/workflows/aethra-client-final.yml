@@ -40,10 +40,13 @@ jobs:
           New-Item -ItemType Directory -Force $dst, $ext | Out-Null
           Invoke-WebRequest "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz" -OutFile $zip
           Expand-Archive -Force $zip $ext
-          $candidate = Get-ChildItem $ext -Recurse -File | Where-Object { $_.Name -match "^windows_release.*x86_64.*\.exe$" } | Select-Object -First 1
-          if (-not $candidate) { $candidate = Get-ChildItem $ext -Recurse -File | Where-Object { $_.Name -match "windows.*release.*x86_64" } | Select-Object -First 1 }
-          if (-not $candidate) { throw "Windows x86_64 export template not found" }
-          Copy-Item $candidate.FullName (Join-Path $dst "windows_release.x86_64.exe") -Force
+          $templates = Get-ChildItem $ext -Recurse -File | Where-Object { $_.Name -match "^windows_(debug|release)_x86_64.*\.exe$" }
+          if ($templates.Count -lt 2) { throw "Windows x86_64 debug/release export templates not found" }
+          foreach ($template in $templates) {
+            Copy-Item $template.FullName (Join-Path $dst $template.Name) -Force
+          }
+          if (-not (Test-Path (Join-Path $dst "windows_release_x86_64.exe"))) { throw "Windows release template missing" }
+          if (-not (Test-Path (Join-Path $dst "windows_debug_x86_64.exe"))) { throw "Windows debug template missing" }
 
       - name: Godot editor validation
         shell: pwsh
