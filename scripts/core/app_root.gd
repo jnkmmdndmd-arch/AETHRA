@@ -20,6 +20,8 @@ var performance_frame_sum := 0.0
 var performance_frame_count := 0
 var performance_low_time := 0.0
 var performance_high_time := 0.0
+var java_engine_bridge
+var java_backend_info: Dictionary = {}
 
 func _ready() -> void:
     randomize()
@@ -38,6 +40,7 @@ func _ready() -> void:
     _apply_graphics_profile()
     if not Settings.settings_changed.is_connected(_apply_graphics_profile):
         Settings.settings_changed.connect(_apply_graphics_profile)
+    _initialize_java_backend()
     _build_auth()
     _build_menu()
     _build_remote_players_root()
@@ -165,6 +168,30 @@ func _adaptive_resolution(delta: float) -> void:
     performance_sample_time = 0.0
     performance_frame_sum = 0.0
     performance_frame_count = 0
+
+func _initialize_java_backend() -> void:
+    var bridge_script := load("res://scripts/integration/java_engine_bridge.gd") as GDScript
+    if bridge_script == null:
+        push_warning("Java engine bridge script is unavailable; continuing with native AETHRA gameplay backend.")
+        return
+    java_engine_bridge = bridge_script.new()
+    var source_path := str(Settings.get_value("java_source_project_path", "")).strip_edges()
+    if not source_path.is_empty():
+        java_backend_info = java_engine_bridge.inspect(ProjectSettings.globalize_path(source_path))
+    else:
+        var runtime_path := str(Settings.get_value("minecraft_runtime_path", "")).strip_edges()
+        if runtime_path.is_empty():
+            java_backend_info = {
+                "kind": java_engine_bridge.BackendKind.UNAVAILABLE,
+                "kind_name": "unavailable",
+                "message": "No external Java backend configured."
+            }
+        else:
+            java_backend_info = java_engine_bridge.inspect(ProjectSettings.globalize_path(runtime_path))
+    if int(java_backend_info.get("kind", java_engine_bridge.BackendKind.UNAVAILABLE)) == java_engine_bridge.BackendKind.JAVA_SOURCE_PROJECT:
+        print("Java gameplay backend source detected: ", java_backend_info.get("root", ""))
+    elif int(java_backend_info.get("kind", java_engine_bridge.BackendKind.UNAVAILABLE)) == java_engine_bridge.BackendKind.MINECRAFT_RUNTIME_PACKAGE:
+        print("Minecraft Java runtime detected as external content/runtime; AETHRA native gameplay remains authoritative.")
 
 func _build_remote_players_root() -> void:
     remote_players_root = Node3D.new()
