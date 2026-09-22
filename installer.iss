@@ -28,4 +28,4 @@ Name: "{autoprograms}\AETHRA: Wildbound"; Filename: "{app}\AETHRA-Wildbound.exe"
 Name: "{userdesktop}\AETHRA: Wildbound"; Filename: "{app}\AETHRA-Wildbound.exe"; WorkingDir: "{app}"
 
 [Run]
-Filename: "{app}\AETHRA-Wildbound.exe"; Description: "تشغيل AETHRA: Wildbound"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\AETHRA-Wildbound.exe"; Description: "Launch AETHRA: Wildbound"; Flags: nowait postinstall skipifsilent
