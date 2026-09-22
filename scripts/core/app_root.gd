@@ -1,6 +1,7 @@
 extends Node3D
 
 var menu: Control
+var menu_layer: CanvasLayer
 var settings_menu: Control
 var world: Node3D
 var player
@@ -80,6 +81,7 @@ func _save_window_state() -> void:
     Settings.save_settings()
 
 func _build_lighting() -> void:
+    print("[BOOT] Building WorldEnvironment")
     var env := WorldEnvironment.new()
     world_environment = Environment.new()
     var environment: Environment = world_environment
@@ -97,6 +99,10 @@ func _build_lighting() -> void:
     environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
     env.environment = environment
     add_child(env)
+    if env.environment == null:
+        push_error("[BOOT] FATAL: WorldEnvironment has no Environment resource.")
+    else:
+        print("[BOOT] WorldEnvironment ready background_mode=", env.environment.background_mode)
     sun_light = DirectionalLight3D.new()
     sun_light.rotation_degrees = Vector3(-55,-35,0)
     sun_light.light_energy = 1.15
@@ -503,6 +509,8 @@ func _hide_menu() -> void:
     print("[BOOT] Main menu hidden -> explicit gameplay transition")
     if menu:
         menu.hide()
+    if menu_layer:
+        menu_layer.hide()
     menu_visible = false
 
 func _show_menu() -> void:
@@ -510,6 +518,8 @@ func _show_menu() -> void:
     menu_visible = true
     if menu:
         menu.show()
+    if menu_layer:
+        menu_layer.show()
 
 func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed:
