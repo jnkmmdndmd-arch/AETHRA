@@ -15,6 +15,5 @@ Core boundaries:
 - `scripts/network` = ENet client/server transport and server validation gates.
 - `scripts/persistence` = world snapshots and recovery files.
 - `scripts/ui` = menu/HUD/settings.
-- `scripts/tools` = developer console.
 
 Security rule: client requests changes; server validates and applies authoritative state in multiplayer.
