@@ -6,7 +6,10 @@ on:
       - fix/aethra-ui-auth-performance
   pull_request:
     branches:
-      - main
+      - fix/aethra-ui-auth-performance
+  pull_request:
+    branches:
+      - fix/aethra-ui-auth-performance
 jobs:
   release:
     runs-on: windows-latest
