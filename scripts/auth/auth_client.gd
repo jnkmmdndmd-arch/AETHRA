@@ -127,7 +127,7 @@ func _on_request_completed(request: HTTPRequest, operation: String, session_toke
         failure.emit("خدمة الحساب غير متاحة.")
         return
 
-    var payload = JSON.parse_string(body.get_string_from_utf8())
+    var payload: Variant = JSON.parse_string(body.get_string_from_utf8())
     var message := str(payload.get("error", "فشل طلب الحساب.")) if payload is Dictionary else "فشل طلب الحساب."
 
     if operation == "logout":
@@ -177,7 +177,7 @@ func _load_local_accounts() -> Dictionary:
     var file := FileAccess.open(LOCAL_ACCOUNTS_PATH, FileAccess.READ)
     if file == null:
         return {}
-    var parsed = JSON.parse_string(file.get_as_text())
+    var parsed: Variant = JSON.parse_string(file.get_as_text())
     file.close()
     return parsed if parsed is Dictionary else {}
 
