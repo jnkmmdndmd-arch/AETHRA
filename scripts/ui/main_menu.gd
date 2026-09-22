@@ -1162,9 +1162,21 @@ func _toggle_window_mode() -> void:
     var mode := DisplayServer.window_get_mode()
     DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED if mode == DisplayServer.WINDOW_MODE_MAXIMIZED else DisplayServer.WINDOW_MODE_MAXIMIZED)
 
+var intro_safety_timer: SceneTreeTimer
+
 func _animate_intro() -> void:
-    modulate.a = 0.0
+    # The main menu is never allowed to remain invisible while waiting for a cosmetic animation.
+    modulate.a = 1.0
+    visible = true
+    intro_safety_timer = get_tree().create_timer(1.5)
+    intro_safety_timer.timeout.connect(func() -> void:
+        if is_instance_valid(self):
+            visible = true
+            modulate.a = 1.0
+    , CONNECT_ONE_SHOT)
+    # Cosmetic fade only; the menu is already visible before the tween starts.
     var tween := create_tween()
+    tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
     tween.tween_property(self, "modulate:a", 1.0, 0.55).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 func _panel(color: Color, radius: int, border: Color) -> PanelContainer:
