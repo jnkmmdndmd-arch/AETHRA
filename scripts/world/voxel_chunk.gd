@@ -1,7 +1,7 @@
 extends Node3D
 
 const SIZE := 16
-const HEIGHT := 96
+const DEFAULT_HEIGHT := 96
 const FACE_DIRS: Array[Vector3i] = [Vector3i.UP, Vector3i.DOWN, Vector3i.LEFT, Vector3i.RIGHT, Vector3i.FORWARD, Vector3i.BACK]
 const FACE_VERTS: Array[PackedVector3Array] = [
     PackedVector3Array([Vector3(0,1,0), Vector3(1,1,0), Vector3(1,1,1), Vector3(0,1,1)]),
@@ -22,11 +22,13 @@ var dirty := true
 var collision_dirty := true
 var collision_enabled := false
 var world_ref: Node = null
+var height := DEFAULT_HEIGHT
 
 func setup(coord: Vector2i, data: PackedByteArray, owner_world: Node = null) -> void:
     chunk_coord = coord
     voxels = data
     world_ref = owner_world
+    height = maxi(1, data.size() / (SIZE * SIZE))
     mesh_instance = MeshInstance3D.new()
     add_child(mesh_instance)
     collision_body = StaticBody3D.new()
@@ -36,10 +38,10 @@ func setup(coord: Vector2i, data: PackedByteArray, owner_world: Node = null) -> 
     add_child(fluid_mesh)
 
 func index_of(local: Vector3i) -> int:
-    return local.x * SIZE * HEIGHT + local.z * HEIGHT + local.y
+    return local.x * SIZE * height + local.z * height + local.y
 
 func get_voxel(local: Vector3i) -> int:
-    if local.y < 0 or local.y >= HEIGHT:
+    if local.y < 0 or local.y >= height:
         return BlockRegistry.AIR
     if local.x < 0 or local.x >= SIZE or local.z < 0 or local.z >= SIZE:
         if world_ref != null and world_ref.has_method("get_block"):
@@ -118,7 +120,7 @@ func build_mesh(build_collision: bool = false) -> void:
 
     for x in SIZE:
         for z in SIZE:
-            for y in HEIGHT:
+            for y in height:
                 var id: int = int(voxels[index_of(Vector3i(x,y,z))])
                 if id == BlockRegistry.AIR:
                     continue
