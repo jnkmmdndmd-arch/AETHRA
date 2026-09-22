@@ -112,6 +112,8 @@ func get_entity_tile(creature_type: String) -> int:
     return clampi(int(ENTITY_TILE_BY_TYPE.get(key, 0)), 0, ENTITY_TEXTURES.size() - 1)
 
 func get_item_tile(item_id: int) -> int:
+    if item_id >= ItemRegistry.MC_APPLE and item_id <= ItemRegistry.MC_CROSSBOW:
+        return clampi(item_id - ItemRegistry.MC_APPLE, 0, ITEM_TEXTURES.size() - 1)
     var mapping := {
         ItemRegistry.HEAL_FOOD: 0,
         ItemRegistry.WOOD_PICK: 52, ItemRegistry.STONE_PICK: 53, ItemRegistry.IRON_PICK: 54,
