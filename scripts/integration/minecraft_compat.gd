@@ -6,7 +6,7 @@ const ENTITY_ATLAS_PATH := "res://assets/minecraft/atlas/minecraft_entities_1_17
 const ITEM_ATLAS_PATH := "res://assets/minecraft/atlas/minecraft_items_1_17_1.webp.b64"
 
 const BLOCK_COLUMNS := 8
-const BLOCK_ROWS := 8
+const BLOCK_ROWS := 9
 const ENTITY_COLUMNS := 8
 const ENTITY_ROWS := 4
 const ITEM_COLUMNS := 8
@@ -90,8 +90,8 @@ func _load_b64_texture(path: String) -> Texture2D:
     return ImageTexture.create_from_image(image)
 
 func _build_fallback_texture(path: String) -> Texture2D:
-    var width := 128
-    var height := 128
+    var width := BLOCK_COLUMNS * 16
+    var height := BLOCK_ROWS * 16
     if "entities" in path:
         width = ENTITY_COLUMNS * 64
         height = ENTITY_ROWS * 64
