@@ -94,6 +94,22 @@ func _run() -> void:
     checks.append(_check("Expanded crafting recipes", func() -> bool:
         return not recipe_registry.find_recipe("iron_sword").is_empty() and not recipe_registry.find_recipe("chest").is_empty()
     ))
+    checks.append(_check("Minecraft atlases", func() -> bool:
+        return MinecraftCompat.get_atlas() != null and MinecraftCompat.get_entity_atlas() != null and MinecraftCompat.get_item_atlas() != null
+    ))
+    checks.append(_check("Minecraft item catalog", func() -> bool:
+        return ItemRegistry.MINECRAFT_ITEM_IDS.size() == 44 and ItemRegistry.get_item(ItemRegistry.MC_DIAMOND).get("name", "") == "Diamond"
+    ))
+    checks.append(_check("Minecraft crafting content", func() -> bool:
+        return not recipe_registry.find_recipe("minecraft_bow").is_empty()
+            and not recipe_registry.find_recipe("minecraft_shield").is_empty()
+            and not recipe_registry.find_recipe("minecraft_arrow").is_empty()
+    ))
+    checks.append(_check("Minecraft texture mapping", func() -> bool:
+        return MinecraftCompat.get_block_tile(BlockRegistry.STONE) == 2
+            and MinecraftCompat.get_item_tile(ItemRegistry.MC_DIAMOND) == 28
+            and MinecraftCompat.get_entity_tile("creeper") == 10
+    ))
     for result in checks:
         print("[TEST] %s: %s" % [result[0], "PASS" if result[1] else "FAIL"])
     if checks.any(func(x): return not bool(x[1])):
