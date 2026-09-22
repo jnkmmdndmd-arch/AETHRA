@@ -16,10 +16,20 @@ const HOSTILES := ["brute","spider","wraith","drake","wolf","sand_wyrm","stone_g
 const LOOT_TABLE := {"rabbit":[200,2],"chicken":[200,1],"boar":[200,2],"deer":[6,1],"wolf":[145,1],"brute":[12,1],"spider":[22,1],"drake":[13,1],"scorpion":[52,1],"crystal_mite":[59,1]}
 
 func setup(kind: String, origin: Vector3) -> void:
-    creature_type=kind; global_position=origin
-    health=18.0 if kind in HOSTILES else 10.0
-    detection_range=22.0 if kind in HOSTILES else 0.0
-    _build_visual(); add_to_group("creatures")
+    creature_type = kind.to_lower()
+    global_position = origin
+    var health_table := {
+        "cow": 10.0, "pig": 10.0, "sheep": 8.0, "chicken": 4.0, "horse": 15.0,
+        "wolf": 12.0, "fox": 10.0, "goat": 10.0, "rabbit": 3.0, "bee": 10.0,
+        "bat": 6.0, "spider": 16.0, "creeper": 20.0, "zombie": 20.0, "skeleton": 20.0,
+        "enderman": 40.0, "witch": 26.0, "guardian": 30.0, "blaze": 20.0, "ghast": 10.0,
+        "endermite": 8.0, "silverfish": 8.0, "piglin": 16.0, "hoglin": 40.0,
+        "ravager": 100.0, "phantom": 20.0, "wither": 300.0,
+    }
+    health = float(health_table.get(creature_type, 18.0 if creature_type in HOSTILES else 10.0))
+    detection_range = 22.0 if creature_type in HOSTILES else 0.0
+    _build_visual()
+    add_to_group("creatures")
 
 func _build_visual() -> void:
     var body := MeshInstance3D.new()
@@ -167,7 +177,7 @@ func _move(delta: float) -> void:
         move_target = target.global_position
         if global_position.distance_to(move_target) < attack_range and attack_cooldown <= 0.0 and _has_line_of_sight(target):
             if target.has_method("apply_damage"):
-                target.apply_damage(4.0 if creature_type in ["brute", "drake", "sand_wyrm", "stone_golem"] else 2.0 if creature_type in ["spider", "wraith", "wolf", "marsh_lurker"] else 1.0)
+                target.apply_damage(_attack_damage())
             attack_cooldown = 1.4
     var flat := Vector3(move_target.x - global_position.x, 0, move_target.z - global_position.z)
     if flat.length() > 0.5:
@@ -188,6 +198,17 @@ func _move(delta: float) -> void:
         if not get_world_3d().direct_space_state.intersect_ray(probe).is_empty():
             velocity.x=-flat.z*speed*0.5; velocity.z=flat.x*speed*0.5
     move_and_slide()
+
+func _attack_damage() -> float:
+    var damage_table := {
+        "creeper": 6.0, "zombie": 3.0, "skeleton": 3.0, "enderman": 7.0,
+        "witch": 3.0, "guardian": 4.0, "blaze": 5.0, "ghast": 6.0,
+        "piglin": 4.0, "hoglin": 6.0, "ravager": 8.0, "phantom": 5.0,
+        "wither": 10.0, "brute": 5.0, "drake": 5.0, "sand_wyrm": 5.0,
+        "stone_golem": 6.0, "marsh_lurker": 3.0, "spider": 2.0, "wolf": 2.0, "wraith": 2.0,
+        "scorpion": 2.0, "slime": 1.0, "bat": 1.0, "crystal_mite": 1.0
+    }
+    return float(damage_table.get(creature_type, 1.0))
 
 func _nearest_player_distance() -> float:
     var best:=0.0
