@@ -206,7 +206,7 @@ func _poll_generation_threads() -> void:
         var thread: Thread = generation_threads[key]
         if thread.is_alive():
             continue
-        var data = thread.wait_to_finish()
+        var data: Variant = thread.wait_to_finish()
         completed.append(coord)
         if data is PackedByteArray and not data.is_empty():
             call_deferred("_apply_chunk", coord, data)
