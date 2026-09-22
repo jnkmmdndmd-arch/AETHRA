@@ -46,7 +46,7 @@ func _build_creative_palette()->void:
     for item_id in [ItemRegistry.HEAL_FOOD,ItemRegistry.WOOD_PICK,ItemRegistry.STONE_PICK,ItemRegistry.IRON_PICK,ItemRegistry.WOOD_AXE,ItemRegistry.STONE_AXE,ItemRegistry.IRON_AXE,ItemRegistry.WOOD_SWORD,ItemRegistry.STONE_SWORD,ItemRegistry.IRON_SWORD,ItemRegistry.AETHER_SWORD,ItemRegistry.BOW,ItemRegistry.ARROW]:
         var item:=ItemRegistry.get_item(item_id)
         var button:=Button.new(); button.text=str(item.get("name","Item")); button.custom_minimum_size=Vector2(90,34)
-        button.pressed.connect(func(id:=item_id): inventory.add_item(id, inventory._stack_size_for(id)); refresh())
+        button.pressed.connect(func(id: int = item_id) -> void: inventory.add_item(id, inventory._stack_size_for(id)); refresh())
         grid.add_child(button)
 
 func _build_recipes()->void:
