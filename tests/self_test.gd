@@ -43,6 +43,29 @@ func _run() -> void:
     checks.append(_check("Voxel world parser", func() -> bool:
         return voxel_script != null
     ))
+    var entry_world = voxel_script.new()
+    add_child(entry_world)
+    if entry_world.has_method("configure"):
+        entry_world.configure({"world_height": 96, "render_distance": 2, "structures": false, "creatures": false, "weather": false})
+    entry_world.initialize(1234)
+    var test_player_script: GDScript = load("res://scripts/player/player_avatar.gd") as GDScript
+    var entry_player = test_player_script.new()
+    add_child(entry_player)
+    entry_player.setup(entry_world, true, 1)
+    checks.append(_check("World entry player/camera", func() -> bool:
+        return entry_player.camera != null and entry_player.camera.current and entry_player.player_model != null
+    ))
+    var test_hud_script: GDScript = load("res://scripts/ui/hud.gd") as GDScript
+    var entry_hud = test_hud_script.new()
+    add_child(entry_hud)
+    entry_hud.build()
+    entry_hud.set_inventory(entry_player.inventory)
+    checks.append(_check("Gameplay HUD construction", func() -> bool:
+        return entry_hud.crosshair != null and entry_hud.hotbar != null and entry_hud.fps_badge != null
+    ))
+    entry_hud.queue_free()
+    entry_player.queue_free()
+    entry_world.queue_free()
     checks.append(_check("UI icon policy", func() -> bool:
         var banned := ["♟", "⌂", "▶", "▣", "◇", "◆", "⚙", "↪", "●", "◉", "□", "×"]
         for path in ["res://scripts/ui/main_menu.gd", "res://scripts/ui/hud.gd", "res://scripts/ui/settings_menu.gd"]:
