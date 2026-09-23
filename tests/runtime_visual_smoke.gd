@@ -9,7 +9,12 @@ func _init() -> void:
 func _run() -> void:
     DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://runtime-proof"))
     print("[VISUAL_SMOKE] Launching main.tscn")
-    app_root = load("res://scenes/main.tscn").instantiate() as Node3D
+    var main_scene := load("res://scenes/main.tscn") as PackedScene
+    if main_scene == null:
+        push_error("[VISUAL_SMOKE] FATAL: main.tscn could not be loaded.")
+        quit(1)
+        return
+    app_root = main_scene.instantiate() as Node3D
     if app_root == null:
         push_error("[VISUAL_SMOKE] FATAL: scenes/main.tscn could not be instantiated.")
         quit(1)
@@ -29,6 +34,8 @@ func _run() -> void:
         return
 
     var viewport: Viewport = root.get_viewport()
+    _add_runtime_proof_overlay(viewport, "MENU")
+    await create_timer(0.05).timeout
     var screenshot: Image = viewport.get_texture().get_image()
     if screenshot != null:
         screenshot.save_png("res://runtime-proof/runtime-menu-proof.png")
@@ -53,6 +60,8 @@ func _run() -> void:
             var camera_ok: bool = app_root.player.camera != null and app_root.player.camera.current
             print("[VISUAL_SMOKE] world=", app_root.world != null, " player=", app_root.player != null, " rendered_chunks=", rendered, " camera=", camera_ok)
             if rendered > 0 and camera_ok:
+                _add_runtime_proof_overlay(viewport, "WORLD")
+                await create_timer(0.05).timeout
                 var world_shot: Image = viewport.get_texture().get_image()
                 if world_shot != null:
                     world_shot.save_png("res://runtime-proof/runtime-world-proof.png")
@@ -66,6 +75,26 @@ func _run() -> void:
 
     push_error("[VISUAL_SMOKE] FAIL: world/player/camera/rendered chunk did not become ready within 12 seconds.")
     quit(1)
+
+func _add_runtime_proof_overlay(viewport: Viewport, phase: String) -> void:
+    var old := viewport.get_node_or_null("RuntimeProofOverlay")
+    if old != null:
+        old.queue_free()
+    var layer := CanvasLayer.new()
+    layer.name = "RuntimeProofOverlay"
+    layer.layer = 2000
+    viewport.add_child(layer)
+    var panel := ColorRect.new()
+    panel.position = Vector2(14, 12)
+    panel.size = Vector2(560, 72)
+    panel.color = Color(0.01, 0.02, 0.03, 0.88)
+    layer.add_child(panel)
+    var label := Label.new()
+    label.position = Vector2(10, 7)
+    label.size = Vector2(540, 58)
+    label.text = "AETHRA runtime proof | %s | %s\nGodot 4.7.2 candidate | system-clock timestamp" % [phase, Time.get_datetime_string_from_system(true)]
+    label.add_theme_font_size_override("font_size", 16)
+    layer.add_child(label)
 
 func _find_button(node: Node, target_text: String) -> Button:
     for child in node.get_children():
