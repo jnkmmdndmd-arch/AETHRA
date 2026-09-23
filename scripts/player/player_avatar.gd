@@ -61,6 +61,7 @@ func _build_body() -> void:
     camera.current = is_local
     camera.fov = float(Settings.get_value("fov", 75.0))
     head.add_child(camera)
+    _apply_view_mode()
 
 func _build_skin_mesh() -> ArrayMesh:
     var vertices: Array = []
@@ -140,6 +141,15 @@ func _physics_process(delta: float) -> void:
 func apply_damage(amount: float) -> void:
     survival.apply_damage(amount)
 
+func _apply_view_mode() -> void:
+    var first_person := bool(Settings.get_value("first_person", true))
+    if camera:
+        camera.position = Vector3.ZERO if first_person else Vector3(0, 0, 3.8)
+    if player_model:
+        # In first person the camera is inside the local head mesh; hide only the local model.
+        # Remote player models remain visible to other clients.
+        player_model.visible = not (is_local and first_person)
+
 func _update_camera() -> void:
     var sensitivity := float(Settings.get_value("mouse_sensitivity", 0.15))
     var target_y := -pitch if bool(Settings.get_value("invert_y", false)) else pitch
@@ -170,8 +180,7 @@ func _unhandled_input(event: InputEvent) -> void:
     elif event is InputEventKey and event.pressed and event.physical_keycode == KEY_V:
         var third_person := not bool(Settings.get_value("first_person", true))
         Settings.values["first_person"] = third_person
-        if camera:
-            camera.position = Vector3(0, 0, 3.8) if third_person else Vector3.ZERO
+        _apply_view_mode()
     elif event.is_action_pressed("pause"):
         Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
     elif event.is_action_pressed("attack"):
