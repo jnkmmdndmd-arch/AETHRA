@@ -60,7 +60,11 @@ func _run() -> void:
             var camera_ok: bool = app_root.player.camera != null and app_root.player.camera.current
             print("[VISUAL_SMOKE] world=", app_root.world != null, " player=", app_root.player != null, " rendered_chunks=", rendered, " camera=", camera_ok)
             if rendered > 0 and camera_ok:
-                _add_runtime_proof_overlay(viewport, "WORLD")
+                # Proof mode only: move the camera behind the local player so the screenshot visibly proves terrain + player.
+                if app_root.player.has_method("get"):
+                    app_root.player.camera.position = Vector3(0, 0, 3.8)
+                    app_root.player.player_model.visible = true
+                _add_runtime_proof_overlay(viewport, "WORLD_THIRD_PERSON_PROOF")
                 await create_timer(0.05).timeout
                 var world_shot: Image = viewport.get_texture().get_image()
                 if world_shot != null:
