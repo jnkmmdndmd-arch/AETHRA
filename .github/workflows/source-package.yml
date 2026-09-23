@@ -15,11 +15,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          SOURCE_SHA="$(git rev-parse HEAD^)"
+          SOURCE_SHA="$(git rev-parse HEAD)"
           mkdir -p source-package
           git archive --format=zip --output="source-package/AETHRA-Wildbound-Source-${SOURCE_SHA:0:8}.zip" "$SOURCE_SHA"
           printf 'AETHRA source package\nSource revision: %s\n' "$SOURCE_SHA" > source-package/SOURCE-REVISION.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: AETHRA-Wildbound-Source-68d1838
+          name: AETHRA-Wildbound-Source-LATEST
           path: source-package/*
