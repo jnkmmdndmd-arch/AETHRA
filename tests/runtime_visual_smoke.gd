@@ -73,9 +73,10 @@ func _run() -> void:
                     return
                 print("[VISUAL_SMOKE] world screenshot saved")
 
-                Settings.values["first_person"] = false
-                if app_root.player.has_method("_apply_view_mode"):
-                    app_root.player.call("_apply_view_mode")
+                var toggle_view := InputEventKey.new()
+                toggle_view.physical_keycode = KEY_V
+                toggle_view.pressed = true
+                app_root.player.call("_unhandled_input", toggle_view)
                 await create_timer(0.20).timeout
                 var player_shot: Image = viewport.get_texture().get_image()
                 var player_model_visible := false
@@ -93,9 +94,7 @@ func _run() -> void:
                     return
                 player_shot.save_png("res://runtime-proof/runtime-player-proof.png")
                 print("[VISUAL_SMOKE] player screenshot saved")
-                Settings.values["first_person"] = true
-                if app_root.player.has_method("_apply_view_mode"):
-                    app_root.player.call("_apply_view_mode")
+                app_root.player.call("_unhandled_input", toggle_view)
 
                 if not _copy_boot_log_and_validate():
                     quit(1)
