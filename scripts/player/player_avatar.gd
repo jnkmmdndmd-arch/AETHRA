@@ -44,6 +44,8 @@ func _build_body() -> void:
     material.cull_mode = BaseMaterial3D.CULL_DISABLED
     player_model.material_override = material
     add_child(player_model)
+    var first_person := bool(Settings.get_value("first_person", true))
+    player_model.visible = not is_local or not first_person
 
     var collision := CollisionShape3D.new()
     var shape := CapsuleShape3D.new()
@@ -60,6 +62,7 @@ func _build_body() -> void:
     camera = Camera3D.new()
     camera.current = is_local
     camera.fov = float(Settings.get_value("fov", 75.0))
+    camera.position = Vector3.ZERO if not is_local or first_person else Vector3(0, 0, 3.8)
     head.add_child(camera)
 
 func _build_skin_mesh() -> ArrayMesh:
