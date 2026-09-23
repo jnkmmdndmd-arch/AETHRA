@@ -364,7 +364,9 @@ func _apply_camera_setting(first_person: bool) -> void:
     if player == null:
         return
     var camera = player.get("camera") if player.has_method("get") else null
-    if camera is Camera3D:
+    if player.has_method("_apply_view_mode"):
+        player.call("_apply_view_mode")
+    elif camera is Camera3D:
         camera.position = Vector3.ZERO if first_person else Vector3(0, 0, 3.8)
 
 func _capture(action: String, button: Button) -> void:
