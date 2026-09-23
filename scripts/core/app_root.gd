@@ -52,7 +52,10 @@ func _ready() -> void:
     get_window().min_size = Vector2i(960, 540)
     _restore_window_state()
     _boot_log("window_restored")
-    _build_lighting()
+    if not _build_lighting():
+        boot_failure_message = "Lighting/WorldTime initialization failed."
+        _show_boot_diagnostic()
+        return
     _boot_log("lighting_built")
     print("[BOOT] WorldEnvironment + sunlight initialized")
     _apply_graphics_profile()
@@ -120,7 +123,7 @@ func _save_window_state() -> void:
         _: Settings.values["window_mode"] = 0
     Settings.save_settings()
 
-func _build_lighting() -> void:
+func _build_lighting() -> bool:
     print("[BOOT] Building WorldEnvironment")
     var env := WorldEnvironment.new()
     world_environment = Environment.new()
@@ -154,11 +157,12 @@ func _build_lighting() -> void:
     var time_script := load("res://scripts/world/world_time.gd") as GDScript
     if time_script == null or not time_script.can_instantiate():
         push_error("[BOOT] FATAL: world_time.gd could not be loaded/instantiated.")
-        return
+        return false
     time_system = time_script.new()
     time_system.name = "WorldTime"
     add_child(time_system)
     time_system.setup(sun_light, environment)
+    return true
 
 func _apply_graphics_profile() -> void:
     if world_environment == null or sun_light == null:
