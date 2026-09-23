@@ -72,6 +72,31 @@ func _run() -> void:
                     quit(1)
                     return
                 print("[VISUAL_SMOKE] world screenshot saved")
+
+                Settings.values["first_person"] = false
+                if app_root.player.has_method("_apply_view_mode"):
+                    app_root.player.call("_apply_view_mode")
+                await create_timer(0.20).timeout
+                var player_shot: Image = viewport.get_texture().get_image()
+                var player_model_visible := false
+                var model := app_root.player.get("player_model")
+                if model is MeshInstance3D:
+                    player_model_visible = bool(model.visible)
+                print("[VISUAL_SMOKE] third_person_player_visible=", player_model_visible)
+                if not player_model_visible:
+                    push_error("[VISUAL_SMOKE] FAIL: third-person player model is not visible.")
+                    quit(1)
+                    return
+                if player_shot == null:
+                    push_error("[VISUAL_SMOKE] FAIL: third-person player screenshot could not be captured.")
+                    quit(1)
+                    return
+                player_shot.save_png("res://runtime-proof/runtime-player-proof.png")
+                print("[VISUAL_SMOKE] player screenshot saved")
+                Settings.values["first_person"] = true
+                if app_root.player.has_method("_apply_view_mode"):
+                    app_root.player.call("_apply_view_mode")
+
                 if not _copy_boot_log_and_validate():
                     quit(1)
                     return
