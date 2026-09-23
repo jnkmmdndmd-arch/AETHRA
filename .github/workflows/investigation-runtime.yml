@@ -1,0 +1,333 @@
+name: AETHRA Investigation Runtime Proof
+
+on:
+  push:
+    branches:
+      - investigation/boot-world-proof-20260923
+  workflow_dispatch:
+
+jobs:
+  investigate:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Apply investigation fixes and fresh-proof instrumentation
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path("scripts/core/app_root.gd")
+          s = p.read_text()
+          s = s.replace('''    _build_auth()
+    _boot_log("auth_initialized")
+    print("[BOOT] Auth service initialized (non-blocking)")
+    _build_menu()
+    _boot_log("main_menu_built")
+    print("[BOOT] Main menu constructed and visible")
+''', '''    if not _build_auth():
+        boot_failure_message = "Auth client could not be loaded."
+        _show_boot_diagnostic()
+        return
+    _boot_log("auth_initialized")
+    print("[BOOT] Auth service initialized (non-blocking)")
+    if not _build_menu():
+        boot_failure_message = "Main menu could not be built."
+        _show_boot_diagnostic()
+        return
+    _boot_log("main_menu_built")
+    print("[BOOT] Main menu constructed and visible")
+''')
+          s = s.replace('''    time_system = load("res://scripts/world/world_time.gd").new()
+    time_system.name = "WorldTime"
+''', '''    var time_script := load("res://scripts/world/world_time.gd") as GDScript
+    if time_script == null or not time_script.can_instantiate():
+        push_error("[BOOT] FATAL: world_time.gd could not be loaded/instantiated.")
+        return
+    time_system = time_script.new()
+    time_system.name = "WorldTime"
+''')
+          s = s.replace('''func _build_auth() -> void:
+    auth = load("res://scripts/auth/auth_client.gd").new()
+''', '''func _build_auth() -> bool:
+    var auth_script := load("res://scripts/auth/auth_client.gd") as GDScript
+    if auth_script == null or not auth_script.can_instantiate():
+        push_error("[BOOT] FATAL: auth_client.gd could not be loaded/instantiated.")
+        return false
+    auth = auth_script.new()
+''')
+          s = s.replace('''    if not saved_token.is_empty():
+        AppState.character_id = str(saved_session.get("character", AppState.character_id))
+        AppState.avatar_id = clampi(int(saved_session.get("avatar_id", AppState.avatar_id)), 0, AppState.MAX_AVATARS - 1)
+        auth.restore_session(saved_token)
+
+func _build_menu() -> void:
+''', '''    if not saved_token.is_empty():
+        AppState.character_id = str(saved_session.get("character", AppState.character_id))
+        AppState.avatar_id = clampi(int(saved_session.get("avatar_id", AppState.avatar_id)), 0, AppState.MAX_AVATARS - 1)
+        auth.restore_session(saved_token)
+    return true
+
+func _build_menu() -> bool:
+''')
+          s = s.replace('''        push_error("[BOOT] FATAL: main_menu.gd could not be loaded/instantiated.")
+        return
+''', '''        push_error("[BOOT] FATAL: main_menu.gd could not be loaded/instantiated.")
+        return false
+''', 1)
+          s = s.replace('''    menu.open_settings.connect(_open_settings)
+
+func _on_auth_success''', '''    menu.open_settings.connect(_open_settings)
+    return true
+
+func _on_auth_success''')
+          s = s.replace('''    world.initialize(seed_value)
+    print("[WORLD] initialize() returned; spawn=", world.spawn_position, " ready=", world.is_ready_for_spawn() if world.has_method("is_ready_for_spawn") else false)
+    _boot_log("world_initialized")
+''', '''    world.initialize(seed_value)
+    var world_ready := world.has_method("is_ready_for_spawn") and bool(world.is_ready_for_spawn())
+    print("[WORLD] initialize() returned; spawn=", world.spawn_position, " ready=", world_ready)
+    if not world_ready:
+        push_error("[WORLD] FATAL: world initialization completed without a ready spawn chunk.")
+        _abort_world_boot("World spawn chunk was not ready after initialization.")
+        return
+    _boot_log("world_initialized")
+''')
+          s = s.replace('''    if not remote_world:
+        creatures = load("res://scripts/entities/spawn_manager.gd").new()
+        add_child(creatures)
+        creatures.setup(world, bool(config.get("creatures", true)))
+    _build_hud()
+''', '''    if not remote_world:
+        var spawn_script := load("res://scripts/entities/spawn_manager.gd") as GDScript
+        if spawn_script == null or not spawn_script.can_instantiate():
+            push_error("[WORLD] FATAL: spawn_manager.gd could not be loaded/instantiated.")
+            _abort_world_boot("Creature spawn manager could not be loaded.")
+            return
+        creatures = spawn_script.new()
+        add_child(creatures)
+        creatures.setup(world, bool(config.get("creatures", true)))
+    if not _build_hud():
+        return
+''')
+          s = s.replace('''func _build_hud() -> void:
+    hud = load("res://scripts/ui/hud.gd").new()
+    add_child(hud)
+''', '''func _build_hud() -> bool:
+    var hud_script := load("res://scripts/ui/hud.gd") as GDScript
+    if hud_script == null or not hud_script.can_instantiate():
+        push_error("[WORLD] FATAL: hud.gd could not be loaded/instantiated.")
+        _abort_world_boot("HUD script could not be loaded.")
+        return false
+    hud = hud_script.new()
+    add_child(hud)
+''')
+          s = s.replace('''    _update_hud()
+
+func _on_inventory_snapshot''', '''    _update_hud()
+    return true
+
+func _on_inventory_snapshot''')
+          s = s.replace('''    settings_menu = load("res://scripts/ui/settings_menu.gd").new()
+    add_child(settings_menu)
+''', '''    var settings_script := load("res://scripts/ui/settings_menu.gd") as GDScript
+    if settings_script == null or not settings_script.can_instantiate():
+        push_error("[BOOT] FATAL: settings_menu.gd could not be loaded/instantiated.")
+        if menu:
+            menu.show()
+        return
+    settings_menu = settings_script.new()
+    add_child(settings_menu)
+''')
+          p.write_text(s)
+
+          p = Path("scripts/world/voxel_world.gd")
+          s = p.read_text()
+          s = s.replace('''    generator = load("res://scripts/world/world_generator.gd").new(world_seed)
+    if generator.has_method("configure"):
+''', '''    var generator_script := load("res://scripts/world/world_generator.gd") as GDScript
+    if generator_script == null or not generator_script.can_instantiate():
+        push_error("[WORLD] FATAL: world_generator.gd failed to load/instantiate.")
+        return
+    generator = generator_script.new(world_seed)
+    if generator.has_method("configure"):
+''')
+          p.write_text(s)
+
+          p = Path("scripts/network/server_directory.gd")
+          s = p.read_text()
+          old = '''        var f := FileAccess.open("user://server_favorites.json", FileAccess.READ)
+        var data = JSON.parse_string(f.get_as_text()); f.close()
+        if data is Array:
+            favorites.assign(data)
+'''
+          new = '''        var f := FileAccess.open("user://server_favorites.json", FileAccess.READ)
+        if f == null:
+            push_error("[NETWORK] Failed to open server favorites file for reading.")
+        else:
+            var data = JSON.parse_string(f.get_as_text())
+            f.close()
+            if data is Array:
+                favorites.assign(data)
+'''
+          s = s.replace(old, new)
+          p.write_text(s)
+
+          p = Path("server/main_server.gd")
+          s = p.read_text()
+          s = s.replace('''    world = load("res://scripts/world/voxel_world.gd").new()
+    add_child(world)
+    world.initialize(world_seed)
+''', '''    var world_script := load("res://scripts/world/voxel_world.gd") as GDScript
+    if world_script == null or not world_script.can_instantiate():
+        push_error("[SERVER] FATAL: voxel_world.gd could not be loaded/instantiated.")
+        return
+    world = world_script.new()
+    add_child(world)
+    world.initialize(world_seed)
+''')
+          s = s.replace('''    time_system = load("res://scripts/world/world_time.gd").new()
+''', '''    var time_script := load("res://scripts/world/world_time.gd") as GDScript
+    if time_script == null or not time_script.can_instantiate():
+        push_error("[SERVER] FATAL: world_time.gd could not be loaded/instantiated.")
+        return
+    time_system = time_script.new()
+''')
+          p.write_text(s)
+
+          p = Path("tests/runtime_visual_smoke.gd")
+          s = p.read_text()
+          s = s.replace('''    var viewport: Viewport = root.get_viewport()
+    var screenshot: Image = viewport.get_texture().get_image()
+''', '''    var viewport: Viewport = root.get_viewport()
+    _add_runtime_proof_overlay(viewport, "MENU")
+    await create_timer(0.05).timeout
+    var screenshot: Image = viewport.get_texture().get_image()
+''')
+          s = s.replace('''                var world_shot: Image = viewport.get_texture().get_image()
+''', '''                _add_runtime_proof_overlay(viewport, "WORLD")
+                await create_timer(0.05).timeout
+                var world_shot: Image = viewport.get_texture().get_image()
+''')
+          s = s.replace('''func _find_button(node: Node, target_text: String) -> Button:
+''', '''func _add_runtime_proof_overlay(viewport: Viewport, phase: String) -> void:
+    var old := viewport.get_node_or_null("RuntimeProofOverlay")
+    if old != null:
+        old.queue_free()
+    var layer := CanvasLayer.new()
+    layer.name = "RuntimeProofOverlay"
+    layer.layer = 2000
+    viewport.add_child(layer)
+    var panel := ColorRect.new()
+    panel.position = Vector2(14, 12)
+    panel.size = Vector2(560, 72)
+    panel.color = Color(0.01, 0.02, 0.03, 0.88)
+    layer.add_child(panel)
+    var label := Label.new()
+    label.position = Vector2(10, 7)
+    label.size = Vector2(540, 58)
+    label.text = "AETHRA runtime proof | %s | %s\\nGodot 4.7.2 candidate | system-clock timestamp" % [phase, Time.get_datetime_string_from_system(true)]
+    label.add_theme_font_size_override("font_size", 16)
+    layer.add_child(label)
+
+func _find_button(node: Node, target_text: String) -> Button:
+''')
+          s = s.replace('''    app_root = load("res://scenes/main.tscn").instantiate() as Node3D
+''', '''    var main_scene := load("res://scenes/main.tscn") as PackedScene
+    if main_scene == null:
+        push_error("[VISUAL_SMOKE] FATAL: main.tscn could not be loaded.")
+        quit(1)
+        return
+    app_root = main_scene.instantiate() as Node3D
+''')
+          p.write_text(s)
+
+          print("INVESTIGATION_PATCH_APPLIED")
+          PY
+
+      - name: Install Godot 4.7.2
+        shell: pwsh
+        run: |
+          $root = Join-Path $env:RUNNER_TEMP "godot-4.7.2"
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+          Invoke-WebRequest -Uri "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_win64.exe.zip" -OutFile (Join-Path $root "godot.zip")
+          Invoke-WebRequest -Uri "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz" -OutFile (Join-Path $root "templates.tpz")
+          Expand-Archive -Path (Join-Path $root "godot.zip") -DestinationPath $root -Force
+          Expand-Archive -Path (Join-Path $root "templates.tpz") -DestinationPath $root -Force
+          $godotExe = Get-ChildItem -Path $root -Recurse -Filter "Godot*.exe" | Select-Object -First 1 -ExpandProperty FullName
+          if (-not $godotExe) { throw "Godot executable was not found." }
+          $templatesDir = Join-Path $env:APPDATA "Godot\export_templates\4.7.2.stable"
+          New-Item -ItemType Directory -Force -Path $templatesDir | Out-Null
+          foreach ($tplRoot in @((Join-Path $root "templates"),(Join-Path $root "export_templates"))) {
+            if (Test-Path $tplRoot) { Get-ChildItem $tplRoot -Force | Copy-Item -Destination $templatesDir -Recurse -Force }
+          }
+          $env:PATH = (Split-Path -Parent $godotExe) + ";" + $env:PATH
+          & $godotExe --version
+
+      - name: Godot parse/editor gates
+        shell: pwsh
+        run: |
+          $godot = Get-ChildItem "$env:RUNNER_TEMP\godot-4.7.2" -Recurse -Filter "Godot*.exe" | Select-Object -First 1 -ExpandProperty FullName
+          & $godot --headless --path . --editor --quit
+          if ($LASTEXITCODE -ne 0) { throw "Editor validation failed." }
+          & $godot --headless --path . --script "res://tests/parse_all_scripts.gd"
+          if ($LASTEXITCODE -ne 0) { throw "GDScript parse gate failed." }
+
+      - name: Fresh graphical runtime proof
+        shell: pwsh
+        run: |
+          $godot = Get-ChildItem "$env:RUNNER_TEMP\godot-4.7.2" -Recurse -Filter "Godot*.exe" | Select-Object -First 1 -ExpandProperty FullName
+          if (Test-Path "runtime-proof") { Remove-Item -Recurse -Force "runtime-proof" }
+          $stdout = Join-Path $env:RUNNER_TEMP "investigation-visual.stdout.log"
+          $stderr = Join-Path $env:RUNNER_TEMP "investigation-visual.stderr.log"
+          $args = @("--path", ".", "--resolution", "1280x720", "--rendering-method", "gl_compatibility", "--script", "res://tests/runtime_visual_smoke.gd")
+          $process = Start-Process -FilePath $godot -ArgumentList $args -NoNewWindow -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          if (-not $process.WaitForExit(90000)) {
+            Stop-Process -Id $process.Id -Force
+            Get-Content $stdout, $stderr -ErrorAction SilentlyContinue
+            throw "Visual runtime timed out."
+          }
+          Get-Content $stdout, $stderr -ErrorAction SilentlyContinue
+          if ($process.ExitCode -ne 0) { throw "Visual runtime failed: $($process.ExitCode)" }
+          if (-not (Test-Path "runtime-proof/runtime-menu-proof.png")) { throw "Missing menu screenshot." }
+          if (-not (Test-Path "runtime-proof/runtime-world-proof.png")) { throw "Missing world screenshot." }
+
+      - name: Fresh Windows export
+        shell: pwsh
+        run: |
+          $godot = Get-ChildItem "$env:RUNNER_TEMP\godot-4.7.2" -Recurse -Filter "Godot*.exe" | Select-Object -First 1 -ExpandProperty FullName
+          if (Test-Path build) { Remove-Item -Recurse -Force build }
+          New-Item -ItemType Directory -Force -Path build | Out-Null
+          & $godot --headless --path . --export-release "Windows Desktop" "build/AETHRA-Wildbound-Investigation.exe"
+          if ($LASTEXITCODE -ne 0) { throw "Windows export failed." }
+          $sha = (Get-FileHash "build/AETHRA-Wildbound-Investigation.exe" -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$sha  AETHRA-Wildbound-Investigation.exe" | Out-File -Encoding ascii build/AETHRA-Wildbound-Investigation.sha256
+
+      - name: Actual EXE startup smoke
+        shell: pwsh
+        run: |
+          $exe = "build/AETHRA-Wildbound-Investigation.exe"
+          $proc = Start-Process -FilePath $exe -PassThru -WindowStyle Normal
+          Start-Sleep -Seconds 15
+          if ($proc.HasExited) {
+            throw "EXE exited unexpectedly with code $($proc.ExitCode)."
+          }
+          $proc | Stop-Process -Force
+          "EXE_PROCESS_START=PASS" | Out-File -Encoding ascii runtime-proof/exe-start.txt
+
+      - name: Upload fresh proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: AETHRA-Investigation-Proof-20260923
+          path: |
+            runtime-proof/runtime-menu-proof.png
+            runtime-proof/runtime-world-proof.png
+            runtime-proof/boot_log.txt
+            runtime-proof/exe-start.txt
+            build/AETHRA-Wildbound-Investigation.exe
+            build/AETHRA-Wildbound-Investigation.sha256
+            build/commit.sha
