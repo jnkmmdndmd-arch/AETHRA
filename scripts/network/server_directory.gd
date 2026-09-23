@@ -7,9 +7,13 @@ var favorites: Array[Dictionary] = []
 func load_favorites() -> void:
     if FileAccess.file_exists("user://server_favorites.json"):
         var f := FileAccess.open("user://server_favorites.json", FileAccess.READ)
-        var data = JSON.parse_string(f.get_as_text()); f.close()
-        if data is Array:
-            favorites.assign(data)
+        if f == null:
+            push_error("[NETWORK] Failed to open server favorites file for reading.")
+        else:
+            var data = JSON.parse_string(f.get_as_text())
+            f.close()
+            if data is Array:
+                favorites.assign(data)
     servers_changed.emit(favorites)
 
 func add_favorite(address: String, name: String = "Favorite") -> void:
