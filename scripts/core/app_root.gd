@@ -61,10 +61,16 @@ func _ready() -> void:
         Settings.settings_changed.connect(_apply_graphics_profile)
     _initialize_java_backend()
     _boot_log("java_backend_checked")
-    _build_auth()
+    if not _build_auth():
+        boot_failure_message = "Auth client could not be loaded."
+        _show_boot_diagnostic()
+        return
     _boot_log("auth_initialized")
     print("[BOOT] Auth service initialized (non-blocking)")
-    _build_menu()
+    if not _build_menu():
+        boot_failure_message = "Main menu could not be built."
+        _show_boot_diagnostic()
+        return
     _boot_log("main_menu_built")
     print("[BOOT] Main menu constructed and visible")
     _build_remote_players_root()
@@ -145,7 +151,11 @@ func _build_lighting() -> void:
     sun_light.light_energy = 1.15
     sun_light.shadow_enabled = false
     add_child(sun_light)
-    time_system = load("res://scripts/world/world_time.gd").new()
+    var time_script := load("res://scripts/world/world_time.gd") as GDScript
+    if time_script == null or not time_script.can_instantiate():
+        push_error("[BOOT] FATAL: world_time.gd could not be loaded/instantiated.")
+        return
+    time_system = time_script.new()
     time_system.name = "WorldTime"
     add_child(time_system)
     time_system.setup(sun_light, environment)
@@ -279,8 +289,12 @@ func _on_remote_player_states(players: Dictionary) -> void:
             remote_player_nodes[id] = node
         node.apply_state(row.get("position", Vector3.ZERO), float(row.get("yaw", 0.0)))
 
-func _build_auth() -> void:
-    auth = load("res://scripts/auth/auth_client.gd").new()
+func _build_auth() -> bool:
+    var auth_script := load("res://scripts/auth/auth_client.gd") as GDScript
+    if auth_script == null or not auth_script.can_instantiate():
+        push_error("[BOOT] FATAL: auth_client.gd could not be loaded/instantiated.")
+        return false
+    auth = auth_script.new()
     add_child(auth)
     auth.configure(str(Settings.get_value("auth_server_url", "")))
     auth.success.connect(_on_auth_success)
@@ -292,8 +306,9 @@ func _build_auth() -> void:
         AppState.character_id = str(saved_session.get("character", AppState.character_id))
         AppState.avatar_id = clampi(int(saved_session.get("avatar_id", AppState.avatar_id)), 0, AppState.MAX_AVATARS - 1)
         auth.restore_session(saved_token)
+    return true
 
-func _build_menu() -> void:
+func _build_menu() -> bool:
     menu_layer = CanvasLayer.new()
     menu_layer.name = "MainMenuLayer"
     menu_layer.layer = 100
@@ -301,7 +316,7 @@ func _build_menu() -> void:
     var menu_script := load("res://scripts/ui/main_menu.gd") as GDScript
     if menu_script == null or not menu_script.can_instantiate():
         push_error("[BOOT] FATAL: main_menu.gd could not be loaded/instantiated.")
-        return
+        return false
     menu = menu_script.new()
     menu_layer.add_child(menu)
     menu.build(self)
@@ -310,6 +325,7 @@ func _build_menu() -> void:
     menu.host_multiplayer.connect(_host)
     menu.join_multiplayer.connect(_join)
     menu.open_settings.connect(_open_settings)
+    return true
 
 func _on_auth_success(profile: Dictionary) -> void:
     var token := str(profile.get("token", ""))
@@ -426,7 +442,12 @@ func _start_world(seed_value: int, world_name: String, mode: String) -> void:
         world.configure(config)
     print("[WORLD] configuring generator/world height=", config.get("world_height", 96))
     world.initialize(seed_value)
-    print("[WORLD] initialize() returned; spawn=", world.spawn_position, " ready=", world.is_ready_for_spawn() if world.has_method("is_ready_for_spawn") else false)
+    var world_ready := world.has_method("is_ready_for_spawn") and bool(world.is_ready_for_spawn())
+    print("[WORLD] initialize() returned; spawn=", world.spawn_position, " ready=", world_ready)
+    if not world_ready:
+        push_error("[WORLD] FATAL: world initialization completed without a ready spawn chunk.")
+        _abort_world_boot("World spawn chunk was not ready after initialization.")
+        return
     _boot_log("world_initialized")
     if time_system:
         time_system.weather_enabled = bool(config.get("weather", true))
@@ -493,10 +514,16 @@ func _start_world(seed_value: int, world_name: String, mode: String) -> void:
             for item_id in starting_inventory:
                 player.inventory.add_item(int(item_id), int(starting_inventory[item_id]))
     if not remote_world:
-        creatures = load("res://scripts/entities/spawn_manager.gd").new()
+        var spawn_script := load("res://scripts/entities/spawn_manager.gd") as GDScript
+        if spawn_script == null or not spawn_script.can_instantiate():
+            push_error("[WORLD] FATAL: spawn_manager.gd could not be loaded/instantiated.")
+            _abort_world_boot("Creature spawn manager could not be loaded.")
+            return
+        creatures = spawn_script.new()
         add_child(creatures)
         creatures.setup(world, bool(config.get("creatures", true)))
-    _build_hud()
+    if not _build_hud():
+        return
     print("[WORLD] HUD built; world boot completed from app perspective")
     _boot_log("world_boot_complete")
     if not remote_world:
@@ -506,8 +533,13 @@ func _start_world(seed_value: int, world_name: String, mode: String) -> void:
     # This prevents the cursor from seemingly disappearing when a new world opens.
     Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
-func _build_hud() -> void:
-    hud = load("res://scripts/ui/hud.gd").new()
+func _build_hud() -> bool:
+    var hud_script := load("res://scripts/ui/hud.gd") as GDScript
+    if hud_script == null or not hud_script.can_instantiate():
+        push_error("[WORLD] FATAL: hud.gd could not be loaded/instantiated.")
+        _abort_world_boot("HUD script could not be loaded.")
+        return false
+    hud = hud_script.new()
     add_child(hud)
     hud.build()
     if not NetworkManager.player_presence_changed.is_connected(hud.set_players):
@@ -516,6 +548,7 @@ func _build_hud() -> void:
     if not player.survival.health_changed.is_connected(_on_player_health):
         player.survival.health_changed.connect(_on_player_health)
     _update_hud()
+    return true
 
 func _on_inventory_snapshot(snapshot: Array) -> void:
     if player == null or snapshot.is_empty():
@@ -536,7 +569,13 @@ func _open_settings(_return_page: String = "home") -> void:
         return
     if menu:
         menu.hide()
-    settings_menu = load("res://scripts/ui/settings_menu.gd").new()
+    var settings_script := load("res://scripts/ui/settings_menu.gd") as GDScript
+    if settings_script == null or not settings_script.can_instantiate():
+        push_error("[BOOT] FATAL: settings_menu.gd could not be loaded/instantiated.")
+        if menu:
+            menu.show()
+        return
+    settings_menu = settings_script.new()
     add_child(settings_menu)
     settings_menu.build(self)
     settings_menu.closed.connect(func():
