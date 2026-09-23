@@ -33,7 +33,11 @@ func _ready() -> void:
     var cli_port := _arg_int(args, "--port", -1)
     if cli_port > 0:
         server_port = cli_port
-    world = load("res://scripts/world/voxel_world.gd").new()
+    var world_script := load("res://scripts/world/voxel_world.gd") as GDScript
+    if world_script == null or not world_script.can_instantiate():
+        push_error("[SERVER] FATAL: voxel_world.gd could not be loaded/instantiated.")
+        return
+    world = world_script.new()
     add_child(world)
     world.initialize(world_seed)
     var settings := {
@@ -54,7 +58,11 @@ func _ready() -> void:
     server_pvp = bool(settings.get("pvp", server_pvp))
     if world.has_method("configure"):
         world.configure(settings)
-    time_system = load("res://scripts/world/world_time.gd").new()
+    var time_script := load("res://scripts/world/world_time.gd") as GDScript
+    if time_script == null or not time_script.can_instantiate():
+        push_error("[SERVER] FATAL: world_time.gd could not be loaded/instantiated.")
+        return
+    time_system = time_script.new()
     time_system.name = "WorldTime"
     add_child(time_system)
     time_system.setup(null, null, bool(settings.get("weather", true)))
