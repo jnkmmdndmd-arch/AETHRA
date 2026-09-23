@@ -147,8 +147,8 @@ func _build_lighting() -> bool:
     add_child(env)
     if env.environment == null:
         push_error("[BOOT] FATAL: WorldEnvironment has no Environment resource.")
-    else:
-        print("[BOOT] WorldEnvironment ready background_mode=", env.environment.background_mode)
+        return false
+    print("[BOOT] WorldEnvironment ready background_mode=", env.environment.background_mode)
     sun_light = DirectionalLight3D.new()
     sun_light.rotation_degrees = Vector3(-55,-35,0)
     sun_light.light_energy = 1.15
@@ -287,7 +287,11 @@ func _on_remote_player_states(players: Dictionary) -> void:
         var row: Dictionary = players[key]
         var node = remote_player_nodes.get(id)
         if node == null or not is_instance_valid(node):
-            node = load("res://scripts/network/remote_player_avatar.gd").new()
+            var remote_script := load("res://scripts/network/remote_player_avatar.gd") as GDScript
+            if remote_script == null or not remote_script.can_instantiate():
+                push_error("[NETWORK] FATAL: remote_player_avatar.gd could not be loaded/instantiated.")
+                continue
+            node = remote_script.new()
             remote_players_root.add_child(node)
             node.setup(id, str(row.get("name", "Player")), str(row.get("character", "ranger")))
             remote_player_nodes[id] = node
