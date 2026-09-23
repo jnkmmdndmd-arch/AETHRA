@@ -349,3 +349,7 @@ AETHRA boot log
 ## Additional finding from run 407
 - **tests/runtime_visual_smoke.gd**: Godot 4.7.2 reported a parse error at the newly added third-person proof variable because `:=` could not infer the type returned by `Node.get()`. The variable is now explicitly declared as `Variant` (current line 70-ish). This was a test-script compile issue, not a gameplay runtime failure.
 - The player/world fix itself had already passed the graphical smoke in run 402; this later failure existed only because the stricter evidence test was not type-correct.
+
+
+## Additional finding from run 410
+- **tests/runtime_visual_smoke.gd**: the third-person proof initially referenced the global `Settings` symbol from a `SceneTree` test script and Godot reported `Identifier not found: Settings`. The test was corrected to exercise the real player V-toggle input path instead of adding a compile-time autoload dependency. This is test-only; the gameplay player view-mode implementation remains unchanged.
