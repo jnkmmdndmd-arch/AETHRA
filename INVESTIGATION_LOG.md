@@ -344,3 +344,8 @@ AETHRA boot log
 
 ## الحكم النهائي
 العطل الأصلي المؤكد هو self-occlusion من نموذج اللاعب المحلي داخل كاميرا first-person، وتم إصلاحه والتحقق منه على Windows runtime. التصدير شُغّل فعليًا و`PROCESS_START_OK`، لكن full desktop GUI automation وحفظ/إعدادات/Multiplayer end-to-end ليست مثبتة كاختبار بشري كامل في runner الحالي.
+
+
+## Additional finding from run 407
+- **tests/runtime_visual_smoke.gd**: Godot 4.7.2 reported a parse error at the newly added third-person proof variable because `:=` could not infer the type returned by `Node.get()`. The variable is now explicitly declared as `Variant` (current line 70-ish). This was a test-script compile issue, not a gameplay runtime failure.
+- The player/world fix itself had already passed the graphical smoke in run 402; this later failure existed only because the stricter evidence test was not type-correct.
