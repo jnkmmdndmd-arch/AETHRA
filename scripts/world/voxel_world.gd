@@ -34,7 +34,11 @@ func initialize(seed_value: int) -> void:
     print("[WORLD] initialize seed=", seed_value)
     world_seed = seed_value
     world_height = clampi(int(world_settings.get("world_height", DEFAULT_WORLD_HEIGHT)), MIN_WORLD_HEIGHT, MAX_WORLD_HEIGHT)
-    generator = load("res://scripts/world/world_generator.gd").new(world_seed)
+    var generator_script := load("res://scripts/world/world_generator.gd") as GDScript
+    if generator_script == null or not generator_script.can_instantiate():
+        push_error("[WORLD] FATAL: world_generator.gd failed to load/instantiate.")
+        return
+    generator = generator_script.new(world_seed)
     if generator.has_method("configure"):
         generator.configure(
             bool(world_settings.get("structures", true)),
