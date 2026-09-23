@@ -1,3 +1,346 @@
-# AETHRA: Wildbound — INVESTIGATION_LOG\n\n## بيانات التحقيق\n- Source baseline: `68d18381078bc8f5f5f2065d72d2d8a5f790f694`\n- Fix commits: `c29a30b913a58fafaf8d28dc63d3be6913a4e0be`, `54116fcd640c54f1a25289ace09b920fcd379151`, `91dc1602c726bce5ada133ed4b995e13bc279f6c`.\n- Windows runtime run: `35847713744` / Godot 4.7.2.\n\n## [scripts/core/app_root.gd]\n- **السبب اللي فتحته لأجله**: نقطة الإقلاع وكل world boot calls\n- **شنو يسوي هالملف**: تهيئة الرسوم وJava/auth/menu/network ثم إنشاء العالم واللاعب والـHUD.\n- **نقاط خطر لقيتها**:\n  - - Java file walk عند إعداد path كبير: ~229-241، synchronous لكنه غير مستدعى بالافتراضي.
+# AETHRA: Wildbound — INVESTIGATION_LOG
+
+## بيانات التحقيق
+- Source baseline: `68d18381078bc8f5f5f2065d72d2d8a5f790f694`
+- Fix commits: `c29a30b913a58fafaf8d28dc63d3be6913a4e0be`, `54116fcd640c54f1a25289ace09b920fcd379151`, `91dc1602c726bce5ada133ed4b995e13bc279f6c`.
+- Windows runtime run: `35847713744` / Godot 4.7.2.
+
+## [scripts/core/app_root.gd]
+- **السبب اللي فتحته لأجله**: نقطة الإقلاع وكل world boot calls
+- **شنو يسوي هالملف**: تهيئة الرسوم وJava/auth/menu/network ثم إنشاء العالم واللاعب والـHUD.
+- **نقاط خطر لقيتها**:
+  - - Java file walk عند إعداد path كبير: ~229-241، synchronous لكنه غير مستدعى بالافتراضي.
 - remote avatar load عند ~276 بلا null check، ومساره بعد boot.
-- spawn manager load عند 496 غير محمي، لكن runtime أثبته.\n- **الحكم النهائي على هالملف**: نظيف بالنسبة للعطل الحالي؛ مشبوه فقط في مسارات لاحقة/اختيارية.\n\n## [scripts/core/app_state.gd]\n- **السبب اللي فتحته لأجله**: autoload يستخدمه app_root/UI/player\n- **شنو يسوي هالملف**: حالة الجلسة والعالم ونمط اللعب.\n- **نقاط خطر لقيتها**:\n  - لا توجد نقطة مؤكدة في boot.\n- **الحكم النهائي على هالملف**: نظيف.\n\n## [scripts/core/settings.gd]\n- **السبب اللي فتحته لأجله**: autoload ويحدد first_person/FOV/graphics\n- **شنو يسوي هالملف**: إدارة الإعدادات والـinput/persistence.\n- **نقاط خطر لقيتها**:\n  - first_person=true يكشف عيب view-model لكنه ليس خطأ بحد ذاته.\n- **الحكم النهائي على هالملف**: نظيف.\n\n## [scripts/audio/audio_manager.gd]\n- **السبب اللي فتحته لأجله**: autoload ويُستدعى أثناء gameplay\n- **شنو يسوي هالملف**: تحميل وتشغيل الأصوات.\n- **نقاط خطر لقيتها**:\n  - WASAPI فشل في runner ثم fallback إلى dummy؛ ليس blocker.\n- **الحكم النهائي على هالملف**: نظيف بالنسبة للعطل؛ تحذير بيئي غير قاتل.\n\n## [scripts/auth/auth_client.gd]\n- **السبب اللي فتحته لأجله**: يبنى قبل القائمة وقد يسبب network wait\n- **شنو يسوي هالملف**: حسابات محلية وHTTP auth.\n- **نقاط خطر لقيتها**:\n  - الطلبات البعيدة عليها timeout؛ الافتراضي auth_server_url فارغ.\n- **الحكم النهائي على هالملف**: نظيف.\n\n## [scripts/persistence/save_db.gd]\n- **السبب اللي فتحته لأجله**: autoload وworld save/load\n- **شنو يسوي هالملف**: تخزين العوالم والنسخ الاحتياطية.\n- **نقاط خطر لقيتها**:\n  - لا مشكلة مؤكدة في boot.\n- **الحكم النهائي على هالملف**: نظيف.\n\n## [scripts/data/block_registry.gd]\n- **السبب اللي فتحته لأجله**: autoload وworld/player\n- **شنو يسوي هالملف**: تعريف البلوكات وخواصها.\n- **نقاط خطر لقيتها**:\n  - لا مشكلة مؤكدة.\n- **الحكم النهائي على هالملف**: نظيف.\n\n## [scripts/data/item_registry.gd]\n- **السبب اللي فتحته لأجله**: autoload وinventory/player\n- **شنو يسوي هالملف**: تعريف العناصر والأدوات.\n- **نقاط خطر لقيتها**:\n  - لا مشكلة مؤكدة.\n- **الحكم النهائي على هالملف**: نظيف.\n\n## [scripts/data/recipe_registry.gd]\n- **السبب اللي فتحته لأجله**: autoload وcrafting\n- **شنو يسوي هالملف**: تعريف وصفات التصنيع.\n- **نقاط خطر لقيتها**:\n  - لا مشكلة مؤكدة.\n- **الحكم النهائي على هالملف**: نظيف.\n\n## [scripts/network/network_manager.gd]\n- **السبب اللي فتحته لأجله**: autoload وربط world/host/join\n- **شنو يسوي هالملف**: ENet وRPC validation وحالة اللاعبين.\n- **نقاط خطر لقيتها**:\n  - remote avatar load غير محمي في مسار remote فقط؛ singleplayer لا ينتظر شبكة.\n- **الحكم النهائي على هالملف**: نظيف لمسار singleplayer.\n\n## [scripts/network/server_directory.gd]\n- **السبب اللي فتحته لأجله**: autoload وmain_menu\n- **شنو يسوي هالملف**: المفضلة والـrecent servers.\n- **نقاط خطر لقيتها**:\n  - لا network wait عند boot.\n- **الحكم النهائي على هالملف**: نظيف.\n\n## [scripts/network/remote_player_avatar.gd]\n- **السبب اللي فتحته لأجله**: dependency لمسار remote player\n- **شنو يسوي هالملف**: نموذج/interpolation للاعب البعيد.\n- **نقاط خطر لقيتها**:\n  - غير مستدعى في singleplayer smoke.\n- **الحكم النهائي على هالملف**: نظيف؛ خارج المسار.\n\n## [scripts/integration/java_engine_bridge.gd]\n- **السبب اللي فتحته لأجله**: app_root يستدعيه قبل القائمة\n- **شنو يسوي هالملف**: فحص مسارات Java/Minecraft bridge.\n- **نقاط خطر لقيتها**:\n  - recursive file walk synchronous إذا path غير فارغ؛ ليس سبب العطل مع defaults.\n- **الحكم النهائي على هالملف**: مشبوه بس مو مؤكد؛ يحتاج اختبار path ضخم مستقل.\n\n## [scripts/ui/ui_factory.gd]\n- **السبب اللي فتحته لأجله**: dependency مباشر للقائمة/HUD\n- **شنو يسوي هالملف**: safe make_icon/make_avatar مع null/can_instantiate fallback.\n- **نقاط خطر لقيتها**:\n  - لا مشكلة.\n- **الحكم النهائي على هالملف**: نظيف.\n\n## [scripts/ui/vector_icon.gd]\n- **السبب اللي فتحته لأجله**: UIFactory dependency\n- **شنو يسوي هالملف**: رسم icons بالـvector.\n- **نقاط خطر لقيتها**:\n  - لا IO/await حاجز.\n- **الحكم النهائي على هالملف**: نظيف.\n\n## [scripts/ui/avatar_renderer.gd]\n- **السبب اللي فتحته لأجله**: UIFactory dependency\n- **شنو يسوي هالملف**: رسم avatar preview.\n- **نقاط خطر لقيتها**:\n  - لا مشكلة.\n- **الحكم النهائي على هالملف**: نظيف.\n\n## [scripts/ui/main_menu.gd]\n- **السبب اللي فتحته لأجله**: يبني القائمة وزر ابدأ اللعب\n- **شنو يسوي هالملف**: backdrop/sidebar/pages/auth/world cards/navigation.\n- **نقاط خطر لقيتها**:\n  - _animate_intro الآن يجعل visible/alpha=1 قبل الـTween مع safety timer؛ لا blocker. بعض asset loads أثبتها import/runtime.\n- **الحكم النهائي على هالملف**: نظيف بالنسبة لعطل القائمة.\n\n## [scripts/ui/settings_menu.gd]\n- **السبب اللي فتحته لأجله**: يغير first_person/FOV/settings\n- **شنو يسوي هالملف**: صفحة الإعدادات.\n- **نقاط خطر لقيتها**:\n  - قبل الإصلاح: camera position فقط. الآن السطور 367-370 تستدعي _apply_view_mode مع fallback.\n- **الحكم النهائي على هالملف**: تم إصلاح المشكلة المؤكدة المرتبطة بتبديل منظور الكاميرا.\n\n## [scripts/ui/hud.gd]\n- **السبب اللي فتحته لأجله**: المستخدم رأى FPS فقط\n- **شنو يسوي هالملف**: HUD والصحة/الـhotbar والـcrosshair وFPS.\n- **نقاط خطر لقيتها**:\n  - FPS حقيقي عبر Engine.get_frames_per_second؛ لا blocker.\n- **الحكم النهائي على هالملف**: نظيف.\n\n## [scripts/player/player_avatar.gd]\n- **السبب اللي فتحته لأجله**: يبني player/head/camera ويُستخدم بعد world init\n- **شنو يسوي هالملف**: الحركة والقتال والتعدين والبناء والكاميرا.\n- **نقاط خطر لقيتها**:\n  - قبل الإصلاح: model مرئي، head y=2.02، camera داخل الرأس، cull disabled. السطور 36-46 + 56-63 كانت self-occlusion مؤكدة.\n- **الحكم النهائي على هالملف**: فيه مشكلة مؤكدة وتم إصلاحها: السطر 64 يستدعي _apply_view_mode؛ الدالة 144-151 تخفي local model في first-person؛ V عند 180-183 يستخدم نفس الدالة.\n\n## [scripts/gameplay/inventory.gd]\n- **السبب اللي فتحته لأجله**: ينشئه player ويستخدمه gameplay\n- **شنو يسوي هالملف**: slots/select/add/remove/count.\n- **نقاط خطر لقيتها**:\n  - لا مشكلة مؤكدة.\n- **الحكم النهائي على هالملف**: نظيف.\n\n## [scripts/gameplay/survival.gd]\n- **السبب اللي فتحته لأجله**: يُستدعى كل frame من player\n- **شنو يسوي هالملف**: health/hunger/stamina/xp.\n- **نقاط خطر لقيتها**:\n  - لا مشكلة مؤكدة.\n- **الحكم النهائي على هالملف**: نظيف.\n\n## [scripts/gameplay/crafting.gd]\n- **السبب اللي فتحته لأجله**: مسار crafting/self-test\n- **شنو يسوي هالملف**: recipe consumption/output.\n- **نقاط خطر لقيتها**:\n  - لا مشكلة مؤكدة.\n- **الحكم النهائي على هالملف**: نظيف.\n\n## [scripts/world/voxel_world.gd]\n- **السبب اللي فتحته لأجله**: يبدأ بعد ابدأ اللعب\n- **شنو يسوي هالملف**: generator/spawn chunk/mesh/collision/streaming.\n- **نقاط خطر لقيتها**:\n  - threads تُنتظر عند exit؛ spawn chunk synchronous؛ لا await world_ready حاجز.\n- **الحكم النهائي على هالملف**: نظيف؛ runtime أثبت generation/render.\n\n## [scripts/world/voxel_chunk.gd]\n- **السبب اللي فتحته لأجله**: يبني terrain mesh\n- **شنو يسوي هالملف**: ArrayMesh/face culling/collision/vertex colors.\n- **نقاط خطر لقيتها**:\n  - لا مشكلة مؤكدة؛ لا يعتمد على PNG atlas المعطوب السابق.\n- **الحكم النهائي على هالملف**: نظيف.\n\n## [scripts/world/world_generator.gd]\n- **السبب اللي فتحته لأجله**: يولد block data\n- **شنو يسوي هالملف**: FastNoise terrain/caves/sea/biomes/structures.\n- **نقاط خطر لقيتها**:\n  - bounds وdynamic height سليمة؛ لا مشكلة spawn مؤكدة.\n- **الحكم النهائي على هالملف**: نظيف.\n\n## [scripts/world/world_time.gd]\n- **السبب اللي فتحته لأجله**: dependency للـlighting/time\n- **شنو يسوي هالملف**: day cycle/weather.\n- **نقاط خطر لقيتها**:\n  - الوصول إلى lighting_built في runtime يثبت عدم التعليق.\n- **الحكم النهائي على هالملف**: نظيف.\n\n## [scripts/entities/spawn_manager.gd]\n- **السبب اللي فتحته لأجله**: ينشئه app_root بعد player\n- **شنو يسوي هالملف**: creature spawning.\n- **نقاط خطر لقيتها**:\n  - load creature script لاحق؛ ليس boot blocker.\n- **الحكم النهائي على هالملف**: نظيف لمسار العطل.\n\n## [scripts/entities/creature.gd]\n- **السبب اللي فتحته لأجله**: dependency لـspawn manager\n- **شنو يسوي هالملف**: AI/physics/damage مبسط.\n- **نقاط خطر لقيتها**:\n  - لا مشكلة مؤكدة.\n- **الحكم النهائي على هالملف**: نظيف.\n\n## [scenes/main.tscn]\n- **السبب اللي فتحته لأجله**: main_scene\n- **شنو يسوي هالملف**: Node3D root مع app_root.gd.\n- **نقاط خطر لقيتها**:\n  - لا مشكلة.\n- **الحكم النهائي على هالملف**: نظيف.\n\n## [project.godot]\n- **السبب اللي فتحته لأجله**: أول ملف في التحقيق\n- **شنو يسوي هالملف**: main_scene، rendering، autoloads، input/environment.\n- **نقاط خطر لقيتها**:\n  - main_scene صحيح؛ autoloads كاملة لمسار العميل.\n- **الحكم النهائي على هالملف**: نظيف.\n\n## [tests/parse_all_scripts.gd]\n- **السبب اللي فتحته لأجله**: GDScript load gate\n- **شنو يسوي هالملف**: تحميل/instantiate scripts.\n- **نقاط خطر لقيتها**:\n  - نجح في run 402.\n- **الحكم النهائي على هالملف**: نظيف.\n\n## [tests/self_test.gd]\n- **السبب اللي فتحته لأجله**: logic smoke gate\n- **شنو يسوي هالملف**: registries/world bounds/inventory/crafting.\n- **نقاط خطر لقيتها**:\n  - لا يكتشف visual occlusion بمفرده؛ gap وليس bug في logic.\n- **الحكم النهائي على هالملف**: نظيف لكن غير كافٍ بصريًا.\n\n## [tests/java_engine_bridge_test.gd]\n- **السبب اللي فتحته لأجله**: اختبار Java integration\n- **شنو يسوي هالملف**: اختبار bridge detection.\n- **نقاط خطر لقيتها**:\n  - خارج F5 normal client boot.\n- **الحكم النهائي على هالملف**: نظيف؛ غير مستدعى بالإقلاع.\n\n## [tests/runtime_visual_smoke.gd]\n- **السبب اللي فتحته لأجله**: الدليل الرسومي\n- **شنو يسوي هالملف**: menu + start-game + world + screenshots + boot log.\n- **نقاط خطر لقيتها**:\n  - قبل الإصلاح كان يكتفي بوجود chunk/player/camera؛ الآن السطور 56-74 تتحقق من local model ومن pixel coverage.\n- **الحكم النهائي على هالملف**: تم إصلاح false PASS في الاختبار.\n\n## [server/main_server.gd]\n- **السبب اللي فتحته لأجله**: server-only\n- **شنو يسوي هالملف**: headless server process.\n- **نقاط خطر لقيتها**:\n  - لا يدخل main_scene.\n- **الحكم النهائي على هالملف**: غير مستدعى بالإقلاع — تم تجاوزه عمدًا.\n\n## [server/main_server.tscn]\n- **السبب اللي فتحته لأجله**: server-only scene\n- **شنو يسوي هالملف**: مشهد السيرفر.\n- **نقاط خطر لقيتها**:\n  - لا يدخل F5 client.\n- **الحكم النهائي على هالملف**: غير مستدعى بالإقلاع — تم تجاوزه عمدًا.\n\n## [server/auth-service/main.go]\n- **السبب اللي فتحته لأجله**: خدمة auth منفصلة\n- **شنو يسوي هالملف**: HTTP/SQLite service.\n- **نقاط خطر لقيتها**:\n  - لا يدخل Godot client boot.\n- **الحكم النهائي على هالملف**: غير مستدعى بالإقلاع — تم تجاوزه عمدًا.\n\n## [server/auth-service/main_test.go]\n- **السبب اللي فتحته لأجله**: اختبار Go للخدمة\n- **شنو يسوي هالملف**: اختبارات auth service.\n- **نقاط خطر لقيتها**:\n  - لا يدخل Godot client boot.\n- **الحكم النهائي على هالملف**: غير مستدعى بالإقلاع — تم تجاوزه عمدًا.\n\n## [server/auth-service/go.mod]\n- **السبب اللي فتحته لأجله**: Go module\n- **شنو يسوي هالملف**: dependencies/version.\n- **نقاط خطر لقيتها**:\n  - لا يدخل Godot client boot.\n- **الحكم النهائي على هالملف**: غير مستدعى بالإقلاع — تم تجاوزه عمدًا.\n\n## [server/database_schema.sql]\n- **السبب اللي فتحته لأجله**: server database\n- **شنو يسوي هالملف**: schema.\n- **نقاط خطر لقيتها**:\n  - لا يقرأه client F5.\n- **الحكم النهائي على هالملف**: غير مستدعى بالإقلاع — تم تجاوزه عمدًا.\n\n## [server/server_config.example.json]\n- **السبب اللي فتحته لأجله**: server config example\n- **شنو يسوي هالملف**: مثال إعداد.\n- **نقاط خطر لقيتها**:\n  - لا يقرأه client F5.\n- **الحكم النهائي على هالملف**: غير مستدعى بالإقلاع — تم تجاوزه عمدًا.\n\n## [ملفات .uid + docs/build/config/import]\n- **السبب اللي فتحته لأجله**: metadata/documentation\n- **شنو يسوي هالملف**: Godot metadata/build/docs.\n- **نقاط خطر لقيتها**:\n  - لا منطق runtime مستقل داخل call graph.\n- **الحكم النهائي على هالملف**: غير مستدعاة بالإقلاع — تم تجاوزها عمدًا.\n\n## مطابقة التشغيل الفعلي\n- `main_menu_built` عند 1068ms و`boot_complete` عند 1070ms.\n- `world_start` 2410ms، `world_initialized` 2588ms، `player_camera_ready` 2658ms، `world_boot_complete` 2762ms.\n- بعد إصلاح player model، لقطة العالم الجديدة تحتوي terrain غير أسود، والـvisual smoke يتحقق من ذلك آليًا.\n\n## آخر boot_log فعلي\n\`\`\`text\nAETHRA boot log\n0ms boot_start\n8ms window_restored\n16ms lighting_built\n19ms graphics_applied\n25ms java_backend_checked\n42ms auth_initialized\n1068ms main_menu_built\n1070ms network_presence_ready\n1070ms boot_complete\n2410ms world_start\n2588ms world_initialized\n2658ms player_camera_ready\n2762ms world_boot_complete\n\`\`\`\n\n## أخطاء/تحذيرات لا يتم إخفاؤها\n- Windows runner استخدم Microsoft Basic Render Driver/ANGLE.\n- WASAPI فشل ثم dummy audio.\n- ظهرت رسائل cleanup/leak لبعض RIDs/ObjectDB/resources عند exit. لم تفشل الـsmoke، لكنها ليست مصححة كحالة صفر warnings/errors على كل جهاز.\n\n## التعديلات\n1. `scripts/player/player_avatar.gd:64,144-151,180-183`: إضافة _apply_view_mode وإخفاء local player mesh في first-person وربط V به.\n2. `scripts/ui/settings_menu.gd:367-370`: مزامنة إعداد camera مع _apply_view_mode.\n3. `tests/runtime_visual_smoke.gd:56-74`: رفض حالة local model visible أو screenshot black بدل false PASS.\n4. CI يلتقط Windows desktop proof في smoke-start إن كانت شاشة النظام متاحة.\n\n## الحكم النهائي\nالعطل الأصلي المؤكد هو self-occlusion من نموذج اللاعب المحلي داخل كاميرا first-person، وتم إصلاحه والتحقق منه على Windows runtime. التصدير شُغّل فعليًا و`PROCESS_START_OK`، لكن full desktop GUI automation وحفظ/إعدادات/Multiplayer end-to-end ليست مثبتة كاختبار بشري كامل في runner الحالي.\n
+- spawn manager load عند 496 غير محمي، لكن runtime أثبته.
+- **الحكم النهائي على هالملف**: نظيف بالنسبة للعطل الحالي؛ مشبوه فقط في مسارات لاحقة/اختيارية.
+
+## [scripts/core/app_state.gd]
+- **السبب اللي فتحته لأجله**: autoload يستخدمه app_root/UI/player
+- **شنو يسوي هالملف**: حالة الجلسة والعالم ونمط اللعب.
+- **نقاط خطر لقيتها**:
+  - لا توجد نقطة مؤكدة في boot.
+- **الحكم النهائي على هالملف**: نظيف.
+
+## [scripts/core/settings.gd]
+- **السبب اللي فتحته لأجله**: autoload ويحدد first_person/FOV/graphics
+- **شنو يسوي هالملف**: إدارة الإعدادات والـinput/persistence.
+- **نقاط خطر لقيتها**:
+  - first_person=true يكشف عيب view-model لكنه ليس خطأ بحد ذاته.
+- **الحكم النهائي على هالملف**: نظيف.
+
+## [scripts/audio/audio_manager.gd]
+- **السبب اللي فتحته لأجله**: autoload ويُستدعى أثناء gameplay
+- **شنو يسوي هالملف**: تحميل وتشغيل الأصوات.
+- **نقاط خطر لقيتها**:
+  - WASAPI فشل في runner ثم fallback إلى dummy؛ ليس blocker.
+- **الحكم النهائي على هالملف**: نظيف بالنسبة للعطل؛ تحذير بيئي غير قاتل.
+
+## [scripts/auth/auth_client.gd]
+- **السبب اللي فتحته لأجله**: يبنى قبل القائمة وقد يسبب network wait
+- **شنو يسوي هالملف**: حسابات محلية وHTTP auth.
+- **نقاط خطر لقيتها**:
+  - الطلبات البعيدة عليها timeout؛ الافتراضي auth_server_url فارغ.
+- **الحكم النهائي على هالملف**: نظيف.
+
+## [scripts/persistence/save_db.gd]
+- **السبب اللي فتحته لأجله**: autoload وworld save/load
+- **شنو يسوي هالملف**: تخزين العوالم والنسخ الاحتياطية.
+- **نقاط خطر لقيتها**:
+  - لا مشكلة مؤكدة في boot.
+- **الحكم النهائي على هالملف**: نظيف.
+
+## [scripts/data/block_registry.gd]
+- **السبب اللي فتحته لأجله**: autoload وworld/player
+- **شنو يسوي هالملف**: تعريف البلوكات وخواصها.
+- **نقاط خطر لقيتها**:
+  - لا مشكلة مؤكدة.
+- **الحكم النهائي على هالملف**: نظيف.
+
+## [scripts/data/item_registry.gd]
+- **السبب اللي فتحته لأجله**: autoload وinventory/player
+- **شنو يسوي هالملف**: تعريف العناصر والأدوات.
+- **نقاط خطر لقيتها**:
+  - لا مشكلة مؤكدة.
+- **الحكم النهائي على هالملف**: نظيف.
+
+## [scripts/data/recipe_registry.gd]
+- **السبب اللي فتحته لأجله**: autoload وcrafting
+- **شنو يسوي هالملف**: تعريف وصفات التصنيع.
+- **نقاط خطر لقيتها**:
+  - لا مشكلة مؤكدة.
+- **الحكم النهائي على هالملف**: نظيف.
+
+## [scripts/network/network_manager.gd]
+- **السبب اللي فتحته لأجله**: autoload وربط world/host/join
+- **شنو يسوي هالملف**: ENet وRPC validation وحالة اللاعبين.
+- **نقاط خطر لقيتها**:
+  - remote avatar load غير محمي في مسار remote فقط؛ singleplayer لا ينتظر شبكة.
+- **الحكم النهائي على هالملف**: نظيف لمسار singleplayer.
+
+## [scripts/network/server_directory.gd]
+- **السبب اللي فتحته لأجله**: autoload وmain_menu
+- **شنو يسوي هالملف**: المفضلة والـrecent servers.
+- **نقاط خطر لقيتها**:
+  - لا network wait عند boot.
+- **الحكم النهائي على هالملف**: نظيف.
+
+## [scripts/network/remote_player_avatar.gd]
+- **السبب اللي فتحته لأجله**: dependency لمسار remote player
+- **شنو يسوي هالملف**: نموذج/interpolation للاعب البعيد.
+- **نقاط خطر لقيتها**:
+  - غير مستدعى في singleplayer smoke.
+- **الحكم النهائي على هالملف**: نظيف؛ خارج المسار.
+
+## [scripts/integration/java_engine_bridge.gd]
+- **السبب اللي فتحته لأجله**: app_root يستدعيه قبل القائمة
+- **شنو يسوي هالملف**: فحص مسارات Java/Minecraft bridge.
+- **نقاط خطر لقيتها**:
+  - recursive file walk synchronous إذا path غير فارغ؛ ليس سبب العطل مع defaults.
+- **الحكم النهائي على هالملف**: مشبوه بس مو مؤكد؛ يحتاج اختبار path ضخم مستقل.
+
+## [scripts/ui/ui_factory.gd]
+- **السبب اللي فتحته لأجله**: dependency مباشر للقائمة/HUD
+- **شنو يسوي هالملف**: safe make_icon/make_avatar مع null/can_instantiate fallback.
+- **نقاط خطر لقيتها**:
+  - لا مشكلة.
+- **الحكم النهائي على هالملف**: نظيف.
+
+## [scripts/ui/vector_icon.gd]
+- **السبب اللي فتحته لأجله**: UIFactory dependency
+- **شنو يسوي هالملف**: رسم icons بالـvector.
+- **نقاط خطر لقيتها**:
+  - لا IO/await حاجز.
+- **الحكم النهائي على هالملف**: نظيف.
+
+## [scripts/ui/avatar_renderer.gd]
+- **السبب اللي فتحته لأجله**: UIFactory dependency
+- **شنو يسوي هالملف**: رسم avatar preview.
+- **نقاط خطر لقيتها**:
+  - لا مشكلة.
+- **الحكم النهائي على هالملف**: نظيف.
+
+## [scripts/ui/main_menu.gd]
+- **السبب اللي فتحته لأجله**: يبني القائمة وزر ابدأ اللعب
+- **شنو يسوي هالملف**: backdrop/sidebar/pages/auth/world cards/navigation.
+- **نقاط خطر لقيتها**:
+  - _animate_intro الآن يجعل visible/alpha=1 قبل الـTween مع safety timer؛ لا blocker. بعض asset loads أثبتها import/runtime.
+- **الحكم النهائي على هالملف**: نظيف بالنسبة لعطل القائمة.
+
+## [scripts/ui/settings_menu.gd]
+- **السبب اللي فتحته لأجله**: يغير first_person/FOV/settings
+- **شنو يسوي هالملف**: صفحة الإعدادات.
+- **نقاط خطر لقيتها**:
+  - قبل الإصلاح: camera position فقط. الآن السطور 367-370 تستدعي _apply_view_mode مع fallback.
+- **الحكم النهائي على هالملف**: تم إصلاح المشكلة المؤكدة المرتبطة بتبديل منظور الكاميرا.
+
+## [scripts/ui/hud.gd]
+- **السبب اللي فتحته لأجله**: المستخدم رأى FPS فقط
+- **شنو يسوي هالملف**: HUD والصحة/الـhotbar والـcrosshair وFPS.
+- **نقاط خطر لقيتها**:
+  - FPS حقيقي عبر Engine.get_frames_per_second؛ لا blocker.
+- **الحكم النهائي على هالملف**: نظيف.
+
+## [scripts/player/player_avatar.gd]
+- **السبب اللي فتحته لأجله**: يبني player/head/camera ويُستخدم بعد world init
+- **شنو يسوي هالملف**: الحركة والقتال والتعدين والبناء والكاميرا.
+- **نقاط خطر لقيتها**:
+  - قبل الإصلاح: model مرئي، head y=2.02، camera داخل الرأس، cull disabled. السطور 36-46 + 56-63 كانت self-occlusion مؤكدة.
+- **الحكم النهائي على هالملف**: فيه مشكلة مؤكدة وتم إصلاحها: السطر 64 يستدعي _apply_view_mode؛ الدالة 144-151 تخفي local model في first-person؛ V عند 180-183 يستخدم نفس الدالة.
+
+## [scripts/gameplay/inventory.gd]
+- **السبب اللي فتحته لأجله**: ينشئه player ويستخدمه gameplay
+- **شنو يسوي هالملف**: slots/select/add/remove/count.
+- **نقاط خطر لقيتها**:
+  - لا مشكلة مؤكدة.
+- **الحكم النهائي على هالملف**: نظيف.
+
+## [scripts/gameplay/survival.gd]
+- **السبب اللي فتحته لأجله**: يُستدعى كل frame من player
+- **شنو يسوي هالملف**: health/hunger/stamina/xp.
+- **نقاط خطر لقيتها**:
+  - لا مشكلة مؤكدة.
+- **الحكم النهائي على هالملف**: نظيف.
+
+## [scripts/gameplay/crafting.gd]
+- **السبب اللي فتحته لأجله**: مسار crafting/self-test
+- **شنو يسوي هالملف**: recipe consumption/output.
+- **نقاط خطر لقيتها**:
+  - لا مشكلة مؤكدة.
+- **الحكم النهائي على هالملف**: نظيف.
+
+## [scripts/world/voxel_world.gd]
+- **السبب اللي فتحته لأجله**: يبدأ بعد ابدأ اللعب
+- **شنو يسوي هالملف**: generator/spawn chunk/mesh/collision/streaming.
+- **نقاط خطر لقيتها**:
+  - threads تُنتظر عند exit؛ spawn chunk synchronous؛ لا await world_ready حاجز.
+- **الحكم النهائي على هالملف**: نظيف؛ runtime أثبت generation/render.
+
+## [scripts/world/voxel_chunk.gd]
+- **السبب اللي فتحته لأجله**: يبني terrain mesh
+- **شنو يسوي هالملف**: ArrayMesh/face culling/collision/vertex colors.
+- **نقاط خطر لقيتها**:
+  - لا مشكلة مؤكدة؛ لا يعتمد على PNG atlas المعطوب السابق.
+- **الحكم النهائي على هالملف**: نظيف.
+
+## [scripts/world/world_generator.gd]
+- **السبب اللي فتحته لأجله**: يولد block data
+- **شنو يسوي هالملف**: FastNoise terrain/caves/sea/biomes/structures.
+- **نقاط خطر لقيتها**:
+  - bounds وdynamic height سليمة؛ لا مشكلة spawn مؤكدة.
+- **الحكم النهائي على هالملف**: نظيف.
+
+## [scripts/world/world_time.gd]
+- **السبب اللي فتحته لأجله**: dependency للـlighting/time
+- **شنو يسوي هالملف**: day cycle/weather.
+- **نقاط خطر لقيتها**:
+  - الوصول إلى lighting_built في runtime يثبت عدم التعليق.
+- **الحكم النهائي على هالملف**: نظيف.
+
+## [scripts/entities/spawn_manager.gd]
+- **السبب اللي فتحته لأجله**: ينشئه app_root بعد player
+- **شنو يسوي هالملف**: creature spawning.
+- **نقاط خطر لقيتها**:
+  - load creature script لاحق؛ ليس boot blocker.
+- **الحكم النهائي على هالملف**: نظيف لمسار العطل.
+
+## [scripts/entities/creature.gd]
+- **السبب اللي فتحته لأجله**: dependency لـspawn manager
+- **شنو يسوي هالملف**: AI/physics/damage مبسط.
+- **نقاط خطر لقيتها**:
+  - لا مشكلة مؤكدة.
+- **الحكم النهائي على هالملف**: نظيف.
+
+## [scenes/main.tscn]
+- **السبب اللي فتحته لأجله**: main_scene
+- **شنو يسوي هالملف**: Node3D root مع app_root.gd.
+- **نقاط خطر لقيتها**:
+  - لا مشكلة.
+- **الحكم النهائي على هالملف**: نظيف.
+
+## [project.godot]
+- **السبب اللي فتحته لأجله**: أول ملف في التحقيق
+- **شنو يسوي هالملف**: main_scene، rendering، autoloads، input/environment.
+- **نقاط خطر لقيتها**:
+  - main_scene صحيح؛ autoloads كاملة لمسار العميل.
+- **الحكم النهائي على هالملف**: نظيف.
+
+## [tests/parse_all_scripts.gd]
+- **السبب اللي فتحته لأجله**: GDScript load gate
+- **شنو يسوي هالملف**: تحميل/instantiate scripts.
+- **نقاط خطر لقيتها**:
+  - نجح في run 402.
+- **الحكم النهائي على هالملف**: نظيف.
+
+## [tests/self_test.gd]
+- **السبب اللي فتحته لأجله**: logic smoke gate
+- **شنو يسوي هالملف**: registries/world bounds/inventory/crafting.
+- **نقاط خطر لقيتها**:
+  - لا يكتشف visual occlusion بمفرده؛ gap وليس bug في logic.
+- **الحكم النهائي على هالملف**: نظيف لكن غير كافٍ بصريًا.
+
+## [tests/java_engine_bridge_test.gd]
+- **السبب اللي فتحته لأجله**: اختبار Java integration
+- **شنو يسوي هالملف**: اختبار bridge detection.
+- **نقاط خطر لقيتها**:
+  - خارج F5 normal client boot.
+- **الحكم النهائي على هالملف**: نظيف؛ غير مستدعى بالإقلاع.
+
+## [tests/runtime_visual_smoke.gd]
+- **السبب اللي فتحته لأجله**: الدليل الرسومي
+- **شنو يسوي هالملف**: menu + start-game + world + screenshots + boot log.
+- **نقاط خطر لقيتها**:
+  - قبل الإصلاح كان يكتفي بوجود chunk/player/camera؛ الآن السطور 56-74 تتحقق من local model ومن pixel coverage.
+- **الحكم النهائي على هالملف**: تم إصلاح false PASS في الاختبار.
+
+## [server/main_server.gd]
+- **السبب اللي فتحته لأجله**: server-only
+- **شنو يسوي هالملف**: headless server process.
+- **نقاط خطر لقيتها**:
+  - لا يدخل main_scene.
+- **الحكم النهائي على هالملف**: غير مستدعى بالإقلاع — تم تجاوزه عمدًا.
+
+## [server/main_server.tscn]
+- **السبب اللي فتحته لأجله**: server-only scene
+- **شنو يسوي هالملف**: مشهد السيرفر.
+- **نقاط خطر لقيتها**:
+  - لا يدخل F5 client.
+- **الحكم النهائي على هالملف**: غير مستدعى بالإقلاع — تم تجاوزه عمدًا.
+
+## [server/auth-service/main.go]
+- **السبب اللي فتحته لأجله**: خدمة auth منفصلة
+- **شنو يسوي هالملف**: HTTP/SQLite service.
+- **نقاط خطر لقيتها**:
+  - لا يدخل Godot client boot.
+- **الحكم النهائي على هالملف**: غير مستدعى بالإقلاع — تم تجاوزه عمدًا.
+
+## [server/auth-service/main_test.go]
+- **السبب اللي فتحته لأجله**: اختبار Go للخدمة
+- **شنو يسوي هالملف**: اختبارات auth service.
+- **نقاط خطر لقيتها**:
+  - لا يدخل Godot client boot.
+- **الحكم النهائي على هالملف**: غير مستدعى بالإقلاع — تم تجاوزه عمدًا.
+
+## [server/auth-service/go.mod]
+- **السبب اللي فتحته لأجله**: Go module
+- **شنو يسوي هالملف**: dependencies/version.
+- **نقاط خطر لقيتها**:
+  - لا يدخل Godot client boot.
+- **الحكم النهائي على هالملف**: غير مستدعى بالإقلاع — تم تجاوزه عمدًا.
+
+## [server/database_schema.sql]
+- **السبب اللي فتحته لأجله**: server database
+- **شنو يسوي هالملف**: schema.
+- **نقاط خطر لقيتها**:
+  - لا يقرأه client F5.
+- **الحكم النهائي على هالملف**: غير مستدعى بالإقلاع — تم تجاوزه عمدًا.
+
+## [server/server_config.example.json]
+- **السبب اللي فتحته لأجله**: server config example
+- **شنو يسوي هالملف**: مثال إعداد.
+- **نقاط خطر لقيتها**:
+  - لا يقرأه client F5.
+- **الحكم النهائي على هالملف**: غير مستدعى بالإقلاع — تم تجاوزه عمدًا.
+
+## [ملفات .uid + docs/build/config/import]
+- **السبب اللي فتحته لأجله**: metadata/documentation
+- **شنو يسوي هالملف**: Godot metadata/build/docs.
+- **نقاط خطر لقيتها**:
+  - لا منطق runtime مستقل داخل call graph.
+- **الحكم النهائي على هالملف**: غير مستدعاة بالإقلاع — تم تجاوزها عمدًا.
+
+## مطابقة التشغيل الفعلي
+- `main_menu_built` عند 1068ms و`boot_complete` عند 1070ms.
+- `world_start` 2410ms، `world_initialized` 2588ms، `player_camera_ready` 2658ms، `world_boot_complete` 2762ms.
+- بعد إصلاح player model، لقطة العالم الجديدة تحتوي terrain غير أسود، والـvisual smoke يتحقق من ذلك آليًا.
+
+## آخر boot_log فعلي
+\`\`\`text
+AETHRA boot log
+0ms boot_start
+8ms window_restored
+16ms lighting_built
+19ms graphics_applied
+25ms java_backend_checked
+42ms auth_initialized
+1068ms main_menu_built
+1070ms network_presence_ready
+1070ms boot_complete
+2410ms world_start
+2588ms world_initialized
+2658ms player_camera_ready
+2762ms world_boot_complete
+\`\`\`
+
+## أخطاء/تحذيرات لا يتم إخفاؤها
+- Windows runner استخدم Microsoft Basic Render Driver/ANGLE.
+- WASAPI فشل ثم dummy audio.
+- ظهرت رسائل cleanup/leak لبعض RIDs/ObjectDB/resources عند exit. لم تفشل الـsmoke، لكنها ليست مصححة كحالة صفر warnings/errors على كل جهاز.
+
+## التعديلات
+1. `scripts/player/player_avatar.gd:64,144-151,180-183`: إضافة _apply_view_mode وإخفاء local player mesh في first-person وربط V به.
+2. `scripts/ui/settings_menu.gd:367-370`: مزامنة إعداد camera مع _apply_view_mode.
+3. `tests/runtime_visual_smoke.gd:56-74`: رفض حالة local model visible أو screenshot black بدل false PASS.
+4. CI يلتقط Windows desktop proof في smoke-start إن كانت شاشة النظام متاحة.
+
+## الحكم النهائي
+العطل الأصلي المؤكد هو self-occlusion من نموذج اللاعب المحلي داخل كاميرا first-person، وتم إصلاحه والتحقق منه على Windows runtime. التصدير شُغّل فعليًا و`PROCESS_START_OK`، لكن full desktop GUI automation وحفظ/إعدادات/Multiplayer end-to-end ليست مثبتة كاختبار بشري كامل في runner الحالي.
