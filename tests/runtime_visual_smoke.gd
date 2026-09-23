@@ -79,7 +79,7 @@ func _run() -> void:
                 await create_timer(0.20).timeout
                 var player_shot: Image = viewport.get_texture().get_image()
                 var player_model_visible := false
-                var model := app_root.player.get("player_model")
+                var model: Variant = app_root.player.get("player_model")
                 if model is MeshInstance3D:
                     player_model_visible = bool(model.visible)
                 print("[VISUAL_SMOKE] third_person_player_visible=", player_model_visible)
