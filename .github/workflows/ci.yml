@@ -250,8 +250,23 @@ jobs:
           $proc = Start-Process -FilePath $exe -PassThru -WindowStyle Normal
           Start-Sleep -Seconds 15
           if ($proc -and -not $proc.HasExited) {
-            $proc | Stop-Process -Force
             Write-Output "PROCESS_START_OK"
+            try {
+              Add-Type -AssemblyName System.Windows.Forms
+              Add-Type -AssemblyName System.Drawing
+              New-Item -ItemType Directory -Force -Path "runtime-proof" | Out-Null
+              $bounds = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+              $bitmap = New-Object System.Drawing.Bitmap $bounds.Width, $bounds.Height
+              $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+              $graphics.CopyFromScreen($bounds.Left, $bounds.Top, 0, 0, $bitmap.Size)
+              $bitmap.Save((Join-Path (Get-Location) "runtime-proof/windows-desktop-proof.png"), [System.Drawing.Imaging.ImageFormat]::Png)
+              $graphics.Dispose()
+              $bitmap.Dispose()
+              Write-Output "DESKTOP_PROOF_CAPTURED"
+            } catch {
+              Write-Warning "Desktop proof capture unavailable: $($_.Exception.Message)"
+            }
+            $proc | Stop-Process -Force
             $report = Get-Content WINDOWS-RUNTIME-VERIFICATION.md -Raw
             $report = $report -replace '(?m)^Process start:.*$', 'Process start: PASS'
             Set-Content WINDOWS-RUNTIME-VERIFICATION.md $report -Encoding utf8
@@ -303,3 +318,4 @@ jobs:
             runtime-proof/runtime-menu-proof.png
             runtime-proof/runtime-world-proof.png
             runtime-proof/boot_log.txt
+            runtime-proof/windows-desktop-proof.png
