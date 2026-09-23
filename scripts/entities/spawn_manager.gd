@@ -50,7 +50,11 @@ func spawn_creature(kind: String) -> void:
         return
     var p := _ground_position(randf_range(-20, 20), randf_range(-20, 20))
     kind = _kind_for_biome(p, kind)
-    var c = load("res://scripts/entities/creature.gd").new()
+    var creature_script := load("res://scripts/entities/creature.gd") as GDScript
+    if creature_script == null or not creature_script.can_instantiate():
+        push_error("[WORLD] Failed to load creature.gd; skipping creature spawn.")
+        return
+    var c = creature_script.new()
     add_child(c)
     c.add_to_group("creatures")
     c.setup(kind, p)
