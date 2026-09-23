@@ -53,14 +53,29 @@ func _run() -> void:
             var camera_ok: bool = app_root.player.camera != null and app_root.player.camera.current
             print("[VISUAL_SMOKE] world=", app_root.world != null, " player=", app_root.player != null, " rendered_chunks=", rendered, " camera=", camera_ok)
             if rendered > 0 and camera_ok:
+                var first_person_ok := not bool(app_root.player.get("player_model").visible) if app_root.player.get("player_model") != null else false
+                print("[VISUAL_SMOKE] first_person_local_model_hidden=", first_person_ok)
+                if not first_person_ok:
+                    push_error("[VISUAL_SMOKE] FAIL: local player model is still visible in first-person view.")
+                    quit(1)
+                    return
                 var world_shot: Image = viewport.get_texture().get_image()
-                if world_shot != null:
-                    world_shot.save_png("res://runtime-proof/runtime-world-proof.png")
-                    print("[VISUAL_SMOKE] world screenshot saved")
+                if world_shot == null:
+                    push_error("[VISUAL_SMOKE] FAIL: world screenshot could not be captured.")
+                    quit(1)
+                    return
+                world_shot.save_png("res://runtime-proof/runtime-world-proof.png")
+                var coverage := _world_pixel_coverage(world_shot)
+                print("[VISUAL_SMOKE] world_pixel_coverage=", coverage)
+                if coverage < 0.01:
+                    push_error("[VISUAL_SMOKE] FAIL: world screenshot is effectively black in the gameplay view.")
+                    quit(1)
+                    return
+                print("[VISUAL_SMOKE] world screenshot saved")
                 if not _copy_boot_log_and_validate():
                     quit(1)
                     return
-                print("[VISUAL_SMOKE] SUCCESS: menu and world rendered")
+                print("[VISUAL_SMOKE] SUCCESS: menu and world visibly rendered")
                 quit(0)
                 return
 
@@ -104,3 +119,21 @@ func _copy_boot_log_and_validate() -> bool:
             return false
     print("[VISUAL_SMOKE] boot log contains all required stages")
     return true
+
+
+func _world_pixel_coverage(image: Image) -> float:
+    var start_x := maxi(96, int(image.get_width() * 0.08))
+    var end_x := mini(image.get_width() - 160, int(image.get_width() * 0.84))
+    var start_y := maxi(140, int(image.get_height() * 0.20))
+    var end_y := mini(image.get_height() - 48, int(image.get_height() * 0.92))
+    var sampled := 0
+    var lit := 0
+    for y in range(start_y, end_y, 16):
+        for x in range(start_x, end_x, 16):
+            var c: Color = image.get_pixel(x, y)
+            sampled += 1
+            if maxf(c.r, maxf(c.g, c.b)) > 0.05:
+                lit += 1
+    if sampled <= 0:
+        return 0.0
+    return float(lit) / float(sampled)
