@@ -319,3 +319,4 @@ jobs:
             runtime-proof/runtime-world-proof.png
             runtime-proof/boot_log.txt
             runtime-proof/windows-desktop-proof.png
+            runtime-proof/runtime-player-proof.png
